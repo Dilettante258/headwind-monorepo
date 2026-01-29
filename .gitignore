@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Rust/Cargo
+target/
+
+# IDE
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Turbo
+.turbo/
+
+# VSCode extension
+*.vsix
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+
+# Vite
+.vite/
+
+# WASM build artifacts (allow specific locations)
+*.wasm
+!packages/swc-host/assets/*.wasm
+!apps/vscode-extension/resources/plugins/*.wasm

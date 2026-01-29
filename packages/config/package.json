@@ -1,0 +1,9 @@
+{
+  "name": "@headwind/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*.json",
+    "./eslint": "./eslint/index.js"
+  }
+}

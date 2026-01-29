@@ -1,0 +1,34 @@
+{
+  "name": "@headwind/vscode-extension",
+  "displayName": "Headwind",
+  "description": "Code transformation powered by SWC",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "headwind.transform",
+        "title": "Headwind: Transform Code"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@headwind/transformer": "workspace:*"
+  },
+  "devDependencies": {
+    "@headwind/config": "workspace:*",
+    "@types/vscode": "^1.96.0",
+    "tsup": "^8.3.5"
+  }
+}

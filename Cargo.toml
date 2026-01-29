@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/swc_plugin",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+swc_core = { version = "56.0.*", features = ["ecma_plugin_transform"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+lto = true
