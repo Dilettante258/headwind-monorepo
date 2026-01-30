@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/core",
+    "crates/css",
+    "crates/tw_index",
+    "crates/tw_parse",
     "crates/swc_plugin",
 ]
 
@@ -13,6 +17,8 @@ license = "MIT"
 swc_core = { version = "56.0.*", features = ["ecma_plugin_transform"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+indexmap = "2.0"
+blake3 = "1.5"
 
 [profile.release]
 lto = true

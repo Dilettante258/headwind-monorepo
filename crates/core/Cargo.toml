@@ -1,0 +1,15 @@
+[package]
+name = "headwind-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+indexmap = "2.0"
+blake3 = "1.5"
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+headwind-tw-index = { path = "../tw_index" }
+headwind-css = { path = "../css" }
