@@ -597,6 +597,7 @@ name = "headwind-tw-index"
 version = "0.1.0"
 dependencies = [
  "headwind-core",
+ "headwind-tw-parse",
  "serde",
  "serde_json",
 ]
