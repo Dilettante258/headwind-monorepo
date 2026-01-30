@@ -44,3 +44,6 @@ coverage/
 *.wasm
 !packages/swc-host/assets/*.wasm
 !apps/vscode-extension/resources/plugins/*.wasm
+
+# Tools data (cloned repositories)
+tools/data/

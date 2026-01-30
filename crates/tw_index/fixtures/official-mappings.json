@@ -1,0 +1,3772 @@
+[
+  {
+    "class": "-indent-px",
+    "css": "text-indent: -1px",
+    "source": "/src/docs/text-indent.mdx"
+  },
+  {
+    "class": "-translate-full",
+    "css": "translate: -100% -100%",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-px",
+    "css": "translate: -1px -1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-x-full",
+    "css": "translate: -100% var(--tw-translate-y)",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-x-px",
+    "css": "translate: -1px var(--tw-translate-y)",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-y-full",
+    "css": "translate: var(--tw-translate-x) -100%",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-y-px",
+    "css": "translate: var(--tw-translate-x) -1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "-translate-z-px",
+    "css": "translate: var(--tw-translate-x) var(--tw-translate-y) -1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "absolute",
+    "css": "position: absolute",
+    "source": "/src/docs/position.mdx"
+  },
+  {
+    "class": "align-baseline",
+    "css": "vertical-align: baseline",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-bottom",
+    "css": "vertical-align: bottom",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-middle",
+    "css": "vertical-align: middle",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-sub",
+    "css": "vertical-align: sub",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-super",
+    "css": "vertical-align: super",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-text-bottom",
+    "css": "vertical-align: text-bottom",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-text-top",
+    "css": "vertical-align: text-top",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "align-top",
+    "css": "vertical-align: top",
+    "source": "/src/docs/vertical-align.mdx"
+  },
+  {
+    "class": "antialiased",
+    "css": "-webkit-font-smoothing: antialiased;\n-moz-osx-font-smoothing: grayscale",
+    "source": "/src/docs/font-smoothing.mdx"
+  },
+  {
+    "class": "appearance-auto",
+    "css": "appearance: auto",
+    "source": "/src/docs/appearance.mdx"
+  },
+  {
+    "class": "appearance-none",
+    "css": "appearance: none",
+    "source": "/src/docs/appearance.mdx"
+  },
+  {
+    "class": "aspect-auto",
+    "css": "aspect-ratio: auto",
+    "source": "/src/docs/aspect-ratio.mdx"
+  },
+  {
+    "class": "aspect-square",
+    "css": "aspect-ratio: 1 / 1",
+    "source": "/src/docs/aspect-ratio.mdx"
+  },
+  {
+    "class": "aspect-video",
+    "css": "aspect-ratio: var(--aspect-video); /* 16 / 9 */",
+    "source": "/src/docs/aspect-ratio.mdx"
+  },
+  {
+    "class": "auto-cols-auto",
+    "css": "grid-auto-columns: auto",
+    "source": "/src/docs/grid-auto-columns.mdx"
+  },
+  {
+    "class": "auto-cols-fr",
+    "css": "grid-auto-columns: minmax(0, 1fr)",
+    "source": "/src/docs/grid-auto-columns.mdx"
+  },
+  {
+    "class": "auto-cols-max",
+    "css": "grid-auto-columns: max-content",
+    "source": "/src/docs/grid-auto-columns.mdx"
+  },
+  {
+    "class": "auto-cols-min",
+    "css": "grid-auto-columns: min-content",
+    "source": "/src/docs/grid-auto-columns.mdx"
+  },
+  {
+    "class": "auto-rows-auto",
+    "css": "grid-auto-rows: auto",
+    "source": "/src/docs/grid-auto-rows.mdx"
+  },
+  {
+    "class": "auto-rows-fr",
+    "css": "grid-auto-rows: minmax(0, 1fr)",
+    "source": "/src/docs/grid-auto-rows.mdx"
+  },
+  {
+    "class": "auto-rows-max",
+    "css": "grid-auto-rows: max-content",
+    "source": "/src/docs/grid-auto-rows.mdx"
+  },
+  {
+    "class": "auto-rows-min",
+    "css": "grid-auto-rows: min-content",
+    "source": "/src/docs/grid-auto-rows.mdx"
+  },
+  {
+    "class": "backdrop-blur-2xl",
+    "css": "backdrop-filter: blur(var(--blur-2xl)); /* 40px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-3xl",
+    "css": "backdrop-filter: blur(var(--blur-3xl)); /* 64px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-lg",
+    "css": "backdrop-filter: blur(var(--blur-lg)); /* 16px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-md",
+    "css": "backdrop-filter: blur(var(--blur-md)); /* 12px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-none",
+    "css": "backdrop-filter: ",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-sm",
+    "css": "backdrop-filter: blur(var(--blur-sm)); /* 8px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-xl",
+    "css": "backdrop-filter: blur(var(--blur-xl)); /* 24px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-blur-xs",
+    "css": "backdrop-filter: blur(var(--blur-xs)); /* 4px */",
+    "source": "/src/docs/backdrop-filter-blur.mdx"
+  },
+  {
+    "class": "backdrop-filter-none",
+    "css": "backdrop-filter: none",
+    "source": "/src/docs/backdrop-filter.mdx"
+  },
+  {
+    "class": "backdrop-grayscale",
+    "css": "backdrop-filter: grayscale(100%)",
+    "source": "/src/docs/backdrop-filter-grayscale.mdx"
+  },
+  {
+    "class": "backdrop-invert",
+    "css": "backdrop-filter: invert(100%)",
+    "source": "/src/docs/backdrop-filter-invert.mdx"
+  },
+  {
+    "class": "backdrop-sepia",
+    "css": "backdrop-filter: sepia(100%)",
+    "source": "/src/docs/backdrop-filter-sepia.mdx"
+  },
+  {
+    "class": "backface-hidden",
+    "css": "backface-visibility: hidden",
+    "source": "/src/docs/backface-visibility.mdx"
+  },
+  {
+    "class": "backface-visible",
+    "css": "backface-visibility: visible",
+    "source": "/src/docs/backface-visibility.mdx"
+  },
+  {
+    "class": "basis-2xl",
+    "css": "flex-basis: var(--container-2xl); /* 42rem (672px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-2xs",
+    "css": "flex-basis: var(--container-2xs); /* 18rem (288px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-3xl",
+    "css": "flex-basis: var(--container-3xl); /* 48rem (768px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-3xs",
+    "css": "flex-basis: var(--container-3xs); /* 16rem (256px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-4xl",
+    "css": "flex-basis: var(--container-4xl); /* 56rem (896px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-5xl",
+    "css": "flex-basis: var(--container-5xl); /* 64rem (1024px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-6xl",
+    "css": "flex-basis: var(--container-6xl); /* 72rem (1152px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-7xl",
+    "css": "flex-basis: var(--container-7xl); /* 80rem (1280px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-auto",
+    "css": "flex-basis: auto",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-full",
+    "css": "flex-basis: 100%",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-lg",
+    "css": "flex-basis: var(--container-lg); /* 32rem (512px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-md",
+    "css": "flex-basis: var(--container-md); /* 28rem (448px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-sm",
+    "css": "flex-basis: var(--container-sm); /* 24rem (384px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-xl",
+    "css": "flex-basis: var(--container-xl); /* 36rem (576px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "basis-xs",
+    "css": "flex-basis: var(--container-xs); /* 20rem (320px) */",
+    "source": "/src/docs/flex-basis.mdx"
+  },
+  {
+    "class": "bg-auto",
+    "css": "background-size: auto",
+    "source": "/src/docs/background-size.mdx"
+  },
+  {
+    "class": "bg-blend-color",
+    "css": "background-blend-mode: color",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-color-burn",
+    "css": "background-blend-mode: color-burn",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-color-dodge",
+    "css": "background-blend-mode: color-dodge",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-darken",
+    "css": "background-blend-mode: darken",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-difference",
+    "css": "background-blend-mode: difference",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-exclusion",
+    "css": "background-blend-mode: exclusion",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-hard-light",
+    "css": "background-blend-mode: hard-light",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-hue",
+    "css": "background-blend-mode: hue",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-lighten",
+    "css": "background-blend-mode: lighten",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-luminosity",
+    "css": "background-blend-mode: luminosity",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-multiply",
+    "css": "background-blend-mode: multiply",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-normal",
+    "css": "background-blend-mode: normal",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-overlay",
+    "css": "background-blend-mode: overlay",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-saturation",
+    "css": "background-blend-mode: saturation",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-screen",
+    "css": "background-blend-mode: screen",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-blend-soft-light",
+    "css": "background-blend-mode: soft-light",
+    "source": "/src/docs/background-blend-mode.mdx"
+  },
+  {
+    "class": "bg-bottom",
+    "css": "background-position: bottom",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-bottom-left",
+    "css": "background-position: bottom left",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-bottom-right",
+    "css": "background-position: bottom right",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-center",
+    "css": "background-position: center",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-clip-border",
+    "css": "background-clip: border-box",
+    "source": "/src/docs/background-clip.mdx"
+  },
+  {
+    "class": "bg-clip-content",
+    "css": "background-clip: content-box",
+    "source": "/src/docs/background-clip.mdx"
+  },
+  {
+    "class": "bg-clip-padding",
+    "css": "background-clip: padding-box",
+    "source": "/src/docs/background-clip.mdx"
+  },
+  {
+    "class": "bg-clip-text",
+    "css": "background-clip: text",
+    "source": "/src/docs/background-clip.mdx"
+  },
+  {
+    "class": "bg-contain",
+    "css": "background-size: contain",
+    "source": "/src/docs/background-size.mdx"
+  },
+  {
+    "class": "bg-cover",
+    "css": "background-size: cover",
+    "source": "/src/docs/background-size.mdx"
+  },
+  {
+    "class": "bg-fixed",
+    "css": "background-attachment: fixed",
+    "source": "/src/docs/background-attachment.mdx"
+  },
+  {
+    "class": "bg-left",
+    "css": "background-position: left",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-linear-to-b",
+    "css": "background-image: linear-gradient(to bottom, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-bl",
+    "css": "background-image: linear-gradient(to bottom left, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-br",
+    "css": "background-image: linear-gradient(to bottom right, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-l",
+    "css": "background-image: linear-gradient(to left, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-r",
+    "css": "background-image: linear-gradient(to right, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-t",
+    "css": "background-image: linear-gradient(to top, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-tl",
+    "css": "background-image: linear-gradient(to top left, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-linear-to-tr",
+    "css": "background-image: linear-gradient(to top right, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-local",
+    "css": "background-attachment: local",
+    "source": "/src/docs/background-attachment.mdx"
+  },
+  {
+    "class": "bg-no-repeat",
+    "css": "background-repeat: no-repeat",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-none",
+    "css": "background-image: none",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-origin-border",
+    "css": "background-origin: border-box",
+    "source": "/src/docs/background-origin.mdx"
+  },
+  {
+    "class": "bg-origin-content",
+    "css": "background-origin: content-box",
+    "source": "/src/docs/background-origin.mdx"
+  },
+  {
+    "class": "bg-origin-padding",
+    "css": "background-origin: padding-box",
+    "source": "/src/docs/background-origin.mdx"
+  },
+  {
+    "class": "bg-radial",
+    "css": "background-image: radial-gradient(in oklab, var(--tw-gradient-stops))",
+    "source": "/src/docs/background-image.mdx"
+  },
+  {
+    "class": "bg-repeat",
+    "css": "background-repeat: repeat",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-repeat-round",
+    "css": "background-repeat: round",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-repeat-space",
+    "css": "background-repeat: space",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-repeat-x",
+    "css": "background-repeat: repeat-x",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-repeat-y",
+    "css": "background-repeat: repeat-y",
+    "source": "/src/docs/background-repeat.mdx"
+  },
+  {
+    "class": "bg-right",
+    "css": "background-position: right",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-scroll",
+    "css": "background-attachment: scroll",
+    "source": "/src/docs/background-attachment.mdx"
+  },
+  {
+    "class": "bg-top",
+    "css": "background-position: top",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-top-left",
+    "css": "background-position: top left",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "bg-top-right",
+    "css": "background-position: top right",
+    "source": "/src/docs/background-position.mdx"
+  },
+  {
+    "class": "blur-2xl",
+    "css": "filter: blur(var(--blur-2xl)); /* 40px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-3xl",
+    "css": "filter: blur(var(--blur-3xl)); /* 64px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-lg",
+    "css": "filter: blur(var(--blur-lg)); /* 16px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-md",
+    "css": "filter: blur(var(--blur-md)); /* 12px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-none",
+    "css": "filter: ",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-sm",
+    "css": "filter: blur(var(--blur-sm)); /* 8px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-xl",
+    "css": "filter: blur(var(--blur-xl)); /* 24px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "blur-xs",
+    "css": "filter: blur(var(--blur-xs)); /* 4px */",
+    "source": "/src/docs/filter-blur.mdx"
+  },
+  {
+    "class": "border-collapse",
+    "css": "border-collapse: collapse",
+    "source": "/src/docs/border-collapse.mdx"
+  },
+  {
+    "class": "border-dashed",
+    "css": "border-style: dashed",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "border-dotted",
+    "css": "border-style: dotted",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "border-double",
+    "css": "border-style: double",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "border-hidden",
+    "css": "border-style: hidden",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "border-none",
+    "css": "border-style: none",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "border-separate",
+    "css": "border-collapse: separate",
+    "source": "/src/docs/border-collapse.mdx"
+  },
+  {
+    "class": "border-solid",
+    "css": "border-style: solid",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "box-border",
+    "css": "box-sizing: border-box",
+    "source": "/src/docs/box-sizing.mdx"
+  },
+  {
+    "class": "box-content",
+    "css": "box-sizing: content-box",
+    "source": "/src/docs/box-sizing.mdx"
+  },
+  {
+    "class": "box-decoration-clone",
+    "css": "box-decoration-break: clone",
+    "source": "/src/docs/box-decoration-break.mdx"
+  },
+  {
+    "class": "box-decoration-slice",
+    "css": "box-decoration-break: slice",
+    "source": "/src/docs/box-decoration-break.mdx"
+  },
+  {
+    "class": "break-after-all",
+    "css": "break-after: all",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-auto",
+    "css": "break-after: auto",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-avoid",
+    "css": "break-after: avoid",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-avoid-page",
+    "css": "break-after: avoid-page",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-column",
+    "css": "break-after: column",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-left",
+    "css": "break-after: left",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-page",
+    "css": "break-after: page",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-after-right",
+    "css": "break-after: right",
+    "source": "/src/docs/break-after.mdx"
+  },
+  {
+    "class": "break-all",
+    "css": "word-break: break-all",
+    "source": "/src/docs/word-break.mdx"
+  },
+  {
+    "class": "break-before-all",
+    "css": "break-before: all",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-auto",
+    "css": "break-before: auto",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-avoid",
+    "css": "break-before: avoid",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-avoid-page",
+    "css": "break-before: avoid-page",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-column",
+    "css": "break-before: column",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-left",
+    "css": "break-before: left",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-page",
+    "css": "break-before: page",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-before-right",
+    "css": "break-before: right",
+    "source": "/src/docs/break-before.mdx"
+  },
+  {
+    "class": "break-inside-auto",
+    "css": "break-inside: auto",
+    "source": "/src/docs/break-inside.mdx"
+  },
+  {
+    "class": "break-inside-avoid",
+    "css": "break-inside: avoid",
+    "source": "/src/docs/break-inside.mdx"
+  },
+  {
+    "class": "break-inside-avoid-column",
+    "css": "break-inside: avoid-column",
+    "source": "/src/docs/break-inside.mdx"
+  },
+  {
+    "class": "break-inside-avoid-page",
+    "css": "break-inside: avoid-page",
+    "source": "/src/docs/break-inside.mdx"
+  },
+  {
+    "class": "break-keep",
+    "css": "word-break: keep-all",
+    "source": "/src/docs/word-break.mdx"
+  },
+  {
+    "class": "break-normal",
+    "css": "word-break: normal",
+    "source": "/src/docs/word-break.mdx"
+  },
+  {
+    "class": "capitalize",
+    "css": "text-transform: capitalize",
+    "source": "/src/docs/text-transform.mdx"
+  },
+  {
+    "class": "caption-bottom",
+    "css": "caption-side: bottom",
+    "source": "/src/docs/caption-side.mdx"
+  },
+  {
+    "class": "caption-top",
+    "css": "caption-side: top",
+    "source": "/src/docs/caption-side.mdx"
+  },
+  {
+    "class": "clear-both",
+    "css": "clear: both",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "clear-end",
+    "css": "clear: inline-end",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "clear-left",
+    "css": "clear: left",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "clear-none",
+    "css": "clear: none",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "clear-right",
+    "css": "clear: right",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "clear-start",
+    "css": "clear: inline-start",
+    "source": "/src/docs/clear.mdx"
+  },
+  {
+    "class": "col-auto",
+    "css": "grid-column: auto",
+    "source": "/src/docs/grid-column.mdx"
+  },
+  {
+    "class": "col-end-auto",
+    "css": "grid-column-end: auto",
+    "source": "/src/docs/grid-column.mdx"
+  },
+  {
+    "class": "col-span-full",
+    "css": "grid-column: 1 / -1",
+    "source": "/src/docs/grid-column.mdx"
+  },
+  {
+    "class": "col-start-auto",
+    "css": "grid-column-start: auto",
+    "source": "/src/docs/grid-column.mdx"
+  },
+  {
+    "class": "collapse",
+    "css": "visibility: collapse",
+    "source": "/src/docs/visibility.mdx"
+  },
+  {
+    "class": "columns-2xl",
+    "css": "columns: var(--container-2xl); /* 42rem (672px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-2xs",
+    "css": "columns: var(--container-2xs); /* 18rem (288px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-3xl",
+    "css": "columns: var(--container-3xl); /* 48rem (768px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-3xs",
+    "css": "columns: var(--container-3xs); /* 16rem (256px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-4xl",
+    "css": "columns: var(--container-4xl); /* 56rem (896px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-5xl",
+    "css": "columns: var(--container-5xl); /* 64rem (1024px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-6xl",
+    "css": "columns: var(--container-6xl); /* 72rem (1152px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-7xl",
+    "css": "columns: var(--container-7xl); /* 80rem (1280px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-auto",
+    "css": "columns: auto",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-lg",
+    "css": "columns: var(--container-lg); /* 32rem (512px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-md",
+    "css": "columns: var(--container-md); /* 28rem (448px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-sm",
+    "css": "columns: var(--container-sm); /* 24rem (384px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-xl",
+    "css": "columns: var(--container-xl); /* 36rem (576px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "columns-xs",
+    "css": "columns: var(--container-xs); /* 20rem (320px) */",
+    "source": "/src/docs/columns.mdx"
+  },
+  {
+    "class": "content-around",
+    "css": "align-content: space-around",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-baseline",
+    "css": "align-content: baseline",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-between",
+    "css": "align-content: space-between",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-center",
+    "css": "align-content: center",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-end",
+    "css": "align-content: flex-end",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-evenly",
+    "css": "align-content: space-evenly",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-none",
+    "css": "content: none",
+    "source": "/src/docs/content.mdx"
+  },
+  {
+    "class": "content-normal",
+    "css": "align-content: normal",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-start",
+    "css": "align-content: flex-start",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "content-stretch",
+    "css": "align-content: stretch",
+    "source": "/src/docs/align-content.mdx"
+  },
+  {
+    "class": "cursor-alias",
+    "css": "cursor: alias",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-all-scroll",
+    "css": "cursor: all-scroll",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-auto",
+    "css": "cursor: auto",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-cell",
+    "css": "cursor: cell",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-col-resize",
+    "css": "cursor: col-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-context-menu",
+    "css": "cursor: context-menu",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-copy",
+    "css": "cursor: copy",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-crosshair",
+    "css": "cursor: crosshair",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-default",
+    "css": "cursor: default",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-e-resize",
+    "css": "cursor: e-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-ew-resize",
+    "css": "cursor: ew-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-grab",
+    "css": "cursor: grab",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-grabbing",
+    "css": "cursor: grabbing",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-help",
+    "css": "cursor: help",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-move",
+    "css": "cursor: move",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-n-resize",
+    "css": "cursor: n-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-ne-resize",
+    "css": "cursor: ne-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-nesw-resize",
+    "css": "cursor: nesw-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-no-drop",
+    "css": "cursor: no-drop",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-none",
+    "css": "cursor: none",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-not-allowed",
+    "css": "cursor: not-allowed",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-ns-resize",
+    "css": "cursor: ns-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-nw-resize",
+    "css": "cursor: nw-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-nwse-resize",
+    "css": "cursor: nwse-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-pointer",
+    "css": "cursor: pointer",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-progress",
+    "css": "cursor: progress",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-row-resize",
+    "css": "cursor: row-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-s-resize",
+    "css": "cursor: s-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-se-resize",
+    "css": "cursor: se-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-sw-resize",
+    "css": "cursor: sw-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-text",
+    "css": "cursor: text",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-vertical-text",
+    "css": "cursor: vertical-text",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-w-resize",
+    "css": "cursor: w-resize",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-wait",
+    "css": "cursor: wait",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-zoom-in",
+    "css": "cursor: zoom-in",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "cursor-zoom-out",
+    "css": "cursor: zoom-out",
+    "source": "/src/docs/cursor.mdx"
+  },
+  {
+    "class": "decoration-auto",
+    "css": "text-decoration-thickness: auto",
+    "source": "/src/docs/text-decoration-thickness.mdx"
+  },
+  {
+    "class": "decoration-dashed",
+    "css": "text-decoration-style: dashed",
+    "source": "/src/docs/text-decoration-style.mdx"
+  },
+  {
+    "class": "decoration-dotted",
+    "css": "text-decoration-style: dotted",
+    "source": "/src/docs/text-decoration-style.mdx"
+  },
+  {
+    "class": "decoration-double",
+    "css": "text-decoration-style: double",
+    "source": "/src/docs/text-decoration-style.mdx"
+  },
+  {
+    "class": "decoration-from-font",
+    "css": "text-decoration-thickness: from-font",
+    "source": "/src/docs/text-decoration-thickness.mdx"
+  },
+  {
+    "class": "decoration-solid",
+    "css": "text-decoration-style: solid",
+    "source": "/src/docs/text-decoration-style.mdx"
+  },
+  {
+    "class": "decoration-wavy",
+    "css": "text-decoration-style: wavy",
+    "source": "/src/docs/text-decoration-style.mdx"
+  },
+  {
+    "class": "diagonal-fractions",
+    "css": "font-variant-numeric: diagonal-fractions",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "divide-dashed",
+    "css": "& > :not(:last-child) {\n  border-style: dashed;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "divide-dotted",
+    "css": "& > :not(:last-child) {\n  border-style: dotted;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "divide-double",
+    "css": "& > :not(:last-child) {\n  border-style: double;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "divide-hidden",
+    "css": "& > :not(:last-child) {\n  border-style: hidden;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "divide-none",
+    "css": "& > :not(:last-child) {\n  border-style: none;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "divide-solid",
+    "css": "& > :not(:last-child) {\n  border-style: solid;\n}",
+    "source": "/src/docs/border-style.mdx"
+  },
+  {
+    "class": "duration-initial",
+    "css": "transition-duration: initial",
+    "source": "/src/docs/transition-duration.mdx"
+  },
+  {
+    "class": "ease-in",
+    "css": "transition-timing-function: var(--ease-in); /* cubic-bezier(0.4, 0, 1, 1) */",
+    "source": "/src/docs/transition-timing-function.mdx"
+  },
+  {
+    "class": "ease-in-out",
+    "css": "transition-timing-function: var(--ease-in-out); /* cubic-bezier(0.4, 0, 0.2, 1) */",
+    "source": "/src/docs/transition-timing-function.mdx"
+  },
+  {
+    "class": "ease-initial",
+    "css": "transition-timing-function: initial",
+    "source": "/src/docs/transition-timing-function.mdx"
+  },
+  {
+    "class": "ease-linear",
+    "css": "transition-timing-function: linear",
+    "source": "/src/docs/transition-timing-function.mdx"
+  },
+  {
+    "class": "ease-out",
+    "css": "transition-timing-function: var(--ease-out); /* cubic-bezier(0, 0, 0.2, 1) */",
+    "source": "/src/docs/transition-timing-function.mdx"
+  },
+  {
+    "class": "field-sizing-content",
+    "css": "field-sizing: content",
+    "source": "/src/docs/field-sizing.mdx"
+  },
+  {
+    "class": "field-sizing-fixed",
+    "css": "field-sizing: fixed",
+    "source": "/src/docs/field-sizing.mdx"
+  },
+  {
+    "class": "filter-none",
+    "css": "filter: none",
+    "source": "/src/docs/filter.mdx"
+  },
+  {
+    "class": "fixed",
+    "css": "position: fixed",
+    "source": "/src/docs/position.mdx"
+  },
+  {
+    "class": "flex-auto",
+    "css": "flex: auto",
+    "source": "/src/docs/flex.mdx"
+  },
+  {
+    "class": "flex-col",
+    "css": "flex-direction: column",
+    "source": "/src/docs/flex-direction.mdx"
+  },
+  {
+    "class": "flex-col-reverse",
+    "css": "flex-direction: column-reverse",
+    "source": "/src/docs/flex-direction.mdx"
+  },
+  {
+    "class": "flex-initial",
+    "css": "flex: 0 auto",
+    "source": "/src/docs/flex.mdx"
+  },
+  {
+    "class": "flex-none",
+    "css": "flex: none",
+    "source": "/src/docs/flex.mdx"
+  },
+  {
+    "class": "flex-nowrap",
+    "css": "flex-wrap: nowrap",
+    "source": "/src/docs/flex-wrap.mdx"
+  },
+  {
+    "class": "flex-row",
+    "css": "flex-direction: row",
+    "source": "/src/docs/flex-direction.mdx"
+  },
+  {
+    "class": "flex-row-reverse",
+    "css": "flex-direction: row-reverse",
+    "source": "/src/docs/flex-direction.mdx"
+  },
+  {
+    "class": "flex-wrap",
+    "css": "flex-wrap: wrap",
+    "source": "/src/docs/flex-wrap.mdx"
+  },
+  {
+    "class": "flex-wrap-reverse",
+    "css": "flex-wrap: wrap-reverse",
+    "source": "/src/docs/flex-wrap.mdx"
+  },
+  {
+    "class": "float-end",
+    "css": "float: inline-end",
+    "source": "/src/docs/float.mdx"
+  },
+  {
+    "class": "float-left",
+    "css": "float: left",
+    "source": "/src/docs/float.mdx"
+  },
+  {
+    "class": "float-none",
+    "css": "float: none",
+    "source": "/src/docs/float.mdx"
+  },
+  {
+    "class": "float-right",
+    "css": "float: right",
+    "source": "/src/docs/float.mdx"
+  },
+  {
+    "class": "float-start",
+    "css": "float: inline-start",
+    "source": "/src/docs/float.mdx"
+  },
+  {
+    "class": "font-black",
+    "css": "font-weight: 900",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-bold",
+    "css": "font-weight: 700",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-extrabold",
+    "css": "font-weight: 800",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-extralight",
+    "css": "font-weight: 200",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-light",
+    "css": "font-weight: 300",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-medium",
+    "css": "font-weight: 500",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-mono",
+    "css": "font-family: var(--font-mono); /* ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace */",
+    "source": "/src/docs/font-family.mdx"
+  },
+  {
+    "class": "font-normal",
+    "css": "font-weight: 400",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-sans",
+    "css": "font-family: var(--font-sans); /* ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' */",
+    "source": "/src/docs/font-family.mdx"
+  },
+  {
+    "class": "font-semibold",
+    "css": "font-weight: 600",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "font-serif",
+    "css": "font-family: var(--font-serif); /* ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif */",
+    "source": "/src/docs/font-family.mdx"
+  },
+  {
+    "class": "font-stretch-condensed",
+    "css": "font-stretch: condensed; /* 75% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-expanded",
+    "css": "font-stretch: expanded; /* 125% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-extra-condensed",
+    "css": "font-stretch: extra-condensed; /* 62.5% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-extra-expanded",
+    "css": "font-stretch: extra-expanded; /* 150% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-normal",
+    "css": "font-stretch: normal; /* 100% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-semi-condensed",
+    "css": "font-stretch: semi-condensed; /* 87.5% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-semi-expanded",
+    "css": "font-stretch: semi-expanded; /* 112.5% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-ultra-condensed",
+    "css": "font-stretch: ultra-condensed; /* 50% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-stretch-ultra-expanded",
+    "css": "font-stretch: ultra-expanded; /* 200% */",
+    "source": "/src/docs/font-stretch.mdx"
+  },
+  {
+    "class": "font-thin",
+    "css": "font-weight: 100",
+    "source": "/src/docs/font-weight.mdx"
+  },
+  {
+    "class": "forced-color-adjust-auto",
+    "css": "forced-color-adjust: auto",
+    "source": "/src/docs/forced-color-adjust.mdx"
+  },
+  {
+    "class": "forced-color-adjust-none",
+    "css": "forced-color-adjust: none",
+    "source": "/src/docs/forced-color-adjust.mdx"
+  },
+  {
+    "class": "grayscale",
+    "css": "filter: grayscale(100%)",
+    "source": "/src/docs/filter-grayscale.mdx"
+  },
+  {
+    "class": "grid-cols-none",
+    "css": "grid-template-columns: none",
+    "source": "/src/docs/grid-template-columns.mdx"
+  },
+  {
+    "class": "grid-cols-subgrid",
+    "css": "grid-template-columns: subgrid",
+    "source": "/src/docs/grid-template-columns.mdx"
+  },
+  {
+    "class": "grid-flow-col",
+    "css": "grid-auto-flow: column",
+    "source": "/src/docs/grid-auto-flow.mdx"
+  },
+  {
+    "class": "grid-flow-col-dense",
+    "css": "grid-auto-flow: column dense",
+    "source": "/src/docs/grid-auto-flow.mdx"
+  },
+  {
+    "class": "grid-flow-dense",
+    "css": "grid-auto-flow: dense",
+    "source": "/src/docs/grid-auto-flow.mdx"
+  },
+  {
+    "class": "grid-flow-row",
+    "css": "grid-auto-flow: row",
+    "source": "/src/docs/grid-auto-flow.mdx"
+  },
+  {
+    "class": "grid-flow-row-dense",
+    "css": "grid-auto-flow: row dense",
+    "source": "/src/docs/grid-auto-flow.mdx"
+  },
+  {
+    "class": "grid-rows-none",
+    "css": "grid-template-rows: none",
+    "source": "/src/docs/grid-template-rows.mdx"
+  },
+  {
+    "class": "grid-rows-subgrid",
+    "css": "grid-template-rows: subgrid",
+    "source": "/src/docs/grid-template-rows.mdx"
+  },
+  {
+    "class": "grow",
+    "css": "flex-grow: 1",
+    "source": "/src/docs/flex-grow.mdx"
+  },
+  {
+    "class": "h-auto",
+    "css": "height: auto",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-dvh",
+    "css": "height: 100dvh",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-dvw",
+    "css": "height: 100dvw",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-fit",
+    "css": "height: fit-content",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-full",
+    "css": "height: 100%",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-lh",
+    "css": "height: 1lh",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-lvh",
+    "css": "height: 100lvh",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-lvw",
+    "css": "height: 100lvw",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-max",
+    "css": "height: max-content",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-min",
+    "css": "height: min-content",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-px",
+    "css": "height: 1px",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-screen",
+    "css": "height: 100vh",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-svh",
+    "css": "height: 100svh",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "h-svw",
+    "css": "height: 100svw",
+    "source": "/src/docs/height.mdx"
+  },
+  {
+    "class": "hyphens-auto",
+    "css": "hyphens: auto",
+    "source": "/src/docs/hyphens.mdx"
+  },
+  {
+    "class": "hyphens-manual",
+    "css": "hyphens: manual",
+    "source": "/src/docs/hyphens.mdx"
+  },
+  {
+    "class": "hyphens-none",
+    "css": "hyphens: none",
+    "source": "/src/docs/hyphens.mdx"
+  },
+  {
+    "class": "indent-px",
+    "css": "text-indent: 1px",
+    "source": "/src/docs/text-indent.mdx"
+  },
+  {
+    "class": "invert",
+    "css": "filter: invert(100%)",
+    "source": "/src/docs/filter-invert.mdx"
+  },
+  {
+    "class": "invisible",
+    "css": "visibility: hidden",
+    "source": "/src/docs/visibility.mdx"
+  },
+  {
+    "class": "isolate",
+    "css": "isolation: isolate",
+    "source": "/src/docs/isolation.mdx"
+  },
+  {
+    "class": "isolation-auto",
+    "css": "isolation: auto",
+    "source": "/src/docs/isolation.mdx"
+  },
+  {
+    "class": "italic",
+    "css": "font-style: italic",
+    "source": "/src/docs/font-style.mdx"
+  },
+  {
+    "class": "items-baseline",
+    "css": "align-items: baseline",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-baseline-last",
+    "css": "align-items: last baseline",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-center",
+    "css": "align-items: center",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-center-safe",
+    "css": "align-items: safe center",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-end",
+    "css": "align-items: flex-end",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-end-safe",
+    "css": "align-items: safe flex-end",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-start",
+    "css": "align-items: flex-start",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "items-stretch",
+    "css": "align-items: stretch",
+    "source": "/src/docs/align-items.mdx"
+  },
+  {
+    "class": "justify-around",
+    "css": "justify-content: space-around",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-baseline",
+    "css": "justify-content: baseline",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-between",
+    "css": "justify-content: space-between",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-center",
+    "css": "justify-content: center",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-center-safe",
+    "css": "justify-content: safe center",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-end",
+    "css": "justify-content: flex-end",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-end-safe",
+    "css": "justify-content: safe flex-end",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-evenly",
+    "css": "justify-content: space-evenly",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-items-center",
+    "css": "justify-items: center",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-center-safe",
+    "css": "justify-items: safe center",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-end",
+    "css": "justify-items: end",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-end-safe",
+    "css": "justify-items: safe end",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-normal",
+    "css": "justify-items: normal",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-start",
+    "css": "justify-items: start",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-items-stretch",
+    "css": "justify-items: stretch",
+    "source": "/src/docs/justify-items.mdx"
+  },
+  {
+    "class": "justify-normal",
+    "css": "justify-content: normal",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-self-auto",
+    "css": "justify-self: auto",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-center",
+    "css": "justify-self: center",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-center-safe",
+    "css": "justify-self: safe center",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-end",
+    "css": "justify-self: end",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-end-safe",
+    "css": "justify-self: safe end",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-start",
+    "css": "justify-self: start",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-self-stretch",
+    "css": "justify-self: stretch",
+    "source": "/src/docs/justify-self.mdx"
+  },
+  {
+    "class": "justify-start",
+    "css": "justify-content: flex-start",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "justify-stretch",
+    "css": "justify-content: stretch",
+    "source": "/src/docs/justify-content.mdx"
+  },
+  {
+    "class": "leading-none",
+    "css": "line-height: 1",
+    "source": "/src/docs/line-height.mdx"
+  },
+  {
+    "class": "line-clamp-none",
+    "css": "overflow: visible;\ndisplay: block;\n-webkit-box-orient: horizontal;\n-webkit-line-clamp: unset",
+    "source": "/src/docs/line-clamp.mdx"
+  },
+  {
+    "class": "line-through",
+    "css": "text-decoration-line: line-through",
+    "source": "/src/docs/text-decoration-line.mdx"
+  },
+  {
+    "class": "lining-nums",
+    "css": "font-variant-numeric: lining-nums",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "list-decimal",
+    "css": "list-style-type: decimal",
+    "source": "/src/docs/list-style-type.mdx"
+  },
+  {
+    "class": "list-disc",
+    "css": "list-style-type: disc",
+    "source": "/src/docs/list-style-type.mdx"
+  },
+  {
+    "class": "list-image-none",
+    "css": "list-style-image: none",
+    "source": "/src/docs/list-style-image.mdx"
+  },
+  {
+    "class": "list-inside",
+    "css": "list-style-position: inside",
+    "source": "/src/docs/list-style-position.mdx"
+  },
+  {
+    "class": "list-none",
+    "css": "list-style-type: none",
+    "source": "/src/docs/list-style-type.mdx"
+  },
+  {
+    "class": "list-outside",
+    "css": "list-style-position: outside",
+    "source": "/src/docs/list-style-position.mdx"
+  },
+  {
+    "class": "lowercase",
+    "css": "text-transform: lowercase",
+    "source": "/src/docs/text-transform.mdx"
+  },
+  {
+    "class": "mask-add",
+    "css": "mask-composite: add",
+    "source": "/src/docs/mask-composite.mdx"
+  },
+  {
+    "class": "mask-alpha",
+    "css": "mask-mode: alpha",
+    "source": "/src/docs/mask-mode.mdx"
+  },
+  {
+    "class": "mask-auto",
+    "css": "mask-size: auto",
+    "source": "/src/docs/mask-size.mdx"
+  },
+  {
+    "class": "mask-bottom",
+    "css": "mask-position: bottom",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-bottom-left",
+    "css": "mask-position: bottom left",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-bottom-right",
+    "css": "mask-position: bottom right",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-center",
+    "css": "mask-position: center",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-clip-border",
+    "css": "mask-clip: border-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-clip-content",
+    "css": "mask-clip: content-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-clip-fill",
+    "css": "mask-clip: fill-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-clip-padding",
+    "css": "mask-clip: padding-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-clip-stroke",
+    "css": "mask-clip: stroke-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-clip-view",
+    "css": "mask-clip: view-box",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-contain",
+    "css": "mask-size: contain",
+    "source": "/src/docs/mask-size.mdx"
+  },
+  {
+    "class": "mask-cover",
+    "css": "mask-size: cover",
+    "source": "/src/docs/mask-size.mdx"
+  },
+  {
+    "class": "mask-exclude",
+    "css": "mask-composite: exclude",
+    "source": "/src/docs/mask-composite.mdx"
+  },
+  {
+    "class": "mask-intersect",
+    "css": "mask-composite: intersect",
+    "source": "/src/docs/mask-composite.mdx"
+  },
+  {
+    "class": "mask-left",
+    "css": "mask-position: left",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-luminance",
+    "css": "mask-mode: luminance",
+    "source": "/src/docs/mask-mode.mdx"
+  },
+  {
+    "class": "mask-match",
+    "css": "mask-mode: match-source",
+    "source": "/src/docs/mask-mode.mdx"
+  },
+  {
+    "class": "mask-no-clip",
+    "css": "mask-clip: no-clip",
+    "source": "/src/docs/mask-clip.mdx"
+  },
+  {
+    "class": "mask-no-repeat",
+    "css": "mask-repeat: no-repeat",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-origin-border",
+    "css": "mask-origin: border-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-origin-content",
+    "css": "mask-origin: content-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-origin-fill",
+    "css": "mask-origin: fill-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-origin-padding",
+    "css": "mask-origin: padding-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-origin-stroke",
+    "css": "mask-origin: stroke-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-origin-view",
+    "css": "mask-origin: view-box",
+    "source": "/src/docs/mask-origin.mdx"
+  },
+  {
+    "class": "mask-repeat",
+    "css": "mask-repeat: repeat",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-repeat-round",
+    "css": "mask-repeat: round",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-repeat-space",
+    "css": "mask-repeat: space",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-repeat-x",
+    "css": "mask-repeat: repeat-x",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-repeat-y",
+    "css": "mask-repeat: repeat-y",
+    "source": "/src/docs/mask-repeat.mdx"
+  },
+  {
+    "class": "mask-right",
+    "css": "mask-position: right",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-subtract",
+    "css": "mask-composite: subtract",
+    "source": "/src/docs/mask-composite.mdx"
+  },
+  {
+    "class": "mask-top",
+    "css": "mask-position: top",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-top-left",
+    "css": "mask-position: top left",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-top-right",
+    "css": "mask-position: top right",
+    "source": "/src/docs/mask-position.mdx"
+  },
+  {
+    "class": "mask-type-alpha",
+    "css": "mask-type: alpha",
+    "source": "/src/docs/mask-type.mdx"
+  },
+  {
+    "class": "mask-type-luminance",
+    "css": "mask-type: luminance",
+    "source": "/src/docs/mask-type.mdx"
+  },
+  {
+    "class": "max-h-dvh",
+    "css": "max-height: 100dvh",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-dvw",
+    "css": "max-height: 100dvw",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-fit",
+    "css": "max-height: fit-content",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-full",
+    "css": "max-height: 100%",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-lh",
+    "css": "max-height: 1lh",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-lvh",
+    "css": "max-height: 100lvh",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-lvw",
+    "css": "max-height: 100lvw",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-max",
+    "css": "max-height: max-content",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-min",
+    "css": "max-height: min-content",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-none",
+    "css": "max-height: none",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-px",
+    "css": "max-height: 1px",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-screen",
+    "css": "max-height: 100vh",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-svh",
+    "css": "max-height: 100svh",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "max-h-svw",
+    "css": "max-height: 100svw",
+    "source": "/src/docs/max-height.mdx"
+  },
+  {
+    "class": "min-h-auto",
+    "css": "min-height: auto",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-dvh",
+    "css": "min-height: 100dvh",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-dvw",
+    "css": "min-height: 100dvw",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-fit",
+    "css": "min-height: fit-content",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-full",
+    "css": "min-height: 100%",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-lh",
+    "css": "min-height: 1lh",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-lvh",
+    "css": "min-height: 100lvh",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-lvw",
+    "css": "min-height: 100lvw",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-max",
+    "css": "min-height: max-content",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-min",
+    "css": "min-height: min-content",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-px",
+    "css": "min-height: 1px",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-screen",
+    "css": "min-height: 100vh",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-svh",
+    "css": "min-height: 100svh",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-h-svw",
+    "css": "min-height: 100svw",
+    "source": "/src/docs/min-height.mdx"
+  },
+  {
+    "class": "min-w-2xl",
+    "css": "min-width: var(--container-2xl); /* 42rem (672px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-2xs",
+    "css": "min-width: var(--container-2xs); /* 18rem (288px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-3xl",
+    "css": "min-width: var(--container-3xl); /* 48rem (768px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-3xs",
+    "css": "min-width: var(--container-3xs); /* 16rem (256px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-4xl",
+    "css": "min-width: var(--container-4xl); /* 56rem (896px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-5xl",
+    "css": "min-width: var(--container-5xl); /* 64rem (1024px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-6xl",
+    "css": "min-width: var(--container-6xl); /* 72rem (1152px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-7xl",
+    "css": "min-width: var(--container-7xl); /* 80rem (1280px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-auto",
+    "css": "min-width: auto",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-dvh",
+    "css": "min-width: 100dvh",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-dvw",
+    "css": "min-width: 100dvw",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-fit",
+    "css": "min-width: fit-content",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-full",
+    "css": "min-width: 100%",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-lg",
+    "css": "min-width: var(--container-lg); /* 32rem (512px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-lvh",
+    "css": "min-width: 100lvh",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-lvw",
+    "css": "min-width: 100lvw",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-max",
+    "css": "min-width: max-content",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-md",
+    "css": "min-width: var(--container-md); /* 28rem (448px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-min",
+    "css": "min-width: min-content",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-px",
+    "css": "min-width: 1px",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-screen",
+    "css": "min-width: 100vw",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-sm",
+    "css": "min-width: var(--container-sm); /* 24rem (384px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-svh",
+    "css": "min-width: 100svh",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-svw",
+    "css": "min-width: 100svw",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-xl",
+    "css": "min-width: var(--container-xl); /* 36rem (576px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "min-w-xs",
+    "css": "min-width: var(--container-xs); /* 20rem (320px) */",
+    "source": "/src/docs/min-width.mdx"
+  },
+  {
+    "class": "mix-blend-color",
+    "css": "mix-blend-mode: color",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-color-burn",
+    "css": "mix-blend-mode: color-burn",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-color-dodge",
+    "css": "mix-blend-mode: color-dodge",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-darken",
+    "css": "mix-blend-mode: darken",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-difference",
+    "css": "mix-blend-mode: difference",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-exclusion",
+    "css": "mix-blend-mode: exclusion",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-hard-light",
+    "css": "mix-blend-mode: hard-light",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-hue",
+    "css": "mix-blend-mode: hue",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-lighten",
+    "css": "mix-blend-mode: lighten",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-luminosity",
+    "css": "mix-blend-mode: luminosity",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-multiply",
+    "css": "mix-blend-mode: multiply",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-normal",
+    "css": "mix-blend-mode: normal",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-overlay",
+    "css": "mix-blend-mode: overlay",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-plus-darker",
+    "css": "mix-blend-mode: plus-darker",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-plus-lighter",
+    "css": "mix-blend-mode: plus-lighter",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-saturation",
+    "css": "mix-blend-mode: saturation",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-screen",
+    "css": "mix-blend-mode: screen",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "mix-blend-soft-light",
+    "css": "mix-blend-mode: soft-light",
+    "source": "/src/docs/mix-blend-mode.mdx"
+  },
+  {
+    "class": "no-underline",
+    "css": "text-decoration-line: none",
+    "source": "/src/docs/text-decoration-line.mdx"
+  },
+  {
+    "class": "normal-case",
+    "css": "text-transform: none",
+    "source": "/src/docs/text-transform.mdx"
+  },
+  {
+    "class": "normal-nums",
+    "css": "font-variant-numeric: normal",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "not-italic",
+    "css": "font-style: normal",
+    "source": "/src/docs/font-style.mdx"
+  },
+  {
+    "class": "object-bottom",
+    "css": "object-position: bottom",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-bottom-left",
+    "css": "object-position: bottom left",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-bottom-right",
+    "css": "object-position: bottom right",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-center",
+    "css": "object-position: center",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-contain",
+    "css": "object-fit: contain",
+    "source": "/src/docs/object-fit.mdx"
+  },
+  {
+    "class": "object-cover",
+    "css": "object-fit: cover",
+    "source": "/src/docs/object-fit.mdx"
+  },
+  {
+    "class": "object-fill",
+    "css": "object-fit: fill",
+    "source": "/src/docs/object-fit.mdx"
+  },
+  {
+    "class": "object-left",
+    "css": "object-position: left",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-none",
+    "css": "object-fit: none",
+    "source": "/src/docs/object-fit.mdx"
+  },
+  {
+    "class": "object-right",
+    "css": "object-position: right",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-scale-down",
+    "css": "object-fit: scale-down",
+    "source": "/src/docs/object-fit.mdx"
+  },
+  {
+    "class": "object-top",
+    "css": "object-position: top",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-top-left",
+    "css": "object-position: top left",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "object-top-right",
+    "css": "object-position: top right",
+    "source": "/src/docs/object-position.mdx"
+  },
+  {
+    "class": "oldstyle-nums",
+    "css": "font-variant-numeric: oldstyle-nums",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "order-first",
+    "css": "order: -9999",
+    "source": "/src/docs/order.mdx"
+  },
+  {
+    "class": "order-last",
+    "css": "order: 9999",
+    "source": "/src/docs/order.mdx"
+  },
+  {
+    "class": "order-none",
+    "css": "order: 0",
+    "source": "/src/docs/order.mdx"
+  },
+  {
+    "class": "ordinal",
+    "css": "font-variant-numeric: ordinal",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "origin-bottom",
+    "css": "transform-origin: bottom",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-bottom-left",
+    "css": "transform-origin: bottom left",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-bottom-right",
+    "css": "transform-origin: bottom right",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-center",
+    "css": "transform-origin: center",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-left",
+    "css": "transform-origin: left",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-right",
+    "css": "transform-origin: right",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-top",
+    "css": "transform-origin: top",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-top-left",
+    "css": "transform-origin: top left",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "origin-top-right",
+    "css": "transform-origin: top right",
+    "source": "/src/docs/transform-origin.mdx"
+  },
+  {
+    "class": "outline",
+    "css": "outline-width: 1px",
+    "source": "/src/docs/outline-width.mdx"
+  },
+  {
+    "class": "outline-dashed",
+    "css": "outline-style: dashed",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "outline-dotted",
+    "css": "outline-style: dotted",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "outline-double",
+    "css": "outline-style: double",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "outline-hidden",
+    "css": "outline: 2px solid transparent;\noutline-offset: 2px",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "outline-none",
+    "css": "outline-style: none",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "outline-solid",
+    "css": "outline-style: solid",
+    "source": "/src/docs/outline-style.mdx"
+  },
+  {
+    "class": "overflow-auto",
+    "css": "overflow: auto",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-clip",
+    "css": "overflow: clip",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-hidden",
+    "css": "overflow: hidden",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-scroll",
+    "css": "overflow: scroll",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-visible",
+    "css": "overflow: visible",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-x-auto",
+    "css": "overflow-x: auto",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-x-clip",
+    "css": "overflow-x: clip",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-x-hidden",
+    "css": "overflow-x: hidden",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-x-scroll",
+    "css": "overflow-x: scroll",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-x-visible",
+    "css": "overflow-x: visible",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-y-auto",
+    "css": "overflow-y: auto",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-y-clip",
+    "css": "overflow-y: clip",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-y-hidden",
+    "css": "overflow-y: hidden",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-y-scroll",
+    "css": "overflow-y: scroll",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overflow-y-visible",
+    "css": "overflow-y: visible",
+    "source": "/src/docs/overflow.mdx"
+  },
+  {
+    "class": "overline",
+    "css": "text-decoration-line: overline",
+    "source": "/src/docs/text-decoration-line.mdx"
+  },
+  {
+    "class": "overscroll-auto",
+    "css": "overscroll-behavior: auto",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-contain",
+    "css": "overscroll-behavior: contain",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-none",
+    "css": "overscroll-behavior: none",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-x-auto",
+    "css": "overscroll-behavior-x: auto",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-x-contain",
+    "css": "overscroll-behavior-x: contain",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-x-none",
+    "css": "overscroll-behavior-x: none",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-y-auto",
+    "css": "overscroll-behavior-y: auto",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-y-contain",
+    "css": "overscroll-behavior-y: contain",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "overscroll-y-none",
+    "css": "overscroll-behavior-y: none",
+    "source": "/src/docs/overscroll-behavior.mdx"
+  },
+  {
+    "class": "perspective-distant",
+    "css": "perspective: var(--perspective-distant); /* 1200px */",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-dramatic",
+    "css": "perspective: var(--perspective-dramatic); /* 100px */",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-midrange",
+    "css": "perspective: var(--perspective-midrange); /* 800px */",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-near",
+    "css": "perspective: var(--perspective-near); /* 300px */",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-none",
+    "css": "perspective: none",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-normal",
+    "css": "perspective: var(--perspective-normal); /* 500px */",
+    "source": "/src/docs/perspective.mdx"
+  },
+  {
+    "class": "perspective-origin-bottom",
+    "css": "perspective-origin: bottom",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-bottom-left",
+    "css": "perspective-origin: bottom left",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-bottom-right",
+    "css": "perspective-origin: bottom right",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-center",
+    "css": "perspective-origin: center",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-left",
+    "css": "perspective-origin: left",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-right",
+    "css": "perspective-origin: right",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-top",
+    "css": "perspective-origin: top",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-top-left",
+    "css": "perspective-origin: top left",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "perspective-origin-top-right",
+    "css": "perspective-origin: top right",
+    "source": "/src/docs/perspective-origin.mdx"
+  },
+  {
+    "class": "place-content-around",
+    "css": "place-content: space-around",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-baseline",
+    "css": "place-content: baseline",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-between",
+    "css": "place-content: space-between",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-center",
+    "css": "place-content: center",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-center-safe",
+    "css": "place-content: safe center",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-end",
+    "css": "place-content: end",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-end-safe",
+    "css": "place-content: safe end",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-evenly",
+    "css": "place-content: space-evenly",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-start",
+    "css": "place-content: start",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-content-stretch",
+    "css": "place-content: stretch",
+    "source": "/src/docs/place-content.mdx"
+  },
+  {
+    "class": "place-items-baseline",
+    "css": "place-items: baseline",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-center",
+    "css": "place-items: center",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-center-safe",
+    "css": "place-items: safe center",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-end",
+    "css": "place-items: end",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-end-safe",
+    "css": "place-items: safe end",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-start",
+    "css": "place-items: start",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-items-stretch",
+    "css": "place-items: stretch",
+    "source": "/src/docs/place-items.mdx"
+  },
+  {
+    "class": "place-self-auto",
+    "css": "place-self: auto",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-center",
+    "css": "place-self: center",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-center-safe",
+    "css": "place-self: safe center",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-end",
+    "css": "place-self: end",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-end-safe",
+    "css": "place-self: safe end",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-start",
+    "css": "place-self: start",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "place-self-stretch",
+    "css": "place-self: stretch",
+    "source": "/src/docs/place-self.mdx"
+  },
+  {
+    "class": "pointer-events-auto",
+    "css": "pointer-events: auto",
+    "source": "/src/docs/pointer-events.mdx"
+  },
+  {
+    "class": "pointer-events-none",
+    "css": "pointer-events: none",
+    "source": "/src/docs/pointer-events.mdx"
+  },
+  {
+    "class": "proportional-nums",
+    "css": "font-variant-numeric: proportional-nums",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "relative",
+    "css": "position: relative",
+    "source": "/src/docs/position.mdx"
+  },
+  {
+    "class": "resize",
+    "css": "resize: both",
+    "source": "/src/docs/resize.mdx"
+  },
+  {
+    "class": "resize-none",
+    "css": "resize: none",
+    "source": "/src/docs/resize.mdx"
+  },
+  {
+    "class": "resize-x",
+    "css": "resize: horizontal",
+    "source": "/src/docs/resize.mdx"
+  },
+  {
+    "class": "resize-y",
+    "css": "resize: vertical",
+    "source": "/src/docs/resize.mdx"
+  },
+  {
+    "class": "rotate-none",
+    "css": "rotate: none",
+    "source": "/src/docs/rotate.mdx"
+  },
+  {
+    "class": "row-auto",
+    "css": "grid-row: auto",
+    "source": "/src/docs/grid-row.mdx"
+  },
+  {
+    "class": "row-end-auto",
+    "css": "grid-row-end: auto",
+    "source": "/src/docs/grid-row.mdx"
+  },
+  {
+    "class": "row-span-full",
+    "css": "grid-row: 1 / -1",
+    "source": "/src/docs/grid-row.mdx"
+  },
+  {
+    "class": "row-start-auto",
+    "css": "grid-row-start: auto",
+    "source": "/src/docs/grid-row.mdx"
+  },
+  {
+    "class": "scale-3d",
+    "css": "scale: var(--tw-scale-x) var(--tw-scale-y) var(--tw-scale-z)",
+    "source": "/src/docs/scale.mdx"
+  },
+  {
+    "class": "scale-none",
+    "css": "scale: none",
+    "source": "/src/docs/scale.mdx"
+  },
+  {
+    "class": "scheme-dark",
+    "css": "color-scheme: dark",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scheme-light",
+    "css": "color-scheme: light",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scheme-light-dark",
+    "css": "color-scheme: light dark",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scheme-normal",
+    "css": "color-scheme: normal",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scheme-only-dark",
+    "css": "color-scheme: only dark",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scheme-only-light",
+    "css": "color-scheme: only light",
+    "source": "/src/docs/color-scheme.mdx"
+  },
+  {
+    "class": "scroll-auto",
+    "css": "scroll-behavior: auto",
+    "source": "/src/docs/scroll-behavior.mdx"
+  },
+  {
+    "class": "scroll-smooth",
+    "css": "scroll-behavior: smooth",
+    "source": "/src/docs/scroll-behavior.mdx"
+  },
+  {
+    "class": "select-all",
+    "css": "user-select: all",
+    "source": "/src/docs/user-select.mdx"
+  },
+  {
+    "class": "select-auto",
+    "css": "user-select: auto",
+    "source": "/src/docs/user-select.mdx"
+  },
+  {
+    "class": "select-none",
+    "css": "user-select: none",
+    "source": "/src/docs/user-select.mdx"
+  },
+  {
+    "class": "select-text",
+    "css": "user-select: text",
+    "source": "/src/docs/user-select.mdx"
+  },
+  {
+    "class": "self-auto",
+    "css": "align-self: auto",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-baseline",
+    "css": "align-self: baseline",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-baseline-last",
+    "css": "align-self: last baseline",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-center",
+    "css": "align-self: center",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-center-safe",
+    "css": "align-self: safe center",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-end",
+    "css": "align-self: flex-end",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-end-safe",
+    "css": "align-self: safe flex-end",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-start",
+    "css": "align-self: flex-start",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "self-stretch",
+    "css": "align-self: stretch",
+    "source": "/src/docs/align-self.mdx"
+  },
+  {
+    "class": "sepia",
+    "css": "filter: sepia(100%)",
+    "source": "/src/docs/filter-sepia.mdx"
+  },
+  {
+    "class": "shrink",
+    "css": "flex-shrink: 1",
+    "source": "/src/docs/flex-shrink.mdx"
+  },
+  {
+    "class": "size-auto",
+    "css": "width: auto;\nheight: auto",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-dvh",
+    "css": "width: 100dvh;\nheight: 100dvh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-dvw",
+    "css": "width: 100dvw;\nheight: 100dvw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-fit",
+    "css": "width: fit-content;\nheight: fit-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-full",
+    "css": "width: 100%;\nheight: 100%",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-lvh",
+    "css": "width: 100lvh;\nheight: 100lvh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-lvw",
+    "css": "width: 100lvw;\nheight: 100lvw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-max",
+    "css": "width: max-content;\nheight: max-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-min",
+    "css": "width: min-content;\nheight: min-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-px",
+    "css": "width: 1px;\nheight: 1px",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-svh",
+    "css": "width: 100svh;\nheight: 100svh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "size-svw",
+    "css": "width: 100svw;\nheight: 100svw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "slashed-zero",
+    "css": "font-variant-numeric: slashed-zero",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "snap-align-none",
+    "css": "scroll-snap-align: none",
+    "source": "/src/docs/scroll-snap-align.mdx"
+  },
+  {
+    "class": "snap-always",
+    "css": "scroll-snap-stop: always",
+    "source": "/src/docs/scroll-snap-stop.mdx"
+  },
+  {
+    "class": "snap-both",
+    "css": "scroll-snap-type: both var(--tw-scroll-snap-strictness)",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "snap-center",
+    "css": "scroll-snap-align: center",
+    "source": "/src/docs/scroll-snap-align.mdx"
+  },
+  {
+    "class": "snap-end",
+    "css": "scroll-snap-align: end",
+    "source": "/src/docs/scroll-snap-align.mdx"
+  },
+  {
+    "class": "snap-mandatory",
+    "css": "--tw-scroll-snap-strictness: mandatory",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "snap-none",
+    "css": "scroll-snap-type: none",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "snap-normal",
+    "css": "scroll-snap-stop: normal",
+    "source": "/src/docs/scroll-snap-stop.mdx"
+  },
+  {
+    "class": "snap-proximity",
+    "css": "--tw-scroll-snap-strictness: proximity",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "snap-start",
+    "css": "scroll-snap-align: start",
+    "source": "/src/docs/scroll-snap-align.mdx"
+  },
+  {
+    "class": "snap-x",
+    "css": "scroll-snap-type: x var(--tw-scroll-snap-strictness)",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "snap-y",
+    "css": "scroll-snap-type: y var(--tw-scroll-snap-strictness)",
+    "source": "/src/docs/scroll-snap-type.mdx"
+  },
+  {
+    "class": "stacked-fractions",
+    "css": "font-variant-numeric: stacked-fractions",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "static",
+    "css": "position: static",
+    "source": "/src/docs/position.mdx"
+  },
+  {
+    "class": "sticky",
+    "css": "position: sticky",
+    "source": "/src/docs/position.mdx"
+  },
+  {
+    "class": "subpixel-antialiased",
+    "css": "-webkit-font-smoothing: auto;\n-moz-osx-font-smoothing: auto",
+    "source": "/src/docs/font-smoothing.mdx"
+  },
+  {
+    "class": "table-auto",
+    "css": "table-layout: auto",
+    "source": "/src/docs/table-layout.mdx"
+  },
+  {
+    "class": "table-fixed",
+    "css": "table-layout: fixed",
+    "source": "/src/docs/table-layout.mdx"
+  },
+  {
+    "class": "tabular-nums",
+    "css": "font-variant-numeric: tabular-nums",
+    "source": "/src/docs/font-variant-numeric.mdx"
+  },
+  {
+    "class": "text-2xl",
+    "css": "font-size: var(--text-2xl); /* 1.5rem (24px) */ \nline-height: var(--text-2xl--line-height); /* calc(2 / 1.5) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-3xl",
+    "css": "font-size: var(--text-3xl); /* 1.875rem (30px) */ \nline-height: var(--text-3xl--line-height); /* calc(2.25 / 1.875) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-4xl",
+    "css": "font-size: var(--text-4xl); /* 2.25rem (36px) */ \nline-height: var(--text-4xl--line-height); /* calc(2.5 / 2.25) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-5xl",
+    "css": "font-size: var(--text-5xl); /* 3rem (48px) */ \nline-height: var(--text-5xl--line-height); /* 1 */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-6xl",
+    "css": "font-size: var(--text-6xl); /* 3.75rem (60px) */ \nline-height: var(--text-6xl--line-height); /* 1 */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-7xl",
+    "css": "font-size: var(--text-7xl); /* 4.5rem (72px) */ \nline-height: var(--text-7xl--line-height); /* 1 */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-8xl",
+    "css": "font-size: var(--text-8xl); /* 6rem (96px) */ \nline-height: var(--text-8xl--line-height); /* 1 */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-9xl",
+    "css": "font-size: var(--text-9xl); /* 8rem (128px) */ \nline-height: var(--text-9xl--line-height); /* 1 */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-balance",
+    "css": "text-wrap: balance",
+    "source": "/src/docs/text-wrap.mdx"
+  },
+  {
+    "class": "text-base",
+    "css": "font-size: var(--text-base); /* 1rem (16px) */ \nline-height: var(--text-base--line-height); /* calc(1.5 / 1) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-center",
+    "css": "text-align: center",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-end",
+    "css": "text-align: end",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-justify",
+    "css": "text-align: justify",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-left",
+    "css": "text-align: left",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-lg",
+    "css": "font-size: var(--text-lg); /* 1.125rem (18px) */ \nline-height: var(--text-lg--line-height); /* calc(1.75 / 1.125) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-nowrap",
+    "css": "text-wrap: nowrap",
+    "source": "/src/docs/text-wrap.mdx"
+  },
+  {
+    "class": "text-pretty",
+    "css": "text-wrap: pretty",
+    "source": "/src/docs/text-wrap.mdx"
+  },
+  {
+    "class": "text-right",
+    "css": "text-align: right",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-sm",
+    "css": "font-size: var(--text-sm); /* 0.875rem (14px) */ \nline-height: var(--text-sm--line-height); /* calc(1.25 / 0.875) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-start",
+    "css": "text-align: start",
+    "source": "/src/docs/text-align.mdx"
+  },
+  {
+    "class": "text-wrap",
+    "css": "text-wrap: wrap",
+    "source": "/src/docs/text-wrap.mdx"
+  },
+  {
+    "class": "text-xl",
+    "css": "font-size: var(--text-xl); /* 1.25rem (20px) */ \nline-height: var(--text-xl--line-height); /* calc(1.75 / 1.25) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "text-xs",
+    "css": "font-size: var(--text-xs); /* 0.75rem (12px) */ \nline-height: var(--text-xs--line-height); /* calc(1 / 0.75) */",
+    "source": "/src/docs/font-size.mdx"
+  },
+  {
+    "class": "touch-auto",
+    "css": "touch-action: auto",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-manipulation",
+    "css": "touch-action: manipulation",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-none",
+    "css": "touch-action: none",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-down",
+    "css": "touch-action: pan-down",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-left",
+    "css": "touch-action: pan-left",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-right",
+    "css": "touch-action: pan-right",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-up",
+    "css": "touch-action: pan-up",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-x",
+    "css": "touch-action: pan-x",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pan-y",
+    "css": "touch-action: pan-y",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "touch-pinch-zoom",
+    "css": "touch-action: pinch-zoom",
+    "source": "/src/docs/touch-action.mdx"
+  },
+  {
+    "class": "tracking-normal",
+    "css": "letter-spacing: var(--tracking-normal); /* 0em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "tracking-tight",
+    "css": "letter-spacing: var(--tracking-tight); /* -0.025em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "tracking-tighter",
+    "css": "letter-spacing: var(--tracking-tighter); /* -0.05em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "tracking-wide",
+    "css": "letter-spacing: var(--tracking-wide); /* 0.025em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "tracking-wider",
+    "css": "letter-spacing: var(--tracking-wider); /* 0.05em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "tracking-widest",
+    "css": "letter-spacing: var(--tracking-widest); /* 0.1em */",
+    "source": "/src/docs/letter-spacing.mdx"
+  },
+  {
+    "class": "transform-3d",
+    "css": "transform-style: preserve-3d",
+    "source": "/src/docs/transform-style.mdx"
+  },
+  {
+    "class": "transform-cpu",
+    "css": "transform: var(--tw-rotate-x) var(--tw-rotate-y) var(--tw-rotate-z) var(--tw-skew-x) var(--tw-skew-y)",
+    "source": "/src/docs/transform.mdx"
+  },
+  {
+    "class": "transform-flat",
+    "css": "transform-style: flat",
+    "source": "/src/docs/transform-style.mdx"
+  },
+  {
+    "class": "transform-gpu",
+    "css": "transform: translateZ(0) var(--tw-rotate-x) var(--tw-rotate-y) var(--tw-rotate-z) var(--tw-skew-x) var(--tw-skew-y)",
+    "source": "/src/docs/transform.mdx"
+  },
+  {
+    "class": "transform-none",
+    "css": "transform: none",
+    "source": "/src/docs/transform.mdx"
+  },
+  {
+    "class": "transition-discrete",
+    "css": "transition-behavior: allow-discrete",
+    "source": "/src/docs/transition-behavior.mdx"
+  },
+  {
+    "class": "transition-normal",
+    "css": "transition-behavior: normal",
+    "source": "/src/docs/transition-behavior.mdx"
+  },
+  {
+    "class": "translate-full",
+    "css": "translate: 100% 100%",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-none",
+    "css": "translate: none",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-px",
+    "css": "translate: 1px 1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-x-full",
+    "css": "translate: 100% var(--tw-translate-y)",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-x-px",
+    "css": "translate: 1px var(--tw-translate-y)",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-y-full",
+    "css": "translate: var(--tw-translate-x) 100%",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-y-px",
+    "css": "translate: var(--tw-translate-x) 1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "translate-z-px",
+    "css": "translate: var(--tw-translate-x) var(--tw-translate-y) 1px",
+    "source": "/src/docs/translate.mdx"
+  },
+  {
+    "class": "underline",
+    "css": "text-decoration-line: underline",
+    "source": "/src/docs/text-decoration-line.mdx"
+  },
+  {
+    "class": "underline-offset-auto",
+    "css": "text-underline-offset: auto",
+    "source": "/src/docs/text-underline-offset.mdx"
+  },
+  {
+    "class": "uppercase",
+    "css": "text-transform: uppercase",
+    "source": "/src/docs/text-transform.mdx"
+  },
+  {
+    "class": "visible",
+    "css": "visibility: visible",
+    "source": "/src/docs/visibility.mdx"
+  },
+  {
+    "class": "w-2xl",
+    "css": "width: var(--container-2xl); /* 42rem (672px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-2xs",
+    "css": "width: var(--container-2xs); /* 18rem (288px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-3xl",
+    "css": "width: var(--container-3xl); /* 48rem (768px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-3xs",
+    "css": "width: var(--container-3xs); /* 16rem (256px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-4xl",
+    "css": "width: var(--container-4xl); /* 56rem (896px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-5xl",
+    "css": "width: var(--container-5xl); /* 64rem (1024px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-6xl",
+    "css": "width: var(--container-6xl); /* 72rem (1152px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-7xl",
+    "css": "width: var(--container-7xl); /* 80rem (1280px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-auto",
+    "css": "width: auto",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-dvh",
+    "css": "width: 100dvh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-dvw",
+    "css": "width: 100dvw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-fit",
+    "css": "width: fit-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-full",
+    "css": "width: 100%",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-lg",
+    "css": "width: var(--container-lg); /* 32rem (512px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-lvh",
+    "css": "width: 100lvh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-lvw",
+    "css": "width: 100lvw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-max",
+    "css": "width: max-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-md",
+    "css": "width: var(--container-md); /* 28rem (448px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-min",
+    "css": "width: min-content",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-px",
+    "css": "width: 1px",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-screen",
+    "css": "width: 100vw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-sm",
+    "css": "width: var(--container-sm); /* 24rem (384px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-svh",
+    "css": "width: 100svh",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-svw",
+    "css": "width: 100svw",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-xl",
+    "css": "width: var(--container-xl); /* 36rem (576px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "w-xs",
+    "css": "width: var(--container-xs); /* 20rem (320px) */",
+    "source": "/src/docs/width.mdx"
+  },
+  {
+    "class": "whitespace-break-spaces",
+    "css": "white-space: break-spaces",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "whitespace-normal",
+    "css": "white-space: normal",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "whitespace-nowrap",
+    "css": "white-space: nowrap",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "whitespace-pre",
+    "css": "white-space: pre",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "whitespace-pre-line",
+    "css": "white-space: pre-line",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "whitespace-pre-wrap",
+    "css": "white-space: pre-wrap",
+    "source": "/src/docs/white-space.mdx"
+  },
+  {
+    "class": "will-change-auto",
+    "css": "will-change: auto",
+    "source": "/src/docs/will-change.mdx"
+  },
+  {
+    "class": "will-change-contents",
+    "css": "will-change: contents",
+    "source": "/src/docs/will-change.mdx"
+  },
+  {
+    "class": "will-change-scroll",
+    "css": "will-change: scroll-position",
+    "source": "/src/docs/will-change.mdx"
+  },
+  {
+    "class": "will-change-transform",
+    "css": "will-change: transform",
+    "source": "/src/docs/will-change.mdx"
+  },
+  {
+    "class": "wrap-anywhere",
+    "css": "overflow-wrap: anywhere",
+    "source": "/src/docs/overflow-wrap.mdx"
+  },
+  {
+    "class": "wrap-break-word",
+    "css": "overflow-wrap: break-word",
+    "source": "/src/docs/overflow-wrap.mdx"
+  },
+  {
+    "class": "wrap-normal",
+    "css": "overflow-wrap: normal",
+    "source": "/src/docs/overflow-wrap.mdx"
+  },
+  {
+    "class": "z-auto",
+    "css": "z-index: auto",
+    "source": "/src/docs/z-index.mdx"
+  }
+]

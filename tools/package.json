@@ -1,0 +1,14 @@
+{
+  "name": "headwind-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract": "bun run scripts/extract-tw-mappings.ts",
+    "setup": "bash scripts/setup-sparse-clone.sh",
+    "clean": "rm -rf data/tailwindcss.com data/tailwind-full.css"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
