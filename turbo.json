@@ -1,11 +1,23 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "build:wasm": {
+      "outputs": ["wasm-pkg/**"],
+      "inputs": [
+        "../../crates/wasm/src/**",
+        "../../crates/wasm/Cargo.toml",
+        "../../crates/transform/src/**",
+        "../../crates/transform/Cargo.toml",
+        "../../crates/core/src/**",
+        "../../crates/core/Cargo.toml"
+      ]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build:wasm"],
       "outputs": ["dist/**"]
     },
     "dev": {
+      "dependsOn": ["build:wasm"],
       "cache": false,
       "persistent": true
     },

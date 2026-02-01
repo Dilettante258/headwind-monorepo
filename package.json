@@ -8,7 +8,8 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "build:plugin": "node tools/scripts/build-plugin.mjs"
+    "build:plugin": "node tools/scripts/build-plugin.mjs",
+    "build:wasm": "node tools/scripts/build-wasm.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",

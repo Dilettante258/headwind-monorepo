@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
+    "build:wasm": "node ../../tools/scripts/build-wasm.mjs",
+    "build:wasm:dev": "node ../../tools/scripts/build-wasm.mjs --dev",
     "build": "vite build",
+    "dev": "vite",
     "serve": "vite preview"
   },
   "dependencies": {
