@@ -101,11 +101,69 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "duration" => "transition-duration",
     "delay" => "transition-delay",
 
+    // Typography extras
+    "align" => "vertical-align",
+    "indent" => "text-indent",
+    "whitespace" => "white-space",
+    "hyphens" => "hyphens",
+
+    // Layout
+    "float" => "float",
+    "clear" => "clear",
+    "columns" => "columns",
+    "basis" => "flex-basis",
+
+    // Appearance & Interaction
+    "appearance" => "appearance",
+    "touch" => "touch-action",
+    "backface" => "backface-visibility",
+
+    // Scroll & Overscroll
+    "scroll" => "scroll-behavior",
+    "overscroll" => "overscroll-behavior",
+    "overscroll-x" => "overscroll-behavior-x",
+    "overscroll-y" => "overscroll-behavior-y",
+
+    // Theme
+    "scheme" => "color-scheme",
+
+    // Grid extras
+    "auto-cols" => "grid-auto-columns",
+    "auto-rows" => "grid-auto-rows",
+    "grid-flow" => "grid-auto-flow",
+    "col" => "grid-column",
+    "col-start" => "grid-column-start",
+    "col-end" => "grid-column-end",
+    "row" => "grid-row",
+    "row-start" => "grid-row-start",
+    "row-end" => "grid-row-end",
+
+    // Transform extras
+    "origin" => "transform-origin",
+    "perspective" => "perspective",
+    "box-decoration" => "box-decoration-break",
+
+    // Break
+    "break-before" => "break-before",
+    "break-after" => "break-after",
+    "break-inside" => "break-inside",
+
+    // Table
+    "table" => "table-layout",
+    "caption" => "caption-side",
+
+    // Transitions extras
+    "ease" => "transition-timing-function",
+    "will" => "will-change",
+    "transition" => "transition-behavior",
+
     // Other (其他)
     "z" => "z-index",
     "content" => "content",
     "aspect" => "aspect-ratio",
     "flex" => "flex",
+    "grow" => "flex-grow",
+    "shrink" => "flex-shrink",
     "transform" => "transform",
     "ring" => "box-shadow",
     "ring-offset" => "box-shadow",
@@ -114,6 +172,11 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "pointer-events" => "pointer-events",
     "resize" => "resize",
     "select" => "user-select",
+    "items" => "align-items",
+    "self" => "align-self",
+    "wrap" => "overflow-wrap",
+    "field" => "field-sizing",
+    "forced" => "forced-color-adjust",
 };
 
 /// 需要生成两个 CSS 声明的插件映射
@@ -130,6 +193,7 @@ static MULTI_PROPERTY_MAP: phf::Map<&'static str, (&'static str, &'static str)> 
     "rounded-r" => ("border-top-right-radius", "border-bottom-right-radius"),
     "rounded-b" => ("border-bottom-right-radius", "border-bottom-left-radius"),
     "rounded-l" => ("border-top-left-radius", "border-bottom-left-radius"),
+    "size" => ("width", "height"),
 };
 
 /// 获取插件属性映射的引用
