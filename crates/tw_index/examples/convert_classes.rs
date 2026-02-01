@@ -1,15 +1,10 @@
-use headwind_tw_index::{load_from_official_json, Converter};
+use headwind_tw_index::Converter;
 use headwind_tw_parse::parse_class;
 
 fn main() {
-    // 1. 加载官方映射
-    println!("📚 Loading official Tailwind CSS mappings...\n");
-    let json = include_str!("../../tw_index/fixtures/official-mappings.json");
-    let index = load_from_official_json(json).expect("Failed to load mappings");
-    println!("✓ Loaded {} class mappings\n", index.len());
-
-    // 2. 创建转换器
-    let converter = Converter::new(&index);
+    // 创建基于规则的转换器
+    println!("🔧 Using rule-based converter (plugin_map + value_map)...\n");
+    let converter = Converter::new();
 
     // 3. 测试各种类名
     let test_cases = vec![

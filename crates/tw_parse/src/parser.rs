@@ -1,6 +1,58 @@
-use crate::types::{ArbitraryValue, Modifier, ParsedClass, ParsedValue};
+use crate::types::{ArbitraryValue, ParsedClass, ParsedValue};
 
-/// 解析 Tailwind class 字符串
+/// 解析包含多个 Tailwind class 的字符串
+///
+/// 这是主要的解析函数，可以处理空格分隔的多个类名。
+/// 单个类名解析 `parse_class` 是此函数的特例。
+///
+/// 支持的格式：
+/// - 简单类：`p-4`, `m-2`, `bg-red-500`
+/// - 修饰符：`hover:bg-blue-500`, `md:p-4`, `dark:text-white`
+/// - 多修饰符：`md:hover:bg-blue-500`
+/// - 负值：`-m-4`, `md:-top-1`
+/// - 任意值：`w-[13px]`, `bg-[#ff0000]`
+/// - 透明度：`bg-blue-500/50`, `text-black/75`
+/// - 重要性：`p-4!`, `md:bg-red-500!`
+///
+/// # 示例
+///
+/// ```
+/// use headwind_tw_parse::parse_classes;
+///
+/// let parsed = parse_classes("p-4 hover:bg-blue-500 md:text-center").unwrap();
+/// assert_eq!(parsed.len(), 3);
+/// assert_eq!(parsed[0].plugin, "p");
+/// assert_eq!(parsed[1].plugin, "bg");
+/// assert_eq!(parsed[2].plugin, "text");
+/// ```
+pub fn parse_classes(input: &str) -> Result<Vec<ParsedClass>, ParseError> {
+    if input.is_empty() {
+        return Err(ParseError::EmptyInput);
+    }
+
+    let mut results = Vec::new();
+
+    // 按空白字符分割
+    for class_str in input.split_whitespace() {
+        if class_str.is_empty() {
+            continue;
+        }
+
+        let mut parser = Parser::new(class_str);
+        let parsed = parser.parse()?;
+        results.push(parsed);
+    }
+
+    if results.is_empty() {
+        return Err(ParseError::EmptyInput);
+    }
+
+    Ok(results)
+}
+
+/// 解析单个 Tailwind class 字符串
+///
+/// 这是 `parse_classes` 的便捷包装，用于只有单个类名的场景。
 ///
 /// 支持的格式：
 /// - 简单类：`p-4`, `m-2`, `bg-red-500`
@@ -17,7 +69,7 @@ use crate::types::{ArbitraryValue, Modifier, ParsedClass, ParsedValue};
 /// use headwind_tw_parse::parse_class;
 ///
 /// let parsed = parse_class("md:hover:bg-blue-500/50!").unwrap();
-/// assert_eq!(parsed.modifiers.len(), 2);
+/// assert_eq!(parsed.modifiers().len(), 2);
 /// assert_eq!(parsed.plugin, "bg");
 /// assert_eq!(parsed.alpha, Some("50".to_string()));
 /// assert_eq!(parsed.important, true);
@@ -65,8 +117,14 @@ impl<'a> Parser<'a> {
     }
 
     fn parse(&mut self) -> Result<ParsedClass, ParseError> {
-        // 1. 解析修饰符（modifier:modifier:...）
-        let modifiers = self.parse_modifiers();
+        // 1. 捕获原始修饰符字符串（modifier:modifier:...）
+        let modifier_start = self.pos;
+        self.skip_modifiers();
+        let raw_modifiers = if modifier_start < self.pos {
+            self.input[modifier_start..self.pos].to_string()
+        } else {
+            String::new()
+        };
 
         // 2. 解析负值标记
         let negative = self.consume_if('-');
@@ -90,7 +148,7 @@ impl<'a> Parser<'a> {
         }
 
         Ok(ParsedClass {
-            modifiers,
+            raw_modifiers,
             negative,
             plugin,
             value,
@@ -99,10 +157,8 @@ impl<'a> Parser<'a> {
         })
     }
 
-    /// 解析修饰符列表
-    fn parse_modifiers(&mut self) -> Vec<Modifier> {
-        let mut modifiers = Vec::new();
-
+    /// 跳过修饰符部分（不解析，只移动位置）
+    fn skip_modifiers(&mut self) {
         loop {
             // 尝试找到下一个冒号
             let start = self.pos;
@@ -138,17 +194,15 @@ impl<'a> Parser<'a> {
                 break;
             }
 
-            modifiers.push(Modifier::from_str(modifier_str));
+            // 不需要解析成 Modifier，只需要继续跳过
         }
-
-        modifiers
     }
 
     /// 解析插件和值
     ///
     /// 策略：扫描整个字符串，找到所有 `-[` 模式的位置
     /// - 如果存在 `-[`，则将其之前的部分作为 plugin
-    /// - 否则，在第一个 `-` 处分割
+    /// - 否则，在第一个 `-` 处分割，并尝试扩展复合插件
     fn parse_plugin_and_value(&mut self) -> Result<(String, Option<ParsedValue>), ParseError> {
         let start = self.pos;
 
@@ -176,6 +230,12 @@ impl<'a> Parser<'a> {
                     break;
                 }
                 self.pos += 1;
+            }
+
+            // 尝试扩展复合插件（如 justify → justify-items, border → border-t）
+            let first_word = &self.input[start..self.pos];
+            if let Some(new_end) = self.try_extend_compound(first_word) {
+                self.pos = new_end;
             }
         }
 
@@ -216,6 +276,47 @@ impl<'a> Parser<'a> {
         };
 
         Ok((plugin, value))
+    }
+
+    /// 尝试扩展复合插件名
+    ///
+    /// 当首段为已知复合前缀时（如 `justify`），向前探测下一段是否为有效扩展
+    /// （如 `items`、`self`），返回扩展后 plugin 的结束位置。
+    ///
+    /// 例：输入 `justify-items-center`，首段 `justify` 已读取，
+    ///     当前位置在 `-`，探测到 `items` 是有效扩展，返回 `items` 的结束位置。
+    fn try_extend_compound(&self, first_word: &str) -> Option<usize> {
+        // 当前必须在 '-'
+        if self.pos >= self.input.len() || self.current_char() != '-' {
+            return None;
+        }
+
+        let extensions = compound_extensions(first_word);
+        if extensions.is_empty() {
+            return None;
+        }
+
+        let after_dash = self.pos + 1;
+        if after_dash >= self.input.len() {
+            return None;
+        }
+
+        // 读取下一段（到 -、[、/、! 或末尾）
+        let mut seg_end = after_dash;
+        while seg_end < self.input.len() {
+            let ch = self.input[seg_end..].chars().next().unwrap();
+            if ch == '-' || ch == '[' || ch == '/' || ch == '!' {
+                break;
+            }
+            seg_end += 1;
+        }
+
+        let segment = &self.input[after_dash..seg_end];
+        if extensions.iter().any(|&ext| ext == segment) {
+            Some(seg_end)
+        } else {
+            None
+        }
     }
 
     /// 解析标准值
@@ -307,6 +408,79 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// 返回给定前缀的合法复合插件扩展列表
+///
+/// Tailwind 中许多插件名由多段组成（如 `justify-items`、`border-t`、`gap-x`）。
+/// 解析器在读取首段后，通过此表决定是否将下一段合并进插件名。
+fn compound_extensions(prefix: &str) -> &'static [&'static str] {
+    match prefix {
+        // Layout alignment
+        "justify" => &["items", "self"],
+        "place" => &["content", "items", "self"],
+        "align" => &["content", "items", "self"],
+
+        // Overflow & Overscroll
+        "overflow" => &["x", "y"],
+        "overscroll" => &["x", "y"],
+
+        // Axis spacing
+        "gap" => &["x", "y"],
+        "space" => &["x", "y"],
+        "divide" => &["x", "y"],
+
+        // Border & Rounded sub-directions
+        "border" => &["t", "r", "b", "l", "x", "y", "s", "e"],
+        "rounded" => &[
+            "t", "r", "b", "l", "tl", "tr", "br", "bl", "s", "e", "ss", "se", "es", "ee",
+        ],
+
+        // Inset axis
+        "inset" => &["x", "y"],
+
+        // Transform axis
+        "translate" => &["x", "y", "z"],
+        "scale" => &["x", "y"],
+
+        // Grid
+        "grid" => &["cols", "rows", "flow"],
+        "col" => &["span", "start", "end"],
+        "row" => &["span", "start", "end"],
+        "auto" => &["cols", "rows"],
+
+        // Ring
+        "ring" => &["offset"],
+
+        // Size constraints
+        "min" => &["w", "h"],
+        "max" => &["w", "h"],
+
+        // Scroll margin/padding
+        "scroll" => &[
+            "m", "mx", "my", "mt", "mr", "mb", "ml", "p", "px", "py", "pt", "pr", "pb", "pl",
+        ],
+
+        // Backdrop filters
+        "backdrop" => &[
+            "blur",
+            "brightness",
+            "contrast",
+            "grayscale",
+            "invert",
+            "opacity",
+            "saturate",
+            "sepia",
+        ],
+
+        // Misc compound
+        "line" => &["clamp"],
+        "box" => &["decoration"],
+        "break" => &["before", "after", "inside"],
+        "font" => &["size"],
+
+        _ => &[],
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -333,8 +507,8 @@ mod tests {
     #[test]
     fn test_single_modifier() {
         let parsed = parse_class("hover:bg-blue-500").unwrap();
-        assert_eq!(parsed.modifiers.len(), 1);
-        assert!(parsed.modifiers[0].is_pseudo_class());
+        assert_eq!(parsed.modifiers().len(), 1);
+        assert!(parsed.modifiers()[0].is_pseudo_class());
         assert_eq!(parsed.plugin, "bg");
         assert_eq!(
             parsed.value,
@@ -345,9 +519,9 @@ mod tests {
     #[test]
     fn test_multiple_modifiers() {
         let parsed = parse_class("md:hover:bg-blue-500").unwrap();
-        assert_eq!(parsed.modifiers.len(), 2);
-        assert!(parsed.modifiers[0].is_responsive());
-        assert!(parsed.modifiers[1].is_pseudo_class());
+        assert_eq!(parsed.modifiers().len(), 2);
+        assert!(parsed.modifiers()[0].is_responsive());
+        assert!(parsed.modifiers()[1].is_pseudo_class());
     }
 
     #[test]
@@ -391,7 +565,7 @@ mod tests {
     #[test]
     fn test_complex_class() {
         let parsed = parse_class("md:hover:bg-blue-500/50!").unwrap();
-        assert_eq!(parsed.modifiers.len(), 2);
+        assert_eq!(parsed.modifiers().len(), 2);
         assert_eq!(parsed.plugin, "bg");
         assert_eq!(
             parsed.value,
@@ -404,7 +578,7 @@ mod tests {
     #[test]
     fn test_negative_with_modifier() {
         let parsed = parse_class("md:-top-1").unwrap();
-        assert_eq!(parsed.modifiers.len(), 1);
+        assert_eq!(parsed.modifiers().len(), 1);
         assert!(parsed.negative);
         assert_eq!(parsed.plugin, "top");
     }
@@ -439,5 +613,242 @@ mod tests {
         let result = parse_class("");
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), ParseError::EmptyInput);
+    }
+
+    #[test]
+    fn test_raw_modifiers_single() {
+        let parsed = parse_class("md:p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "md:");
+        assert_eq!(parsed.modifiers().len(), 1);
+    }
+
+    #[test]
+    fn test_raw_modifiers_multiple() {
+        let parsed = parse_class("md:hover:bg-blue-500").unwrap();
+        assert_eq!(parsed.raw_modifiers, "md:hover:");
+        assert_eq!(parsed.modifiers().len(), 2);
+    }
+
+    #[test]
+    fn test_raw_modifiers_none() {
+        let parsed = parse_class("p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "");
+        assert_eq!(parsed.modifiers().len(), 0);
+    }
+
+    #[test]
+    fn test_parse_classes_multiple() {
+        let parsed = parse_classes("p-4 hover:bg-blue-500 md:text-center").unwrap();
+        assert_eq!(parsed.len(), 3);
+
+        assert_eq!(parsed[0].plugin, "p");
+        assert_eq!(parsed[0].raw_modifiers, "");
+        assert_eq!(parsed[0].modifiers().len(), 0);
+
+        assert_eq!(parsed[1].plugin, "bg");
+        assert_eq!(parsed[1].raw_modifiers, "hover:");
+        assert_eq!(parsed[1].modifiers().len(), 1);
+
+        assert_eq!(parsed[2].plugin, "text");
+        assert_eq!(parsed[2].raw_modifiers, "md:");
+        assert_eq!(parsed[2].modifiers().len(), 1);
+    }
+
+    #[test]
+    fn test_parse_classes_single() {
+        let parsed = parse_classes("p-4").unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].plugin, "p");
+    }
+
+    #[test]
+    fn test_parse_classes_with_extra_whitespace() {
+        let parsed = parse_classes("  p-4   m-2  ").unwrap();
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed[0].plugin, "p");
+        assert_eq!(parsed[1].plugin, "m");
+    }
+
+    #[test]
+    fn test_parse_classes_empty() {
+        let result = parse_classes("");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ParseError::EmptyInput);
+    }
+
+    #[test]
+    fn test_parse_classes_whitespace_only() {
+        let result = parse_classes("   ");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ParseError::EmptyInput);
+    }
+
+    #[test]
+    fn test_parse_classes_complex() {
+        let parsed =
+            parse_classes("md:hover:p-4 -m-2 w-[13px] bg-blue-500/50!").unwrap();
+        assert_eq!(parsed.len(), 4);
+
+        // md:hover:p-4
+        assert_eq!(parsed[0].plugin, "p");
+        assert_eq!(parsed[0].raw_modifiers, "md:hover:");
+        assert_eq!(parsed[0].modifiers().len(), 2);
+
+        // -m-2
+        assert_eq!(parsed[1].plugin, "m");
+        assert!(parsed[1].negative);
+
+        // w-[13px]
+        assert_eq!(parsed[2].plugin, "w");
+        assert!(parsed[2].value.as_ref().unwrap().is_arbitrary());
+
+        // bg-blue-500/50!
+        assert_eq!(parsed[3].plugin, "bg");
+        assert_eq!(parsed[3].alpha, Some("50".to_string()));
+        assert!(parsed[3].important);
+    }
+
+    // --- Compound plugin tests ---
+
+    #[test]
+    fn test_compound_justify_items() {
+        let parsed = parse_class("justify-items-center").unwrap();
+        assert_eq!(parsed.plugin, "justify-items");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("center".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_justify_self() {
+        let parsed = parse_class("justify-self-auto").unwrap();
+        assert_eq!(parsed.plugin, "justify-self");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("auto".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_place_content() {
+        let parsed = parse_class("place-content-center").unwrap();
+        assert_eq!(parsed.plugin, "place-content");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("center".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_gap_x() {
+        let parsed = parse_class("gap-x-4").unwrap();
+        assert_eq!(parsed.plugin, "gap-x");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_border_t() {
+        let parsed = parse_class("border-t-2").unwrap();
+        assert_eq!(parsed.plugin, "border-t");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("2".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_min_w() {
+        let parsed = parse_class("min-w-full").unwrap();
+        assert_eq!(parsed.plugin, "min-w");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("full".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_translate_x() {
+        let parsed = parse_class("translate-x-4").unwrap();
+        assert_eq!(parsed.plugin, "translate-x");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_grid_cols() {
+        let parsed = parse_class("grid-cols-3").unwrap();
+        assert_eq!(parsed.plugin, "grid-cols");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("3".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_scroll_mt() {
+        let parsed = parse_class("scroll-mt-4").unwrap();
+        assert_eq!(parsed.plugin, "scroll-mt");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_no_false_extension() {
+        // `border-black` should NOT extend: `black` is not a valid extension for `border`
+        let parsed = parse_class("border-black").unwrap();
+        assert_eq!(parsed.plugin, "border");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("black".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_no_false_extension_gap() {
+        // `gap-4` should NOT extend: `4` is not a valid extension for `gap`
+        let parsed = parse_class("gap-4").unwrap();
+        assert_eq!(parsed.plugin, "gap");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_with_modifier() {
+        let parsed = parse_class("hover:justify-items-center").unwrap();
+        assert_eq!(parsed.plugin, "justify-items");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("center".to_string()))
+        );
+        assert_eq!(parsed.modifiers().len(), 1);
+    }
+
+    #[test]
+    fn test_compound_negative() {
+        let parsed = parse_class("-translate-x-4").unwrap();
+        assert!(parsed.negative);
+        assert_eq!(parsed.plugin, "translate-x");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_compound_valueless() {
+        // `overflow-x` without value (no further dash)
+        let parsed = parse_class("col-span").unwrap();
+        assert_eq!(parsed.plugin, "col-span");
+        assert_eq!(parsed.value, None);
     }
 }

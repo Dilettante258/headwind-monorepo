@@ -1,7 +1,8 @@
-use crate::index::TailwindIndex;
 use crate::plugin_map::get_plugin_properties;
+use crate::value_map::infer_value;
 use headwind_core::Declaration;
 use headwind_tw_parse::{Modifier, ParsedClass, ParsedValue};
+use phf::phf_map;
 
 /// CSS 规则，包含选择器和声明
 #[derive(Debug, Clone, PartialEq)]
@@ -12,166 +13,305 @@ pub struct CssRule {
     pub declarations: Vec<Declaration>,
 }
 
-/// 将解析后的 Tailwind 类转换为 CSS 规则
-pub struct Converter<'a> {
-    index: &'a TailwindIndex,
+/// 无值类的静态映射：class name → (css property, css value)
+static VALUELESS_MAP: phf::Map<&'static str, (&'static str, &'static str)> = phf_map! {
+    // Display
+    "block" => ("display", "block"),
+    "inline-block" => ("display", "inline-block"),
+    "inline" => ("display", "inline"),
+    "flex" => ("display", "flex"),
+    "inline-flex" => ("display", "inline-flex"),
+    "grid" => ("display", "grid"),
+    "inline-grid" => ("display", "inline-grid"),
+    "hidden" => ("display", "none"),
+
+    // Position
+    "static" => ("position", "static"),
+    "fixed" => ("position", "fixed"),
+    "absolute" => ("position", "absolute"),
+    "relative" => ("position", "relative"),
+    "sticky" => ("position", "sticky"),
+
+    // Overflow
+    "overflow-auto" => ("overflow", "auto"),
+    "overflow-hidden" => ("overflow", "hidden"),
+    "overflow-visible" => ("overflow", "visible"),
+    "overflow-scroll" => ("overflow", "scroll"),
+
+    // Flex direction
+    "flex-row" => ("flex-direction", "row"),
+    "flex-row-reverse" => ("flex-direction", "row-reverse"),
+    "flex-col" => ("flex-direction", "column"),
+    "flex-col-reverse" => ("flex-direction", "column-reverse"),
+
+    // Flex wrap
+    "flex-wrap" => ("flex-wrap", "wrap"),
+    "flex-wrap-reverse" => ("flex-wrap", "wrap-reverse"),
+    "flex-nowrap" => ("flex-wrap", "nowrap"),
+
+    // Items alignment
+    "items-start" => ("align-items", "flex-start"),
+    "items-end" => ("align-items", "flex-end"),
+    "items-center" => ("align-items", "center"),
+    "items-baseline" => ("align-items", "baseline"),
+    "items-stretch" => ("align-items", "stretch"),
+
+    // Pointer events
+    "pointer-events-none" => ("pointer-events", "none"),
+    "pointer-events-auto" => ("pointer-events", "auto"),
+
+    // Cursor
+    "cursor-auto" => ("cursor", "auto"),
+    "cursor-default" => ("cursor", "default"),
+    "cursor-pointer" => ("cursor", "pointer"),
+    "cursor-wait" => ("cursor", "wait"),
+    "cursor-text" => ("cursor", "text"),
+    "cursor-move" => ("cursor", "move"),
+    "cursor-not-allowed" => ("cursor", "not-allowed"),
+
+    // Visibility
+    "visible" => ("visibility", "visible"),
+    "invisible" => ("visibility", "hidden"),
+};
+
+/// 响应式断点映射
+static BREAKPOINT_MAP: phf::Map<&'static str, &'static str> = phf_map! {
+    "sm" => "640px",
+    "md" => "768px",
+    "lg" => "1024px",
+    "xl" => "1280px",
+    "2xl" => "1536px",
+};
+
+/// 基于规则的 Tailwind 类转换器
+///
+/// 基于 plugin_map 和 value_map 进行转换，不依赖外部索引
+pub struct Converter;
+
+impl Converter {
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// 将 Tailwind 类转换为 CSS 声明（仅声明，不含选择器）
+    ///
+    /// 适用于上下文模式，由调用者决定如何组织选择器。
+    /// 复合插件（如 justify-items、gap-x）由解析器负责识别，
+    /// 此处仅处理声明构建和无值类回退。
+    pub fn to_declarations(&self, parsed: &ParsedClass) -> Option<Vec<Declaration>> {
+        let declarations = match &parsed.value {
+            Some(ParsedValue::Arbitrary(arb)) => {
+                build_arbitrary_declarations(parsed, &arb.content)?
+            }
+            Some(ParsedValue::Standard(value)) => build_standard_declarations(parsed, value)
+                .or_else(|| build_valueless_from_full_name(parsed, value))?,
+            None => build_valueless_declarations(parsed)?,
+        };
+
+        Some(apply_important(declarations, parsed.important))
+    }
+
+    /// 将 Tailwind 类名转换为 CSS 规则（声明 + 选择器）
+    pub fn convert(&self, parsed: &ParsedClass) -> Option<CssRule> {
+        let declarations = self.to_declarations(parsed)?;
+        let selector = build_selector(parsed);
+        Some(CssRule { selector, declarations })
+    }
 }
 
-impl<'a> Converter<'a> {
-    pub fn new(index: &'a TailwindIndex) -> Self {
-        Self { index }
+impl Default for Converter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 声明构建（纯函数，不依赖 Converter 状态）
+// ---------------------------------------------------------------------------
+
+/// 为任意值构建 CSS 声明
+///
+/// 例如：`w-[13px]` → `width: 13px`
+fn build_arbitrary_declarations(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<Declaration>> {
+    // 不在 plugin_map 中的复杂插件，走专门的分发逻辑
+    if let Some(decls) = build_complex_arbitrary(parsed, raw_value) {
+        return Some(decls);
     }
 
-    /// 将 Tailwind 类名转换为 CSS 规则
-    ///
-    /// 如果类名不存在于索引中且无法生成任意值 CSS，返回 None
-    pub fn convert(&self, parsed: &ParsedClass) -> Option<CssRule> {
-        // 先尝试从索引查找
-        let base_class = self.build_base_class(parsed);
-        let declarations = if let Some(base_declarations) = self.index.lookup(&base_class) {
-            // 找到了，直接使用
-            base_declarations.to_vec()
-        } else if let Some(value) = &parsed.value {
-            // 没找到，尝试处理任意值
-            if matches!(value, ParsedValue::Arbitrary(_)) {
-                self.build_arbitrary_declarations(parsed)?
+    let properties = get_plugin_properties(&parsed.plugin)?;
+    let declarations = properties
+        .into_iter()
+        .map(|property| {
+            let value = if parsed.negative {
+                format!("-{}", raw_value)
             } else {
-                // 不是任意值，且索引中没有，返回 None
-                return None;
-            }
-        } else {
-            // 没有值，且索引中没有，返回 None
-            return None;
-        };
-
-        // 应用修饰符
-        let selector = self.build_selector(parsed);
-        let mut declarations = declarations;
-
-        // 如果有 !important 标记，给所有声明添加
-        if parsed.important {
-            for decl in &mut declarations {
-                if !decl.value.ends_with("!important") {
-                    decl.value = format!("{} !important", decl.value);
-                }
-            }
-        }
-
-        Some(CssRule {
-            selector,
-            declarations,
+                raw_value.to_string()
+            };
+            Declaration::new(property, value)
         })
+        .collect();
+
+    Some(declarations)
+}
+
+/// 为标准值构建 CSS 声明
+///
+/// 例如：`p-4` → `padding: 1rem`
+fn build_standard_declarations(parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
+    // 不在 plugin_map 中的复杂插件，走专门的分发逻辑
+    if let Some(decls) = build_complex_standard(parsed, value) {
+        return Some(decls);
     }
 
-    /// 为任意值构建 CSS 声明
-    ///
-    /// 例如：`w-[13px]` → `Declaration { property: "width", value: "13px" }`
-    fn build_arbitrary_declarations(&self, parsed: &ParsedClass) -> Option<Vec<Declaration>> {
-        let ParsedValue::Arbitrary(arbitrary_value) = parsed.value.as_ref()? else {
-            return None;
-        };
+    let properties = get_plugin_properties(&parsed.plugin)?;
+    let mut css_value = infer_value(&parsed.plugin, value)?;
 
-        // 获取插件对应的 CSS 属性
-        let properties = get_plugin_properties(&parsed.plugin)?;
-
-        // 为每个属性生成声明
-        let declarations = properties
-            .into_iter()
-            .map(|property| Declaration::new(property, arbitrary_value.content.clone()))
-            .collect();
-
-        Some(declarations)
+    if parsed.negative {
+        css_value = format!("-{}", css_value);
     }
 
-    /// 构建基础类名（不包含修饰符和 !important）
-    fn build_base_class(&self, parsed: &ParsedClass) -> String {
-        let mut class = String::new();
+    let declarations = properties
+        .into_iter()
+        .map(|property| Declaration::new(property, css_value.clone()))
+        .collect();
 
-        // 负号
-        if parsed.negative {
-            class.push('-');
+    Some(declarations)
+}
+
+/// 为无值类构建声明
+///
+/// 例如：`flex` → `display: flex`
+fn build_valueless_declarations(parsed: &ParsedClass) -> Option<Vec<Declaration>> {
+    let &(property, value) = VALUELESS_MAP.get(parsed.plugin.as_str())?;
+    Some(vec![Declaration::new(property, value)])
+}
+
+/// 回退：将 plugin-value 作为完整类名查找 VALUELESS_MAP
+///
+/// 处理解析器无法区分"带值插件"和"多段无值类"的情况。
+/// 例如：plugin=`overflow`, value=`auto` → 查找 `overflow-auto` → `overflow: auto`
+///       plugin=`flex`, value=`row` → 查找 `flex-row` → `flex-direction: row`
+fn build_valueless_from_full_name(parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
+    let full_name = format!("{}-{}", parsed.plugin, value);
+    let &(property, css_value) = VALUELESS_MAP.get(full_name.as_str())?;
+    Some(vec![Declaration::new(property, css_value)])
+}
+
+// ---------------------------------------------------------------------------
+// 复杂插件分发（语义重载的插件，不适合放进静态 map）
+// ---------------------------------------------------------------------------
+
+/// 处理复杂任意值插件
+fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<Declaration>> {
+    match parsed.plugin.as_str() {
+        // text-[#fff] → color
+        "text" => {
+            let value = if parsed.negative {
+                format!("-{}", raw_value)
+            } else {
+                raw_value.to_string()
+            };
+            Some(vec![Declaration::new("color", value)])
         }
+        _ => None,
+    }
+}
 
-        // 插件名
-        class.push_str(&parsed.plugin);
+/// 处理复杂标准值插件
+fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
+    match parsed.plugin.as_str() {
+        // text-center → text-align, text-red-500 → color
+        "text" => match value {
+            "left" | "center" | "right" | "justify" | "start" | "end" => {
+                Some(vec![Declaration::new("text-align", value.to_string())])
+            }
+            "nowrap" | "wrap" | "balance" | "pretty" => {
+                Some(vec![Declaration::new("text-wrap", value.to_string())])
+            }
+            _ => {
+                let css_value = infer_value(&parsed.plugin, value)?;
+                Some(vec![Declaration::new("color", css_value)])
+            }
+        },
+        _ => None,
+    }
+}
 
-        // 值
-        if let Some(value) = &parsed.value {
-            class.push('-');
-            class.push_str(&value.to_string());
-        }
+// ---------------------------------------------------------------------------
+// 工具函数
+// ---------------------------------------------------------------------------
 
-        // Alpha 值
-        if let Some(alpha) = &parsed.alpha {
-            class.push('/');
-            class.push_str(alpha);
-        }
+/// 应用 !important 标记
+fn apply_important(declarations: Vec<Declaration>, important: bool) -> Vec<Declaration> {
+    if !important {
+        return declarations;
+    }
+    declarations
+        .into_iter()
+        .map(|mut decl| {
+            if !decl.value.ends_with("!important") {
+                decl.value = format!("{} !important", decl.value);
+            }
+            decl
+        })
+        .collect()
+}
 
-        class
+/// 构建基础类名（不包含修饰符）
+fn build_base_class(parsed: &ParsedClass) -> String {
+    let mut class = String::new();
+
+    if parsed.negative {
+        class.push('-');
     }
 
-    /// 构建 CSS 选择器，包含修饰符
-    fn build_selector(&self, parsed: &ParsedClass) -> String {
-        let class_name = self.build_base_class(parsed);
+    class.push_str(&parsed.plugin);
 
-        // 如果没有修饰符，返回简单的类选择器
-        if parsed.modifiers.is_empty() {
-            return format!(".{}", class_name);
-        }
-
-        // 否则，构建带修饰符的选择器
-        let mut selector = format!(".{}", class_name);
-
-        for modifier in &parsed.modifiers {
-            selector = self.apply_modifier(&selector, modifier);
-        }
-
-        selector
+    if let Some(value) = &parsed.value {
+        class.push('-');
+        class.push_str(&value.to_string());
     }
 
-    /// 应用单个修饰符到选择器
-    fn apply_modifier(&self, selector: &str, modifier: &Modifier) -> String {
-        match modifier {
-            Modifier::PseudoClass(name) => {
-                // 伪类：hover, focus, active 等
-                format!("{}:{}", selector, name)
+    if let Some(alpha) = &parsed.alpha {
+        class.push('/');
+        class.push_str(alpha);
+    }
+
+    class
+}
+
+/// 构建 CSS 选择器，包含修饰符
+fn build_selector(parsed: &ParsedClass) -> String {
+    let class_name = build_base_class(parsed);
+    let mut selector = format!(".{}", class_name);
+
+    for modifier in &parsed.modifiers() {
+        selector = apply_modifier(&selector, modifier);
+    }
+
+    selector
+}
+
+/// 应用单个修饰符到选择器
+fn apply_modifier(selector: &str, modifier: &Modifier) -> String {
+    match modifier {
+        Modifier::PseudoClass(name) => format!("{}:{}", selector, name),
+        Modifier::PseudoElement(name) => format!("{}::{}", selector, name),
+        Modifier::State(name) => match name.as_str() {
+            "dark" => format!(".dark {}", selector),
+            name if name.starts_with("group-") => {
+                format!(".group:{} {}", &name[6..], selector)
             }
-            Modifier::PseudoElement(name) => {
-                // 伪元素：before, after 等
-                format!("{}::{}", selector, name)
+            name if name.starts_with("peer-") => {
+                format!(".peer:{} ~ {}", &name[5..], selector)
             }
-            Modifier::State(name) => {
-                // 状态修饰符：dark, group-hover 等
-                match name.as_str() {
-                    "dark" => format!(".dark {}", selector),
-                    name if name.starts_with("group-") => {
-                        let pseudo = &name[6..]; // 移除 "group-" 前缀
-                        format!(".group:{} {}", pseudo, selector)
-                    }
-                    name if name.starts_with("peer-") => {
-                        let pseudo = &name[5..]; // 移除 "peer-" 前缀
-                        format!(".peer:{} ~ {}", pseudo, selector)
-                    }
-                    _ => selector.to_string(),
-                }
-            }
-            Modifier::Responsive(size) => {
-                // 响应式修饰符：sm, md, lg 等
-                let breakpoint = match size.as_str() {
-                    "sm" => "640px",
-                    "md" => "768px",
-                    "lg" => "1024px",
-                    "xl" => "1280px",
-                    "2xl" => "1536px",
-                    _ => "0px",
-                };
-                format!("@media (min-width: {}) {{ {} }}", breakpoint, selector)
-            }
-            Modifier::Custom(name) => {
-                // 自定义修饰符，暂时当作伪类处理
-                format!("{}:{}", selector, name)
-            }
+            _ => selector.to_string(),
+        },
+        Modifier::Responsive(size) => {
+            let breakpoint = BREAKPOINT_MAP.get(size.as_str()).copied().unwrap_or("0px");
+            format!("@media (min-width: {}) {{ {} }}", breakpoint, selector)
         }
+        Modifier::Custom(name) => format!("{}:{}", selector, name),
     }
 }
 
@@ -180,27 +320,9 @@ mod tests {
     use super::*;
     use headwind_tw_parse::parse_class;
 
-    fn create_test_index() -> TailwindIndex {
-        let mut index = TailwindIndex::new();
-        index.insert(
-            "p-4".to_string(),
-            vec![Declaration::new("padding", "1rem")],
-        );
-        index.insert(
-            "text-center".to_string(),
-            vec![Declaration::new("text-align", "center")],
-        );
-        index.insert(
-            "bg-blue-500".to_string(),
-            vec![Declaration::new("background-color", "rgb(59 130 246)")],
-        );
-        index
-    }
-
     #[test]
-    fn test_convert_simple_class() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+    fn test_convert_standard_value() {
+        let converter = Converter::new();
 
         let parsed = parse_class("p-4").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -212,9 +334,21 @@ mod tests {
     }
 
     #[test]
+    fn test_convert_valueless_class() {
+        let converter = Converter::new();
+
+        let parsed = parse_class("flex").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.selector, ".flex");
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "display");
+        assert_eq!(rule.declarations[0].value, "flex");
+    }
+
+    #[test]
     fn test_convert_with_pseudo_class() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("hover:p-4").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -225,8 +359,7 @@ mod tests {
 
     #[test]
     fn test_convert_with_responsive() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("md:text-center").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -238,8 +371,7 @@ mod tests {
 
     #[test]
     fn test_convert_with_important() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("p-4!").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -250,8 +382,7 @@ mod tests {
 
     #[test]
     fn test_convert_multiple_modifiers() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("md:hover:p-4").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -261,20 +392,8 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_unknown_class() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
-
-        let parsed = parse_class("unknown-class").unwrap();
-        let rule = converter.convert(&parsed);
-
-        assert!(rule.is_none());
-    }
-
-    #[test]
     fn test_convert_arbitrary_value() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("w-[13px]").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -287,8 +406,7 @@ mod tests {
 
     #[test]
     fn test_convert_arbitrary_value_with_modifier() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("hover:w-[13px]").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -301,8 +419,7 @@ mod tests {
 
     #[test]
     fn test_convert_arbitrary_value_multi_property() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("px-[2rem]").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -317,8 +434,7 @@ mod tests {
 
     #[test]
     fn test_convert_arbitrary_value_with_color() {
-        let index = create_test_index();
-        let converter = Converter::new(&index);
+        let converter = Converter::new();
 
         let parsed = parse_class("text-[#1da1f2]").unwrap();
         let rule = converter.convert(&parsed).unwrap();
@@ -327,5 +443,70 @@ mod tests {
         assert_eq!(rule.declarations.len(), 1);
         assert_eq!(rule.declarations[0].property, "color");
         assert_eq!(rule.declarations[0].value, "#1da1f2");
+    }
+
+    #[test]
+    fn test_convert_color_value() {
+        let converter = Converter::new();
+
+        let parsed = parse_class("bg-blue-500").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.selector, ".bg-blue-500");
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "background");
+        assert_eq!(rule.declarations[0].value, "#3b82f6");
+    }
+
+    #[test]
+    fn test_convert_negative_value() {
+        let converter = Converter::new();
+
+        let parsed = parse_class("-m-4").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.selector, ".-m-4");
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "margin");
+        assert_eq!(rule.declarations[0].value, "-1rem");
+    }
+
+    #[test]
+    fn test_convert_valueless_fallback() {
+        // overflow-auto: parser gives plugin="overflow", value="auto"
+        // converter falls back to VALUELESS_MAP lookup of "overflow-auto"
+        let converter = Converter::new();
+
+        let parsed = parse_class("overflow-auto").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "overflow");
+        assert_eq!(rule.declarations[0].value, "auto");
+    }
+
+    #[test]
+    fn test_convert_compound_plugin() {
+        // justify-items-center: parser detects compound plugin "justify-items"
+        let converter = Converter::new();
+
+        let parsed = parse_class("justify-items-center").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "justify-items");
+        assert_eq!(rule.declarations[0].value, "center");
+    }
+
+    #[test]
+    fn test_convert_compound_gap_x() {
+        let converter = Converter::new();
+
+        let parsed = parse_class("gap-x-4").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+
+        assert_eq!(rule.declarations.len(), 1);
+        assert_eq!(rule.declarations[0].property, "column-gap");
+        assert_eq!(rule.declarations[0].value, "1rem");
     }
 }

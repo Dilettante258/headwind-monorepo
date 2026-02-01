@@ -6,12 +6,15 @@ fn main() {
     println!("🔍 Validating official Tailwind CSS mappings\n");
     println!("{}\n", "=".repeat(80));
 
-    // 加载官方映射
+    // 加载官方映射（用于验证）
     let json = include_str!("../../tw_index/fixtures/official-mappings.json");
     let index = load_from_official_json(json).expect("Failed to load mappings");
-    let converter = Converter::new(&index);
 
-    println!("📚 Loaded {} official class mappings\n", index.len());
+    // 使用基于规则的转换器
+    let converter = Converter::new();
+
+    println!("📚 Loaded {} official class mappings for validation\n", index.len());
+    println!("🔧 Using rule-based converter (not index lookup)\n");
 
     // 统计信息
     let all_classes = index.classes();

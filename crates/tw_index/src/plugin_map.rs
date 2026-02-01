@@ -1,140 +1,161 @@
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use phf::phf_map;
 
-/// 插件名到 CSS 属性的映射
+/// 插件名到单个 CSS 属性的映射
 ///
 /// 用于处理任意值，如 `w-[13px]` → `width: 13px`
-pub fn get_plugin_property_map() -> &'static HashMap<&'static str, &'static str> {
-    static MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+/// 使用 phf 在编译期生成完美哈希表，零运行时开销
+static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
+    // Spacing (间距)
+    "p" => "padding",
+    "pt" => "padding-top",
+    "pr" => "padding-right",
+    "pb" => "padding-bottom",
+    "pl" => "padding-left",
+    "m" => "margin",
+    "mt" => "margin-top",
+    "mr" => "margin-right",
+    "mb" => "margin-bottom",
+    "ml" => "margin-left",
 
-    MAP.get_or_init(|| {
-        let mut map = HashMap::new();
+    // Sizing (尺寸)
+    "w" => "width",
+    "h" => "height",
+    "min-w" => "min-width",
+    "min-h" => "min-height",
+    "max-w" => "max-width",
+    "max-h" => "max-height",
 
-        // Spacing (间距)
-        map.insert("p", "padding");
-        map.insert("pt", "padding-top");
-        map.insert("pr", "padding-right");
-        map.insert("pb", "padding-bottom");
-        map.insert("pl", "padding-left");
-        map.insert("px", "padding-left"); // 会生成两个声明
-        map.insert("py", "padding-top"); // 会生成两个声明
-        map.insert("m", "margin");
-        map.insert("mt", "margin-top");
-        map.insert("mr", "margin-right");
-        map.insert("mb", "margin-bottom");
-        map.insert("ml", "margin-left");
-        map.insert("mx", "margin-left"); // 会生成两个声明
-        map.insert("my", "margin-top"); // 会生成两个声明
+    // Position (定位)
+    "top" => "top",
+    "right" => "right",
+    "bottom" => "bottom",
+    "left" => "left",
+    "inset" => "inset",
 
-        // Sizing (尺寸)
-        map.insert("w", "width");
-        map.insert("h", "height");
-        map.insert("min-w", "min-width");
-        map.insert("min-h", "min-height");
-        map.insert("max-w", "max-width");
-        map.insert("max-h", "max-height");
+    // Typography (排版)
+    // 注意：text 不在此 map 中，因为它是语义重载的（color / font-size / text-align），
+    // 由 converter 根据值类型做分发
+    "font-size" => "font-size",
+    "leading" => "line-height",
+    "tracking" => "letter-spacing",
 
-        // Position (定位)
-        map.insert("top", "top");
-        map.insert("right", "right");
-        map.insert("bottom", "bottom");
-        map.insert("left", "left");
-        map.insert("inset", "inset");
-        map.insert("inset-x", "left"); // 会生成两个声明
-        map.insert("inset-y", "top"); // 会生成两个声明
+    // Background (背景)
+    "bg" => "background",
+    "bg-color" => "background-color",
 
-        // Typography (排版)
-        map.insert("text", "color"); // text-[color] 或 font-size
-        map.insert("font-size", "font-size");
-        map.insert("leading", "line-height");
-        map.insert("tracking", "letter-spacing");
+    // Border (边框)
+    "border" => "border-width",
+    "border-t" => "border-top-width",
+    "border-r" => "border-right-width",
+    "border-b" => "border-bottom-width",
+    "border-l" => "border-left-width",
+    "rounded" => "border-radius",
 
-        // Background (背景)
-        map.insert("bg", "background");
-        map.insert("bg-color", "background-color");
+    // Flexbox & Grid
+    "gap" => "gap",
+    "gap-x" => "column-gap",
+    "gap-y" => "row-gap",
+    "grid-cols" => "grid-template-columns",
+    "grid-rows" => "grid-template-rows",
+    "col-span" => "grid-column",
+    "row-span" => "grid-row",
 
-        // Border (边框)
-        map.insert("border", "border-width");
-        map.insert("border-t", "border-top-width");
-        map.insert("border-r", "border-right-width");
-        map.insert("border-b", "border-bottom-width");
-        map.insert("border-l", "border-left-width");
-        map.insert("rounded", "border-radius");
-        map.insert("rounded-t", "border-top-left-radius"); // 会生成两个声明
-        map.insert("rounded-r", "border-top-right-radius"); // 会生成两个声明
-        map.insert("rounded-b", "border-bottom-right-radius"); // 会生成两个声明
-        map.insert("rounded-l", "border-top-left-radius"); // 会生成两个声明
+    // Layout alignment (compound plugins)
+    "justify" => "justify-content",
+    "justify-items" => "justify-items",
+    "justify-self" => "justify-self",
+    "place-content" => "place-content",
+    "place-items" => "place-items",
+    "place-self" => "place-self",
+    "align-content" => "align-content",
+    "align-self" => "align-self",
 
-        // Flexbox & Grid
-        map.insert("gap", "gap");
-        map.insert("gap-x", "column-gap");
-        map.insert("gap-y", "row-gap");
-        map.insert("grid-cols", "grid-template-columns");
-        map.insert("grid-rows", "grid-template-rows");
-        map.insert("col-span", "grid-column");
-        map.insert("row-span", "grid-row");
+    // Overflow (compound)
+    "overflow-x" => "overflow-x",
+    "overflow-y" => "overflow-y",
 
-        // Effects (效果)
-        map.insert("opacity", "opacity");
-        map.insert("shadow", "box-shadow");
+    // Object
+    "object" => "object-fit",
 
-        // Transform (变换)
-        map.insert("translate", "translate");
-        map.insert("translate-x", "translate");
-        map.insert("translate-y", "translate");
-        map.insert("translate-z", "translate");
-        map.insert("rotate", "rotate");
-        map.insert("scale", "scale");
-        map.insert("scale-x", "scale");
-        map.insert("scale-y", "scale");
+    // Effects (效果)
+    "opacity" => "opacity",
+    "shadow" => "box-shadow",
 
-        // Filters (滤镜)
-        map.insert("blur", "filter");
-        map.insert("brightness", "filter");
-        map.insert("contrast", "filter");
-        map.insert("grayscale", "filter");
+    // Transform (变换)
+    "translate" => "translate",
+    "translate-x" => "translate",
+    "translate-y" => "translate",
+    "translate-z" => "translate",
+    "rotate" => "rotate",
+    "scale" => "scale",
+    "scale-x" => "scale",
+    "scale-y" => "scale",
 
-        // Transitions & Animation (过渡和动画)
-        map.insert("duration", "transition-duration");
-        map.insert("delay", "transition-delay");
+    // Filters (滤镜)
+    "blur" => "filter",
+    "brightness" => "filter",
+    "contrast" => "filter",
+    "grayscale" => "filter",
 
-        // Other (其他)
-        map.insert("z", "z-index");
+    // Transitions & Animation (过渡和动画)
+    "duration" => "transition-duration",
+    "delay" => "transition-delay",
 
-        map
-    })
+    // Other (其他)
+    "z" => "z-index",
+    "content" => "content",
+    "aspect" => "aspect-ratio",
+    "flex" => "flex",
+    "transform" => "transform",
+    "ring" => "box-shadow",
+    "ring-offset" => "box-shadow",
+    "order" => "order",
+    "cursor" => "cursor",
+    "pointer-events" => "pointer-events",
+    "resize" => "resize",
+    "select" => "user-select",
+};
+
+/// 需要生成两个 CSS 声明的插件映射
+///
+/// 例如 `px-4` 需要同时设置 `padding-left` 和 `padding-right`
+static MULTI_PROPERTY_MAP: phf::Map<&'static str, (&'static str, &'static str)> = phf_map! {
+    "px" => ("padding-left", "padding-right"),
+    "py" => ("padding-top", "padding-bottom"),
+    "mx" => ("margin-left", "margin-right"),
+    "my" => ("margin-top", "margin-bottom"),
+    "inset-x" => ("left", "right"),
+    "inset-y" => ("top", "bottom"),
+    "rounded-t" => ("border-top-left-radius", "border-top-right-radius"),
+    "rounded-r" => ("border-top-right-radius", "border-bottom-right-radius"),
+    "rounded-b" => ("border-bottom-right-radius", "border-bottom-left-radius"),
+    "rounded-l" => ("border-top-left-radius", "border-bottom-left-radius"),
+};
+
+/// 获取插件属性映射的引用
+pub fn get_plugin_property_map() -> &'static phf::Map<&'static str, &'static str> {
+    &PLUGIN_PROPERTY_MAP
 }
 
 /// 检查插件是否需要生成多个 CSS 声明
-///
-/// 例如 `px` 需要同时设置 `padding-left` 和 `padding-right`
 pub fn is_multi_declaration_plugin(plugin: &str) -> bool {
-    matches!(
-        plugin,
-        "px" | "py" | "mx" | "my" | "inset-x" | "inset-y" | "rounded-t" | "rounded-r"
-            | "rounded-b" | "rounded-l"
-    )
+    MULTI_PROPERTY_MAP.contains_key(plugin)
 }
 
 /// 获取插件的所有 CSS 属性
 ///
 /// 对于普通插件返回单个属性，对于 px/py/mx/my 等返回两个属性
 pub fn get_plugin_properties(plugin: &str) -> Option<Vec<&'static str>> {
-    let map = get_plugin_property_map();
-
-    match plugin {
-        "px" => Some(vec!["padding-left", "padding-right"]),
-        "py" => Some(vec!["padding-top", "padding-bottom"]),
-        "mx" => Some(vec!["margin-left", "margin-right"]),
-        "my" => Some(vec!["margin-top", "margin-bottom"]),
-        "inset-x" => Some(vec!["left", "right"]),
-        "inset-y" => Some(vec!["top", "bottom"]),
-        "rounded-t" => Some(vec!["border-top-left-radius", "border-top-right-radius"]),
-        "rounded-r" => Some(vec!["border-top-right-radius", "border-bottom-right-radius"]),
-        "rounded-b" => Some(vec!["border-bottom-right-radius", "border-bottom-left-radius"]),
-        "rounded-l" => Some(vec!["border-top-left-radius", "border-bottom-left-radius"]),
-        _ => map.get(plugin).map(|&prop| vec![prop]),
+    if let Some(&(a, b)) = MULTI_PROPERTY_MAP.get(plugin) {
+        Some(vec![a, b])
+    } else {
+        PLUGIN_PROPERTY_MAP.get(plugin).map(|&prop| vec![prop])
     }
+}
+
+/// 检查是否为已知插件（单属性或多属性）
+pub fn is_known_plugin(plugin: &str) -> bool {
+    PLUGIN_PROPERTY_MAP.contains_key(plugin) || MULTI_PROPERTY_MAP.contains_key(plugin)
 }
 
 #[cfg(test)]

@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 /// 解析后的 Tailwind class 表示
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ParsedClass {
-    /// 修饰符列表（如 hover, md, dark）
-    pub modifiers: Vec<Modifier>,
+    /// 原始修饰符字符串（如 "md:hover:"）
+    /// 需要时可通过 parse_modifiers_from_raw() 解析成 Vec<Modifier>
+    pub raw_modifiers: String,
 
     /// 是否为负值（如 -m-4）
     pub negative: bool,
@@ -65,7 +66,7 @@ impl ParsedClass {
     /// 创建一个新的 ParsedClass
     pub fn new(plugin: String) -> Self {
         Self {
-            modifiers: Vec::new(),
+            raw_modifiers: String::new(),
             negative: false,
             plugin,
             value: None,
@@ -74,9 +75,21 @@ impl ParsedClass {
         }
     }
 
+    /// 获取解析后的修饰符列表
+    ///
+    /// 这个方法会在需要时从 raw_modifiers 解析出 Modifier 列表
+    pub fn modifiers(&self) -> Vec<Modifier> {
+        parse_modifiers_from_raw(&self.raw_modifiers)
+    }
+
     /// 添加修饰符
     pub fn with_modifier(mut self, modifier: Modifier) -> Self {
-        self.modifiers.push(modifier);
+        // 更新 raw_modifiers
+        if !self.raw_modifiers.is_empty() {
+            self.raw_modifiers.push_str(&format!("{}:", modifier));
+        } else {
+            self.raw_modifiers = format!("{}:", modifier);
+        }
         self
     }
 
@@ -108,11 +121,8 @@ impl ParsedClass {
     pub fn to_normalized_string(&self) -> String {
         let mut result = String::new();
 
-        // 添加修饰符
-        for modifier in &self.modifiers {
-            result.push_str(&modifier.to_string());
-            result.push(':');
-        }
+        // 添加修饰符（直接使用 raw_modifiers）
+        result.push_str(&self.raw_modifiers);
 
         // 添加负值前缀
         if self.negative {
@@ -207,6 +217,28 @@ impl std::fmt::Display for Modifier {
             | Modifier::Custom(s) => write!(f, "{}", s),
         }
     }
+}
+
+/// 从 raw_modifiers 字符串解析出 Modifier 列表
+///
+/// # 示例
+///
+/// ```
+/// use headwind_tw_parse::parse_modifiers_from_raw;
+///
+/// let modifiers = parse_modifiers_from_raw("hover:md:");
+/// assert_eq!(modifiers.len(), 2);
+/// ```
+pub fn parse_modifiers_from_raw(raw: &str) -> Vec<Modifier> {
+    if raw.is_empty() {
+        return Vec::new();
+    }
+
+    // 按冒号分割，过滤空字符串
+    raw.split(':')
+        .filter(|s| !s.is_empty())
+        .map(Modifier::from_str)
+        .collect()
 }
 
 impl ParsedValue {
