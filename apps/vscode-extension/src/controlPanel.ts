@@ -104,31 +104,27 @@ function handleWebviewMessage(msg: WebviewToHostMessage): void {
 }
 
 /**
- * Resolve the editor to use for transform operations.
- * Prefers the active text editor if it's a supported file,
- * otherwise falls back to the last tracked file URI from state.
+ * Resolve the document to use for transform operations.
+ * Prefers the active text editor's document if it's a supported file,
+ * otherwise silently reads the last tracked file from state (no new tab).
  */
-async function resolveEditor(): Promise<vscode.TextEditor | undefined> {
+async function resolveDocument(): Promise<vscode.TextDocument | undefined> {
   const active = vscode.window.activeTextEditor;
   if (active && isSupportedFile(active.document.fileName)) {
-    return active;
+    return active.document;
   }
 
-  // Fall back to the last known supported file
+  // Silently open the document without showing it in a tab
   if (state.activeFileUri) {
-    const doc = await vscode.workspace.openTextDocument(state.activeFileUri);
-    return await vscode.window.showTextDocument(doc, {
-      preserveFocus: true,
-      preview: true,
-    });
+    return await vscode.workspace.openTextDocument(state.activeFileUri);
   }
 
   return undefined;
 }
 
 async function doTransform(): Promise<void> {
-  const editor = await resolveEditor();
-  if (!editor) {
+  const doc = await resolveDocument();
+  if (!doc) {
     postMessage({
       type: "transformError",
       error:
@@ -138,8 +134,8 @@ async function doTransform(): Promise<void> {
   }
 
   try {
-    const source = editor.document.getText();
-    const filename = editor.document.fileName;
+    const source = doc.getText();
+    const filename = doc.fileName;
     const start = performance.now();
     const result = runTransform(source, filename, state.options);
     const duration = performance.now() - start;
