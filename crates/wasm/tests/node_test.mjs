@@ -163,4 +163,38 @@ let passed = 0;
   passed++;
 }
 
+// Test 11: Global mode with importPath (side-effect import injection)
+{
+  const result = transformJsx(
+    `function App() { return <div className="p-4 text-center">Hi</div>; }`,
+    "App.tsx",
+    {
+      outputMode: { type: "global", importPath: "./App.css" },
+    }
+  );
+
+  assert.ok(
+    result.code.includes('import "./App.css"'),
+    "should inject side-effect CSS import"
+  );
+  assert.ok(!result.code.includes("styles"), "should NOT have CSS modules binding");
+  console.log("PASS: Global mode with importPath");
+  passed++;
+}
+
+// Test 12: Global mode without importPath (no import injected)
+{
+  const result = transformJsx(
+    `function App() { return <div className="p-4">Hi</div>; }`,
+    "App.tsx",
+    {
+      outputMode: { type: "global" },
+    }
+  );
+
+  assert.ok(!result.code.includes("import"), "should NOT inject import without importPath");
+  console.log("PASS: Global mode without importPath");
+  passed++;
+}
+
 console.log(`\n${passed}/${passed} tests passed!`);

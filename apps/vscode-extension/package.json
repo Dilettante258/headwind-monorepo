@@ -95,8 +95,8 @@
         },
         "headwind.cssOutputPattern": {
           "type": "string",
-          "default": "[name].headwind.css",
-          "description": "Filename pattern for generated CSS files. [name] is replaced with the source filename stem."
+          "default": "[name].css",
+          "description": "Filename pattern for generated CSS files in global mode. [name] is replaced with the source filename stem. CSS Modules always uses [name].module.css."
         },
         "headwind.include": {
           "type": "string",

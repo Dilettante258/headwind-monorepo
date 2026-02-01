@@ -17,8 +17,8 @@ Powered by Rust + WASM for near-instant transforms.
 - **Diff Preview** — Side-by-side comparison of original vs transformed code using VS Code's built-in diff editor
   差异预览 — 使用 VS Code 内置 diff 编辑器对比转换前后代码
 
-- **Apply Transform** — One-click apply: replaces source code and writes a companion `.headwind.css` file
-  一键应用 — 替换源码并生成配套 `.headwind.css` 文件
+- **Apply Transform** — One-click apply: replaces source code and writes a companion CSS file (`.css` for global, `.module.css` for CSS Modules)
+  一键应用 — 替换源码并生成配套 CSS 文件（全局模式 `.css`，CSS Modules 模式 `.module.css`）
 
 - **Transform on Save** — Optionally auto-transform when saving supported files
   保存时自动转换（可选）
@@ -52,7 +52,7 @@ Powered by Rust + WASM for near-instant transforms.
 | `headwind.cssVariables` | `var` \| `inline` | `var` | CSS value mode / CSS 值模式 |
 | `headwind.unknownClasses` | `remove` \| `preserve` | `preserve` | Unknown class handling / 未知类名处理 |
 | `headwind.transformOnSave` | `boolean` | `false` | Auto-transform on save / 保存时自动转换 |
-| `headwind.cssOutputPattern` | `string` | `[name].headwind.css` | CSS output filename pattern / CSS 输出文件名模式 |
+| `headwind.cssOutputPattern` | `string` | `[name].css` | CSS output filename pattern (global mode) / CSS 输出文件名模式（全局模式）|
 | `headwind.include` | `string` | `**/*.{jsx,tsx,html}` | File glob for workspace transforms / 工作区转换文件匹配 |
 
 ---
@@ -107,7 +107,7 @@ Extension Host                          Webview (Control Panel)
        │
        ├── diffPreview.ts ── vscode.diff (before / after)
        ├── transformOnSave.ts ── onWillSaveTextDocument
-       └── cssOutput.ts ── [name].headwind.css
+       └── cssOutput.ts ── [name].css / [name].module.css
 ```
 
 The transform engine is `headwind-wasm` compiled for Node.js (`wasm-pack --target nodejs`). At runtime, the WASM binary is loaded via `require()` from the `dist/` directory.

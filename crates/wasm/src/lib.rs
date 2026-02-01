@@ -40,7 +40,11 @@ impl Default for JsNamingMode {
 #[derive(Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum JsOutputMode {
-    Global,
+    #[serde(rename_all = "camelCase")]
+    Global {
+        #[serde(default)]
+        import_path: Option<String>,
+    },
     #[serde(rename_all = "camelCase")]
     CssModules {
         #[serde(default = "default_binding")]
@@ -54,7 +58,7 @@ enum JsOutputMode {
 
 impl Default for JsOutputMode {
     fn default() -> Self {
-        JsOutputMode::Global
+        JsOutputMode::Global { import_path: None }
     }
 }
 
@@ -133,7 +137,7 @@ impl From<JsCssModulesAccess> for CssModulesAccess {
 impl From<JsOutputMode> for OutputMode {
     fn from(m: JsOutputMode) -> Self {
         match m {
-            JsOutputMode::Global => OutputMode::Global,
+            JsOutputMode::Global { import_path } => OutputMode::Global { import_path },
             JsOutputMode::CssModules {
                 binding_name,
                 import_path,

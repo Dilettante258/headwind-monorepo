@@ -24,7 +24,7 @@ export function getTransformOptions(): TransformOptions {
 export function getCssOutputPattern(): string {
   return vscode.workspace
     .getConfiguration("headwind")
-    .get<string>("cssOutputPattern", "[name].headwind.css");
+    .get<string>("cssOutputPattern", "[name].css");
 }
 
 export function getIncludeGlob(): string {

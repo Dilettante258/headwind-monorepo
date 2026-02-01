@@ -3,6 +3,7 @@ import * as path from "path";
 import { state } from "./state";
 import { runTransform } from "./wasm";
 import { writeCssOutput } from "./cssOutput";
+import { getCssOutputPattern } from "./config";
 import { clearDiagnostics, reportError } from "./diagnostics";
 import { log, logError } from "./logger";
 import { isSupportedFile } from "./types";
@@ -100,7 +101,7 @@ async function executePreviewTransform(): Promise<void> {
 
   try {
     const start = performance.now();
-    const result = runTransform(source, filename, state.options);
+    const result = runTransform(source, filename, state.options, getCssOutputPattern());
     const duration = performance.now() - start;
 
     state.setResult(result, duration);
@@ -156,7 +157,7 @@ async function executeApplyTransform(): Promise<void> {
 
   // Write CSS file
   if (result.css.trim().length > 0) {
-    const cssUri = await writeCssOutput(doc.uri, result.css);
+    const cssUri = await writeCssOutput(doc.uri, result.css, state.options.outputMode);
     log(`CSS written to ${path.basename(cssUri.fsPath)}`);
     vscode.window.showInformationMessage(
       `Headwind: Applied! CSS written to ${path.basename(cssUri.fsPath)}`,

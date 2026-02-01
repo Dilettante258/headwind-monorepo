@@ -9,6 +9,7 @@ export interface TransformOptions {
 
 export interface GlobalOutputMode {
   type: 'global';
+  importPath?: string;
 }
 
 export interface CssModulesOutputMode {

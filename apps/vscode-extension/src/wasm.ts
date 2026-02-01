@@ -36,15 +36,32 @@ export function transformHtml(
   return wasmModule.transformHtml(source, options);
 }
 
-/** Pick the right transform function based on file extension */
+/**
+ * Pick the right transform function based on file extension.
+ * For JSX global mode, auto-injects the CSS import path when
+ * `cssOutputPattern` is provided (e.g. `[name].headwind.css`).
+ */
 export function runTransform(
   source: string,
   filename: string,
   options: TransformOptions,
+  cssOutputPattern?: string,
 ): TransformResult {
   const ext = path.extname(filename).toLowerCase();
   if (ext === ".html" || ext === ".htm") {
     return transformHtml(source, options);
   }
-  return transformJsx(source, filename, options);
+
+  // For global mode, derive the CSS import path from the filename
+  let opts = options;
+  if (options.outputMode.type === "global" && cssOutputPattern) {
+    const stem = path.basename(filename, path.extname(filename));
+    const cssFileName = cssOutputPattern.replace("[name]", stem);
+    opts = {
+      ...options,
+      outputMode: { ...options.outputMode, importPath: `./${cssFileName}` },
+    };
+  }
+
+  return transformJsx(source, filename, opts);
 }

@@ -39,7 +39,11 @@ impl Default for CssModulesAccess {
 pub enum OutputMode {
     /// 全局模式：直接替换为类名字符串
     /// `className="p-4"` → `className="c_abc123"`
-    Global,
+    Global {
+        /// CSS import 路径。设置后注入 side-effect import `import '<path>'`。
+        /// None 时不注入（向后兼容）。
+        import_path: Option<String>,
+    },
     /// CSS Modules 模式：替换为 styles.xxx 或 styles["xxx"] 引用，
     /// 并在文件头部注入 `import styles from './xxx.module.css'`
     CssModules {
@@ -55,7 +59,7 @@ pub enum OutputMode {
 
 impl Default for OutputMode {
     fn default() -> Self {
-        OutputMode::Global
+        OutputMode::Global { import_path: None }
     }
 }
 
@@ -104,7 +108,7 @@ impl Default for TransformOptions {
     fn default() -> Self {
         Self {
             naming_mode: NamingMode::Hash,
-            output_mode: OutputMode::Global,
+            output_mode: OutputMode::default(),
             css_variables: CssVariableMode::Var,
             unknown_classes: UnknownClassMode::Remove,
         }
@@ -196,7 +200,7 @@ pub fn transform_jsx(
             access,
             ..
         } => Some((binding_name.clone(), *access)),
-        OutputMode::Global => None,
+        OutputMode::Global { .. } => None,
     };
     {
         let mut visitor = JsxClassVisitor::new(
@@ -208,20 +212,27 @@ pub fn transform_jsx(
         module.visit_mut_with(&mut visitor);
     }
 
-    // CSS Modules 模式：注入 import 语句
-    if let OutputMode::CssModules {
-        binding_name,
-        import_path,
-        ..
-    } = &options.output_mode
-    {
-        // 只有实际产生了类名映射才注入 import
-        if !collector.class_map().is_empty() {
-            let path = import_path
-                .clone()
-                .unwrap_or_else(|| derive_css_module_path(filename));
-            let import = create_css_module_import(binding_name, &path);
-            module.body.insert(0, import);
+    // 注入 import 语句（仅在有类名映射时）
+    if !collector.class_map().is_empty() {
+        match &options.output_mode {
+            OutputMode::Global {
+                import_path: Some(path),
+            } => {
+                let import = create_side_effect_import(path);
+                module.body.insert(0, import);
+            }
+            OutputMode::CssModules {
+                binding_name,
+                import_path,
+                ..
+            } => {
+                let path = import_path
+                    .clone()
+                    .unwrap_or_else(|| derive_css_module_path(filename));
+                let import = create_css_module_import(binding_name, &path);
+                module.body.insert(0, import);
+            }
+            _ => {}
         }
     }
 
@@ -277,6 +288,23 @@ fn derive_css_module_path(filename: &str) -> String {
     let base = filename.rsplit('/').next().unwrap_or(filename);
     let stem = base.rsplit_once('.').map(|(name, _)| name).unwrap_or(base);
     format!("./{}.module.css", stem)
+}
+
+/// 创建 side-effect import 声明 AST 节点
+/// `import './App.css'`
+fn create_side_effect_import(import_path: &str) -> ModuleItem {
+    ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        specifiers: vec![],
+        src: Box::new(Str {
+            span: DUMMY_SP,
+            value: import_path.into(),
+            raw: None,
+        }),
+        type_only: false,
+        with: None,
+        phase: Default::default(),
+    }))
 }
 
 /// 创建 CSS Module 的 import 声明 AST 节点
@@ -889,5 +917,77 @@ mod tests {
         assert!(class_name.starts_with("c_"));
         let pattern = format!("styles[\"{}\"]", class_name);
         assert!(result.code.contains(&pattern));
+    }
+
+    // === Global mode CSS import injection tests ===
+
+    #[test]
+    fn test_global_with_import_path() {
+        let source = r#"export default function App() {
+    return <div className="p-4 text-center">Hello</div>;
+}"#;
+
+        let result = transform_jsx(
+            source,
+            "App.tsx",
+            TransformOptions {
+                output_mode: OutputMode::Global {
+                    import_path: Some("./App.css".to_string()),
+                },
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        println!("=== Global + Import Code ===\n{}", result.code);
+
+        // Should contain side-effect import
+        assert!(result.code.contains("import \"./App.css\""));
+        // Should still use string class names (not styles.xxx)
+        assert!(!result.code.contains("styles."));
+        // CSS should still be generated
+        assert!(result.css.contains("padding"));
+    }
+
+    #[test]
+    fn test_global_without_import_path() {
+        let source = r#"function App() {
+    return <div className="p-4">Hello</div>;
+}"#;
+
+        let result = transform_jsx(
+            source,
+            "App.tsx",
+            TransformOptions {
+                output_mode: OutputMode::Global { import_path: None },
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        // No import should be injected
+        assert!(!result.code.contains("import"));
+    }
+
+    #[test]
+    fn test_global_import_not_injected_when_no_classes() {
+        let source = r#"function App() {
+    return <div id="main">Hello</div>;
+}"#;
+
+        let result = transform_jsx(
+            source,
+            "App.tsx",
+            TransformOptions {
+                output_mode: OutputMode::Global {
+                    import_path: Some("./App.css".to_string()),
+                },
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        // No className means no class map → no import
+        assert!(!result.code.contains("import"));
     }
 }

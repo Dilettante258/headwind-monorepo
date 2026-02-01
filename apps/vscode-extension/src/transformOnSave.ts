@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { state } from "./state";
 import { runTransform } from "./wasm";
-import { isTransformOnSave } from "./config";
+import { isTransformOnSave, getCssOutputPattern } from "./config";
 import { writeCssOutput } from "./cssOutput";
 import { clearDiagnostics, reportError } from "./diagnostics";
 import { log, logError } from "./logger";
@@ -28,13 +28,13 @@ export function registerTransformOnSave(context: vscode.ExtensionContext): void 
       (async (): Promise<vscode.TextEdit[]> => {
         try {
           const source = document.getText();
-          const result = runTransform(source, filename, state.options);
+          const result = runTransform(source, filename, state.options, getCssOutputPattern());
 
           clearDiagnostics(document.uri);
 
           // Write CSS file (fire-and-forget)
           if (result.css.trim().length > 0) {
-            writeCssOutput(document.uri, result.css).catch((err) =>
+            writeCssOutput(document.uri, result.css, state.options.outputMode).catch((err) =>
               logError("CSS write failed", err),
             );
           }

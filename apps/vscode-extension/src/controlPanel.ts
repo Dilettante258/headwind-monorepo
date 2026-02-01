@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { state } from "./state";
 import { runTransform } from "./wasm";
 import { getWebviewHtml } from "./controlPanelHtml";
+import { getCssOutputPattern } from "./config";
 import { isSupportedFile } from "./types";
 import type { WebviewToHostMessage, HostToWebviewMessage } from "./types";
 
@@ -137,7 +138,7 @@ async function doTransform(): Promise<void> {
     const source = doc.getText();
     const filename = doc.fileName;
     const start = performance.now();
-    const result = runTransform(source, filename, state.options);
+    const result = runTransform(source, filename, state.options, getCssOutputPattern());
     const duration = performance.now() - start;
     state.setResult(result, duration);
     postMessage({ type: "transformResult", result, duration });
