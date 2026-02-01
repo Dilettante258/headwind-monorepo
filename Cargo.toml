@@ -6,6 +6,8 @@ members = [
     "crates/tw_index",
     "crates/tw_parse",
     "crates/swc_plugin",
+    "crates/transform",
+    "crates/wasm",
 ]
 
 [workspace.package]
@@ -14,12 +16,14 @@ edition = "2021"
 license = "MIT"
 
 [workspace.dependencies]
-swc_core = { version = "56.0.*", features = ["ecma_plugin_transform"] }
+swc_core = { version = "56.0.*" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 indexmap = "2.0"
 blake3 = "1.5"
 phf = { version = "0.11", features = ["macros"] }
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
 
 [profile.release]
 lto = true

@@ -23,10 +23,12 @@ pub struct BundleResult {
 /// 命名策略
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NamingMode {
-    /// 基于内容 hash
+    /// 基于内容 hash: `c_a1b2c3d4e5f6`
     Hash,
-    /// 调试友好（如 "p4_m2"）
+    /// 调试友好（下划线分隔）: `p4_m2`
     Readable,
+    /// 驼峰式（适合 CSS Modules `styles.xxx`）: `p4M2`
+    CamelCase,
     /// AI 命名（未来）
     Semantic,
 }

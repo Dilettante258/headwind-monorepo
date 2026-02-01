@@ -71,11 +71,78 @@ impl NamingStrategy for ReadableNaming {
     }
 }
 
+/// CamelCase 命名策略：生成驼峰式类名，适合 CSS Modules 的 `styles.xxx` 访问
+///
+/// 例如：
+/// - `["p-4", "m-2"]` → `p4M2`
+/// - `["text-center", "hover:text-left"]` → `textCenterHoverTextLeft`
+/// - `["bg-blue-500", "text-white"]` → `bgBlue500TextWhite`
+pub struct CamelCaseNaming;
+
+impl CamelCaseNaming {
+    /// 将单个 Tailwind 类转换为 camelCase 片段
+    ///
+    /// 按 `-` 和 `:` 拆分，首段保持原样，后续段首字母大写
+    fn class_to_camel(class: &str) -> String {
+        let mut result = String::new();
+        let mut capitalize_next = false;
+
+        for ch in class.chars() {
+            if ch == '-' || ch == ':' {
+                capitalize_next = true;
+            } else if capitalize_next {
+                result.extend(ch.to_uppercase());
+                capitalize_next = false;
+            } else {
+                result.push(ch);
+            }
+        }
+
+        result
+    }
+}
+
+impl NamingStrategy for CamelCaseNaming {
+    fn generate_name(&self, classes: &[String]) -> String {
+        if classes.is_empty() {
+            return "empty".to_string();
+        }
+
+        let mut combined = String::new();
+
+        for (i, class) in classes.iter().enumerate() {
+            let camel = Self::class_to_camel(class);
+            if i == 0 {
+                // 第一个类：保持首字母小写
+                combined.push_str(&camel);
+            } else {
+                // 后续类：首字母大写
+                let mut chars = camel.chars();
+                if let Some(first) = chars.next() {
+                    combined.extend(first.to_uppercase());
+                    combined.push_str(chars.as_str());
+                }
+            }
+        }
+
+        // 过长时截断 + hash 后缀
+        if combined.len() > 32 {
+            let truncated = &combined[..24];
+            let hash = blake3::hash(combined.as_bytes());
+            let hex = format!("{}", hash);
+            format!("{}{}", truncated, &hex[..6])
+        } else {
+            combined
+        }
+    }
+}
+
 /// 根据 NamingMode 创建对应的策略
 pub fn create_naming_strategy(mode: NamingMode) -> Box<dyn NamingStrategy> {
     match mode {
         NamingMode::Hash => Box::new(HashNaming),
         NamingMode::Readable => Box::new(ReadableNaming),
+        NamingMode::CamelCase => Box::new(CamelCaseNaming),
         NamingMode::Semantic => {
             // 未来实现 AI 命名
             unimplemented!("Semantic naming not yet implemented")
@@ -143,6 +210,72 @@ mod tests {
     #[test]
     fn test_readable_naming_empty() {
         let naming = ReadableNaming;
+        let classes: Vec<String> = vec![];
+
+        let name = naming.generate_name(&classes);
+        assert_eq!(name, "empty");
+    }
+
+    #[test]
+    fn test_camel_case_naming_basic() {
+        let naming = CamelCaseNaming;
+        let classes = vec!["p-4".to_string(), "m-2".to_string()];
+
+        let name = naming.generate_name(&classes);
+        assert_eq!(name, "p4M2");
+    }
+
+    #[test]
+    fn test_camel_case_naming_complex() {
+        let naming = CamelCaseNaming;
+        let classes = vec!["text-center".to_string(), "bg-blue-500".to_string()];
+
+        let name = naming.generate_name(&classes);
+        assert_eq!(name, "textCenterBgBlue500");
+    }
+
+    #[test]
+    fn test_camel_case_naming_with_modifiers() {
+        let naming = CamelCaseNaming;
+        let classes = vec![
+            "text-center".to_string(),
+            "hover:text-left".to_string(),
+        ];
+
+        let name = naming.generate_name(&classes);
+        assert_eq!(name, "textCenterHoverTextLeft");
+    }
+
+    #[test]
+    fn test_camel_case_naming_single() {
+        let naming = CamelCaseNaming;
+        let classes = vec!["flex".to_string()];
+
+        let name = naming.generate_name(&classes);
+        assert_eq!(name, "flex");
+    }
+
+    #[test]
+    fn test_camel_case_naming_long() {
+        let naming = CamelCaseNaming;
+        let classes = vec![
+            "bg-blue-500".to_string(),
+            "text-white".to_string(),
+            "hover:bg-blue-700".to_string(),
+            "font-bold".to_string(),
+            "px-4".to_string(),
+            "py-2".to_string(),
+            "rounded".to_string(),
+        ];
+
+        let name = naming.generate_name(&classes);
+        // 超过 32 字符时应截断 + hash
+        assert!(name.len() <= 32);
+    }
+
+    #[test]
+    fn test_camel_case_naming_empty() {
+        let naming = CamelCaseNaming;
         let classes: Vec<String> = vec![];
 
         let name = naming.generate_name(&classes);

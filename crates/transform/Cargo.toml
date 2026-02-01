@@ -1,0 +1,17 @@
+[package]
+name = "headwind-transform"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+headwind-core = { path = "../core" }
+headwind-tw-index = { path = "../tw_index" }
+swc_core = { workspace = true, features = [
+    "common",
+    "ecma_ast",
+    "ecma_parser",
+    "ecma_visit",
+    "ecma_codegen",
+] }
+indexmap = { workspace = true }
+blake3 = { workspace = true }

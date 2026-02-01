@@ -1,0 +1,24 @@
+[package]
+name = "headwind-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "Headwind CSS transform compiled to WebAssembly"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+headwind-transform = { path = "../transform" }
+headwind-core = { path = "../core" }
+wasm-bindgen = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+indexmap = { workspace = true, features = ["serde"] }
+console_error_panic_hook = "0.1"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+serde_json = { workspace = true }

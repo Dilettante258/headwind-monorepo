@@ -10,7 +10,6 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@headwind/transformer": "workspace:*",
     "solid-js": "^1.9.5"
   },
   "devDependencies": {

@@ -8,7 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 serde = "1"
-swc_core = { version = "56.0.*", features = ["ecma_plugin_transform"] }
+swc_core = { workspace = true, features = ["ecma_plugin_transform"] }
 
 # .cargo/config.toml defines few alias to build plugin.
 # cargo build-wasip1 generates wasm32-wasip1 binary
