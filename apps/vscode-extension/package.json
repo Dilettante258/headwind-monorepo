@@ -1,30 +1,118 @@
 {
   "name": "@headwind/vscode-extension",
   "displayName": "Headwind",
-  "description": "Code transformation powered by SWC",
+  "description": "Tailwind CSS to Atomic CSS compiler powered by Rust + WASM",
   "version": "0.1.0",
   "private": true,
+  "publisher": "headwind",
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": ["Other"],
-  "activationEvents": [],
+  "categories": ["Formatters", "Other"],
+  "activationEvents": [
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:html"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "headwind.transform",
-        "title": "Headwind: Transform Code"
+        "title": "Headwind: Transform Current File"
+      },
+      {
+        "command": "headwind.previewTransform",
+        "title": "Headwind: Preview Transform (Diff)"
+      },
+      {
+        "command": "headwind.applyTransform",
+        "title": "Headwind: Apply Transform"
+      },
+      {
+        "command": "headwind.openPanel",
+        "title": "Headwind: Open Control Panel"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Headwind",
+      "properties": {
+        "headwind.transformOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically transform Tailwind classes when saving supported files"
+        },
+        "headwind.namingMode": {
+          "type": "string",
+          "enum": ["hash", "readable", "camelCase"],
+          "default": "hash",
+          "enumDescriptions": [
+            "Hash-based names (c_a1b2c3)",
+            "Readable abbreviated names (p4_m2)",
+            "CamelCase names (p4M2)"
+          ],
+          "description": "Class naming strategy for generated atomic class names"
+        },
+        "headwind.outputMode": {
+          "type": "string",
+          "enum": ["global", "cssModules"],
+          "default": "global",
+          "enumDescriptions": [
+            "Global CSS with string class names",
+            "CSS Modules with styles.xxx references"
+          ],
+          "description": "Output format for transformed class names"
+        },
+        "headwind.cssModulesAccess": {
+          "type": "string",
+          "enum": ["dot", "bracket"],
+          "default": "dot",
+          "enumDescriptions": [
+            "Dot notation: styles.className",
+            "Bracket notation: styles[\"className\"]"
+          ],
+          "description": "CSS Modules property access style (only used when outputMode is cssModules)"
+        },
+        "headwind.cssVariables": {
+          "type": "string",
+          "enum": ["var", "inline"],
+          "default": "var",
+          "enumDescriptions": [
+            "Use CSS custom properties: var(--text-3xl)",
+            "Inline literal values: 1.875rem"
+          ],
+          "description": "CSS value output mode"
+        },
+        "headwind.unknownClasses": {
+          "type": "string",
+          "enum": ["remove", "preserve"],
+          "default": "preserve",
+          "enumDescriptions": [
+            "Remove unrecognized class names from output",
+            "Keep unrecognized class names in output"
+          ],
+          "description": "How to handle unrecognized Tailwind classes"
+        },
+        "headwind.cssOutputPattern": {
+          "type": "string",
+          "default": "[name].headwind.css",
+          "description": "Filename pattern for generated CSS files. [name] is replaced with the source filename stem."
+        },
+        "headwind.include": {
+          "type": "string",
+          "default": "**/*.{jsx,tsx,html}",
+          "description": "Glob pattern for files to include in workspace transform"
+        }
+      }
+    }
   },
   "scripts": {
+    "build:wasm": "node ../../tools/scripts/build-wasm-node.mjs",
+    "prebuild": "npm run build:wasm",
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@headwind/transformer": "workspace:*"
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@headwind/config": "workspace:*",

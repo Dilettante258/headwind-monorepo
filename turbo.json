@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build:wasm": {
-      "outputs": ["wasm-pkg/**"],
+      "outputs": ["wasm-pkg/**", "wasm/**"],
       "inputs": [
         "../../crates/wasm/src/**",
         "../../crates/wasm/Cargo.toml",
