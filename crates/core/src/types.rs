@@ -33,6 +33,28 @@ pub enum NamingMode {
     Semantic,
 }
 
+/// CSS 变量模式
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum CssVariableMode {
+    /// 使用 CSS 变量引用: `font-size: var(--text-3xl)`
+    /// 需要引入 Tailwind 的 @layer theme
+    #[default]
+    Var,
+    /// 内联为具体值: `font-size: 1.875rem`
+    /// 独立使用，不依赖 Tailwind 主题
+    Inline,
+}
+
+/// 未知类名处理模式
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum UnknownClassMode {
+    /// 删除不可识别的类名（默认）
+    #[default]
+    Remove,
+    /// 保留不可识别的类名（原样输出）
+    Preserve,
+}
+
 /// CSS 声明
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Declaration {

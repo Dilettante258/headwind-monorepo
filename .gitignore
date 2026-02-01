@@ -47,3 +47,6 @@ coverage/
 
 # Tools data (cloned repositories)
 tools/data/
+
+# Claude Code
+.claude/

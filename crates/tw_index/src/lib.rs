@@ -4,6 +4,7 @@ pub mod converter;
 pub mod index;
 pub mod loader;
 pub mod plugin_map;
+pub mod theme_values;
 pub mod value_map;
 
 // Re-export main types

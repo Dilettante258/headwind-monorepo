@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use headwind_transform::{
     transform_jsx as rs_transform_jsx,
     transform_html as rs_transform_html,
-    TransformOptions, OutputMode, CssModulesAccess, NamingMode,
+    TransformOptions, OutputMode, CssModulesAccess, NamingMode, CssVariableMode, UnknownClassMode,
 };
 
 // ── JS 侧 serde 镜像类型 ──────────────────────────────────────
@@ -17,6 +17,10 @@ struct JsTransformOptions {
     naming_mode: JsNamingMode,
     #[serde(default)]
     output_mode: JsOutputMode,
+    #[serde(default)]
+    css_variables: JsCssVariableMode,
+    #[serde(default)]
+    unknown_classes: JsUnknownClassMode,
 }
 
 #[derive(Deserialize)]
@@ -64,6 +68,32 @@ enum JsCssModulesAccess {
 impl Default for JsCssModulesAccess {
     fn default() -> Self {
         JsCssModulesAccess::Dot
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum JsCssVariableMode {
+    Var,
+    Inline,
+}
+
+impl Default for JsCssVariableMode {
+    fn default() -> Self {
+        JsCssVariableMode::Var
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum JsUnknownClassMode {
+    Remove,
+    Preserve,
+}
+
+impl Default for JsUnknownClassMode {
+    fn default() -> Self {
+        JsUnknownClassMode::Remove
     }
 }
 
@@ -117,11 +147,31 @@ impl From<JsOutputMode> for OutputMode {
     }
 }
 
+impl From<JsCssVariableMode> for CssVariableMode {
+    fn from(m: JsCssVariableMode) -> Self {
+        match m {
+            JsCssVariableMode::Var => CssVariableMode::Var,
+            JsCssVariableMode::Inline => CssVariableMode::Inline,
+        }
+    }
+}
+
+impl From<JsUnknownClassMode> for UnknownClassMode {
+    fn from(m: JsUnknownClassMode) -> Self {
+        match m {
+            JsUnknownClassMode::Remove => UnknownClassMode::Remove,
+            JsUnknownClassMode::Preserve => UnknownClassMode::Preserve,
+        }
+    }
+}
+
 impl From<JsTransformOptions> for TransformOptions {
     fn from(opts: JsTransformOptions) -> Self {
         TransformOptions {
             naming_mode: opts.naming_mode.into(),
             output_mode: opts.output_mode.into(),
+            css_variables: opts.css_variables.into(),
+            unknown_classes: opts.unknown_classes.into(),
         }
     }
 }
@@ -131,6 +181,8 @@ fn parse_options(options: JsValue) -> Result<JsTransformOptions, JsError> {
         Ok(JsTransformOptions {
             naming_mode: JsNamingMode::default(),
             output_mode: JsOutputMode::default(),
+            css_variables: JsCssVariableMode::default(),
+            unknown_classes: JsUnknownClassMode::default(),
         })
     } else {
         serde_wasm_bindgen::from_value(options)

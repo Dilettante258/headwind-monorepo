@@ -39,6 +39,8 @@ type Language = 'jsx' | 'html';
 type NamingMode = 'hash' | 'readable' | 'camelCase';
 type OutputModeType = 'global' | 'cssModules';
 type AccessMode = 'dot' | 'bracket';
+type CssVariablesMode = 'var' | 'inline';
+type UnknownClassesMode = 'remove' | 'preserve';
 
 const App: Component = () => {
   const [wasmLoaded, setWasmLoaded] = createSignal(false);
@@ -48,6 +50,8 @@ const App: Component = () => {
   const [namingMode, setNamingMode] = createSignal<NamingMode>('hash');
   const [outputModeType, setOutputModeType] = createSignal<OutputModeType>('global');
   const [accessMode, setAccessMode] = createSignal<AccessMode>('dot');
+  const [cssVariables, setCssVariables] = createSignal<CssVariablesMode>('inline');
+  const [unknownClasses, setUnknownClasses] = createSignal<UnknownClassesMode>('preserve');
   const [result, setResult] = createSignal<TransformResult | null>(null);
   const [error, setError] = createSignal('');
   const [duration, setDuration] = createSignal(0);
@@ -77,6 +81,8 @@ const App: Component = () => {
     const naming = namingMode();
     const outType = outputModeType();
     const access = accessMode();
+    const cssVars = cssVariables();
+    const unknown = unknownClasses();
 
     const options: TransformOptions = {
       namingMode: naming,
@@ -84,6 +90,8 @@ const App: Component = () => {
         outType === 'global'
           ? { type: 'global' }
           : { type: 'cssModules', access },
+      cssVariables: cssVars,
+      unknownClasses: unknown,
     };
 
     try {
@@ -184,6 +192,30 @@ const App: Component = () => {
           >
             <option value="global">Global</option>
             <option value="cssModules">CSS Modules</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="toolbar-label">Values</label>
+          <select
+            class="toolbar-select"
+            value={cssVariables()}
+            onChange={(e) => setCssVariables(e.currentTarget.value as CssVariablesMode)}
+          >
+            <option value="inline">Inline (1.875rem)</option>
+            <option value="var">Variables (var(--text-3xl))</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="toolbar-label">Unknown</label>
+          <select
+            class="toolbar-select"
+            value={unknownClasses()}
+            onChange={(e) => setUnknownClasses(e.currentTarget.value as UnknownClassesMode)}
+          >
+            <option value="preserve">Preserve</option>
+            <option value="remove">Remove</option>
           </select>
         </div>
 

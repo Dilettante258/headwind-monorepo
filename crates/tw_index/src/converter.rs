@@ -1,4 +1,5 @@
 use crate::plugin_map::get_plugin_properties;
+use crate::theme_values;
 use crate::value_map::{get_spacing_value, infer_value};
 use headwind_core::Declaration;
 use headwind_tw_parse::{Modifier, ParsedClass, ParsedValue};
@@ -145,11 +146,23 @@ static BREAKPOINT_MAP: phf::Map<&'static str, &'static str> = phf_map! {
 /// 基于规则的 Tailwind 类转换器
 ///
 /// 基于 plugin_map 和 value_map 进行转换，不依赖外部索引
-pub struct Converter;
+pub struct Converter {
+    /// true = 使用 var(--text-3xl)，false = 内联为 1.875rem
+    use_variables: bool,
+}
 
 impl Converter {
     pub fn new() -> Self {
-        Self
+        Self {
+            use_variables: true,
+        }
+    }
+
+    /// 创建使用内联值的转换器（不依赖 Tailwind 主题变量）
+    pub fn with_inline() -> Self {
+        Self {
+            use_variables: false,
+        }
     }
 
     /// 将 Tailwind 类转换为 CSS 声明（仅声明，不含选择器）
@@ -162,7 +175,8 @@ impl Converter {
             Some(ParsedValue::Arbitrary(arb)) => {
                 build_arbitrary_declarations(parsed, &arb.content)?
             }
-            Some(ParsedValue::Standard(value)) => build_standard_declarations(parsed, value)
+            Some(ParsedValue::Standard(value)) => self
+                .build_standard_declarations(parsed, value)
                 .or_else(|| build_valueless_from_full_name(parsed, value))?,
             None => build_valueless_declarations(parsed)?,
         };
@@ -213,29 +227,7 @@ fn build_arbitrary_declarations(parsed: &ParsedClass, raw_value: &str) -> Option
     Some(declarations)
 }
 
-/// 为标准值构建 CSS 声明
-///
-/// 例如：`p-4` → `padding: 1rem`
-fn build_standard_declarations(parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
-    // 不在 plugin_map 中的复杂插件，走专门的分发逻辑
-    if let Some(decls) = build_complex_standard(parsed, value) {
-        return Some(decls);
-    }
-
-    let properties = get_plugin_properties(&parsed.plugin)?;
-    let mut css_value = infer_value(&parsed.plugin, value)?;
-
-    if parsed.negative {
-        css_value = format!("-{}", css_value);
-    }
-
-    let declarations = properties
-        .into_iter()
-        .map(|property| Declaration::new(property, css_value.clone()))
-        .collect();
-
-    Some(declarations)
-}
+// build_standard_declarations is now a method on Converter (see impl block below)
 
 /// 为无值类构建声明
 ///
@@ -299,22 +291,61 @@ fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<
     }
 }
 
-/// 处理复杂标准值插件（语义重载，不同值映射到不同 CSS 属性）
-fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
-    match parsed.plugin.as_str() {
-        // ── text: text-align / text-wrap / font-size / color ─────
-        "text" => match value {
-            "left" | "center" | "right" | "justify" | "start" | "end" => {
-                Some(vec![Declaration::new("text-align", value.to_string())])
-            }
-            "nowrap" | "wrap" | "balance" | "pretty" => {
-                Some(vec![Declaration::new("text-wrap", value.to_string())])
-            }
-            "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl"
-            | "7xl" | "8xl" | "9xl" => Some(vec![
-                Declaration::new("font-size", format!("var(--text-{})", value)),
-                Declaration::new("line-height", format!("var(--text-{}--line-height)", value)),
-            ]),
+// build_complex_standard is now a method on Converter (see impl block below)
+
+// ---------------------------------------------------------------------------
+// Converter 方法扩展（需要访问 use_variables 的逻辑）
+// ---------------------------------------------------------------------------
+
+impl Converter {
+    /// 为标准值构建 CSS 声明
+    fn build_standard_declarations(&self, parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
+        if let Some(decls) = self.build_complex_standard(parsed, value) {
+            return Some(decls);
+        }
+
+        let properties = get_plugin_properties(&parsed.plugin)?;
+        let mut css_value = infer_value(&parsed.plugin, value)?;
+
+        if parsed.negative {
+            css_value = format!("-{}", css_value);
+        }
+
+        let declarations = properties
+            .into_iter()
+            .map(|property| Declaration::new(property, css_value.clone()))
+            .collect();
+
+        Some(declarations)
+    }
+
+    /// 处理复杂标准值插件（语义重载，不同值映射到不同 CSS 属性）
+    fn build_complex_standard(&self, parsed: &ParsedClass, value: &str) -> Option<Vec<Declaration>> {
+        match parsed.plugin.as_str() {
+            // ── text: text-align / text-wrap / font-size / color ─────
+            "text" => match value {
+                "left" | "center" | "right" | "justify" | "start" | "end" => {
+                    Some(vec![Declaration::new("text-align", value.to_string())])
+                }
+                "nowrap" | "wrap" | "balance" | "pretty" => {
+                    Some(vec![Declaration::new("text-wrap", value.to_string())])
+                }
+                "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl"
+                | "7xl" | "8xl" | "9xl" => {
+                    if self.use_variables {
+                        Some(vec![
+                            Declaration::new("font-size", format!("var(--text-{})", value)),
+                            Declaration::new("line-height", format!("var(--text-{}--line-height)", value)),
+                        ])
+                    } else {
+                        let fs = theme_values::TEXT_SIZE.get(value)?;
+                        let lh = theme_values::TEXT_LINE_HEIGHT.get(value)?;
+                        Some(vec![
+                            Declaration::new("font-size", fs.to_string()),
+                            Declaration::new("line-height", lh.to_string()),
+                        ])
+                    }
+                }
             _ => {
                 let css_value = infer_value(&parsed.plugin, value)?;
                 Some(vec![Declaration::new("color", css_value)])
@@ -402,10 +433,17 @@ fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Decla
 
         // ── font: weight / family / stretch ──────────────────────
         "font" => match value {
-            "sans" | "serif" | "mono" => Some(vec![Declaration::new(
-                "font-family",
-                format!("var(--font-{})", value),
-            )]),
+            "sans" | "serif" | "mono" => {
+                if self.use_variables {
+                    Some(vec![Declaration::new(
+                        "font-family",
+                        format!("var(--font-{})", value),
+                    )])
+                } else {
+                    let family = theme_values::FONT_FAMILY.get(value)?;
+                    Some(vec![Declaration::new("font-family", family.to_string())])
+                }
+            }
             "thin" => Some(vec![Declaration::new("font-weight", "100")]),
             "extralight" => Some(vec![Declaration::new("font-weight", "200")]),
             "light" => Some(vec![Declaration::new("font-weight", "300")]),
@@ -654,16 +692,36 @@ fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Decla
         },
 
         // ── blur: filter with var() ──────────────────────────────
-        "blur" => Some(vec![Declaration::new(
-            "filter",
-            format!("blur(var(--blur-{}))", value),
-        )]),
+        "blur" => {
+            if self.use_variables {
+                Some(vec![Declaration::new(
+                    "filter",
+                    format!("blur(var(--blur-{}))", value),
+                )])
+            } else {
+                let size = theme_values::BLUR_SIZE.get(value)?;
+                Some(vec![Declaration::new(
+                    "filter",
+                    format!("blur({})", size),
+                )])
+            }
+        }
 
         // ── backdrop-blur: backdrop-filter with var() ────────────
-        "backdrop-blur" => Some(vec![Declaration::new(
-            "backdrop-filter",
-            format!("blur(var(--blur-{}))", value),
-        )]),
+        "backdrop-blur" => {
+            if self.use_variables {
+                Some(vec![Declaration::new(
+                    "backdrop-filter",
+                    format!("blur(var(--blur-{}))", value),
+                )])
+            } else {
+                let size = theme_values::BLUR_SIZE.get(value)?;
+                Some(vec![Declaration::new(
+                    "backdrop-filter",
+                    format!("blur({})", size),
+                )])
+            }
+        }
 
         // ── backdrop: filter-none ────────────────────────────────
         "backdrop" => match value {
@@ -706,10 +764,16 @@ fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Decla
         "aspect" => match value {
             "auto" => Some(vec![Declaration::new("aspect-ratio", "auto")]),
             "square" => Some(vec![Declaration::new("aspect-ratio", "1 / 1")]),
-            "video" => Some(vec![Declaration::new(
-                "aspect-ratio",
-                "var(--aspect-video)",
-            )]),
+            "video" => {
+                if self.use_variables {
+                    Some(vec![Declaration::new(
+                        "aspect-ratio",
+                        "var(--aspect-video)",
+                    )])
+                } else {
+                    Some(vec![Declaration::new("aspect-ratio", "16 / 9")])
+                }
+            }
             _ => None,
         },
 
@@ -729,6 +793,7 @@ fn build_complex_standard(parsed: &ParsedClass, value: &str) -> Option<Vec<Decla
 
         _ => None,
     }
+}
 }
 
 // ---------------------------------------------------------------------------

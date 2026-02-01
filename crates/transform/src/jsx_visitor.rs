@@ -59,7 +59,7 @@ impl<'a> JsxClassVisitor<'a> {
     fn build_attr_value(&self, new_class: &str, span: Span) -> JSXAttrValue {
         match &self.css_modules {
             Some(config) => {
-                let expr = create_access_expr(
+                let expr = create_css_modules_expr(
                     &config.binding_name,
                     new_class,
                     config.access,
@@ -124,7 +124,7 @@ impl<'a> JsxClassVisitor<'a> {
                     let new_class = self.collector.process_classes(&original);
                     match &self.css_modules {
                         Some(config) => {
-                            **expr = create_access_expr(
+                            **expr = create_css_modules_expr(
                                 &config.binding_name,
                                 &new_class,
                                 config.access,
@@ -145,7 +145,7 @@ impl<'a> JsxClassVisitor<'a> {
                         let new_class = self.collector.process_classes(original);
                         match &self.css_modules {
                             Some(config) => {
-                                **expr = create_access_expr(
+                                **expr = create_css_modules_expr(
                                     &config.binding_name,
                                     &new_class,
                                     config.access,
@@ -166,6 +166,32 @@ impl<'a> JsxClassVisitor<'a> {
                 // 动态表达式暂不处理
             }
         }
+    }
+}
+
+/// CSS Modules 表达式，处理 preserved unknown classes。
+///
+/// - `"c_abc123"` → `styles.c_abc123`
+/// - `"c_abc123 my-custom foo"` → `styles.c_abc123 + " my-custom foo"`
+fn create_css_modules_expr(binding: &str, new_class: &str, access: CssModulesAccess) -> Expr {
+    let parts: Vec<&str> = new_class.splitn(2, ' ').collect();
+    let generated_name = parts[0];
+    let access_expr = create_access_expr(binding, generated_name, access);
+
+    if parts.len() > 1 {
+        // styles.xxx + " unknown1 unknown2"
+        Expr::Bin(BinExpr {
+            span: DUMMY_SP,
+            op: BinaryOp::Add,
+            left: Box::new(access_expr),
+            right: Box::new(Expr::Lit(Lit::Str(Str {
+                span: DUMMY_SP,
+                value: format!(" {}", parts[1]).into(),
+                raw: None,
+            }))),
+        })
+    } else {
+        access_expr
     }
 }
 

@@ -18,6 +18,8 @@ export function isReady(): boolean {
 export interface TransformOptions {
   namingMode?: 'hash' | 'readable' | 'camelCase';
   outputMode?: GlobalOutputMode | CssModulesOutputMode;
+  cssVariables?: 'var' | 'inline';
+  unknownClasses?: 'remove' | 'preserve';
 }
 
 interface GlobalOutputMode {

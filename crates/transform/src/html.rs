@@ -105,11 +105,11 @@ fn matches_class_attr(bytes: &[u8], i: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use headwind_core::NamingMode;
+    use headwind_core::{CssVariableMode, NamingMode, UnknownClassMode};
 
     #[test]
     fn test_html_basic() {
-        let mut collector = ClassCollector::new(NamingMode::Hash);
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove);
         let html = r#"<div class="p-4 m-2">Hello</div>"#;
         let result = transform_html_source(html, &mut collector);
 
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn test_html_single_quotes() {
-        let mut collector = ClassCollector::new(NamingMode::Hash);
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove);
         let html = "<div class='p-4 m-2'>Hello</div>";
         let result = transform_html_source(html, &mut collector);
 
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_html_multiple_elements() {
-        let mut collector = ClassCollector::new(NamingMode::Hash);
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove);
         let html = r#"<div class="p-4"><span class="text-center m-2">text</span></div>"#;
         let result = transform_html_source(html, &mut collector);
 
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_html_preserves_non_class_attrs() {
-        let mut collector = ClassCollector::new(NamingMode::Hash);
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove);
         let html = r#"<div id="main" class="p-4" data-value="test">content</div>"#;
         let result = transform_html_source(html, &mut collector);
 
@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_html_does_not_match_classname() {
-        let mut collector = ClassCollector::new(NamingMode::Hash);
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove);
         let html = r#"<div className="p-4">content</div>"#;
         let result = transform_html_source(html, &mut collector);
 

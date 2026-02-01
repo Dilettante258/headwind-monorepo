@@ -4,6 +4,7 @@ pub mod jsx_visitor;
 
 use indexmap::IndexMap;
 use jsx_visitor::JsxClassVisitor;
+use swc_core::common::comments::SingleThreadedComments;
 use swc_core::common::sync::Lrc;
 use swc_core::common::{FileName, Globals, SourceMap, DUMMY_SP, GLOBALS};
 use swc_core::ecma::ast::*;
@@ -14,7 +15,7 @@ use swc_core::ecma::visit::VisitMutWith;
 
 // Re-exports
 pub use collector::ClassCollector;
-pub use headwind_core::NamingMode;
+pub use headwind_core::{CssVariableMode, NamingMode, UnknownClassMode};
 
 /// CSS Modules 属性访问方式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -93,6 +94,10 @@ pub struct TransformOptions {
     pub naming_mode: NamingMode,
     /// 输出模式（默认 Global）
     pub output_mode: OutputMode,
+    /// CSS 变量模式（默认 Var）
+    pub css_variables: CssVariableMode,
+    /// 未知类名处理模式（默认 Remove）
+    pub unknown_classes: UnknownClassMode,
 }
 
 impl Default for TransformOptions {
@@ -100,6 +105,8 @@ impl Default for TransformOptions {
         Self {
             naming_mode: NamingMode::Hash,
             output_mode: OutputMode::Global,
+            css_variables: CssVariableMode::Var,
+            unknown_classes: UnknownClassMode::Remove,
         }
     }
 }
@@ -171,9 +178,10 @@ pub fn transform_jsx(
         source.to_string(),
     );
 
-    // 解析
+    // 解析（保留注释）
+    let comments = SingleThreadedComments::default();
     let mut errors = vec![];
-    let mut module = parse_file_as_module(&fm, syntax, EsVersion::latest(), None, &mut errors)
+    let mut module = parse_file_as_module(&fm, syntax, EsVersion::latest(), Some(&comments), &mut errors)
         .map_err(|e| format!("解析错误: {:?}", e))?;
 
     if !errors.is_empty() {
@@ -181,7 +189,7 @@ pub fn transform_jsx(
     }
 
     // 遍历并替换
-    let mut collector = ClassCollector::new(options.naming_mode);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes);
     let css_modules_config = match &options.output_mode {
         OutputMode::CssModules {
             binding_name,
@@ -217,8 +225,8 @@ pub fn transform_jsx(
         }
     }
 
-    // 输出代码
-    let code = GLOBALS.set(&Globals::new(), || emit_module(&cm, &module))?;
+    // 输出代码（携带注释）
+    let code = GLOBALS.set(&Globals::new(), || emit_module(&cm, &module, Some(&comments)))?;
 
     Ok(TransformResult {
         code,
@@ -253,7 +261,7 @@ pub fn transform_jsx(
 /// println!("CSS:\n{}", result.css);
 /// ```
 pub fn transform_html(source: &str, options: TransformOptions) -> Result<TransformResult, String> {
-    let mut collector = ClassCollector::new(options.naming_mode);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes);
     let code = html::transform_html_source(source, &mut collector);
 
     Ok(TransformResult {
@@ -300,6 +308,7 @@ fn create_css_module_import(binding_name: &str, import_path: &str) -> ModuleItem
 fn emit_module(
     cm: &Lrc<SourceMap>,
     module: &swc_core::ecma::ast::Module,
+    comments: Option<&SingleThreadedComments>,
 ) -> Result<String, String> {
     let mut buf = vec![];
     {
@@ -307,7 +316,7 @@ fn emit_module(
         let mut emitter = Emitter {
             cfg: CodegenConfig::default().with_target(EsVersion::latest()),
             cm: cm.clone(),
-            comments: None,
+            comments: comments.map(|c| c as &dyn swc_core::common::comments::Comments),
             wr: writer,
         };
         emitter
@@ -803,6 +812,8 @@ mod tests {
             TransformOptions {
                 naming_mode: NamingMode::CamelCase,
                 output_mode: OutputMode::css_modules(),
+                css_variables: CssVariableMode::Var,
+                unknown_classes: UnknownClassMode::Remove,
             },
         )
         .unwrap();
@@ -837,6 +848,8 @@ mod tests {
                     import_path: None,
                     access: CssModulesAccess::Bracket,
                 },
+                css_variables: CssVariableMode::Var,
+                unknown_classes: UnknownClassMode::Remove,
             },
         )
         .unwrap();
@@ -862,6 +875,8 @@ mod tests {
             TransformOptions {
                 naming_mode: NamingMode::Hash,
                 output_mode: OutputMode::css_modules_bracket(),
+                css_variables: CssVariableMode::Var,
+                unknown_classes: UnknownClassMode::Remove,
             },
         )
         .unwrap();

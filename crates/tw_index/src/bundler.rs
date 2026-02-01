@@ -2,8 +2,8 @@ use crate::context::ClassContext;
 use crate::converter::Converter;
 use headwind_core::Declaration;
 use headwind_css::{create_stylesheet, emit_css};
-use headwind_tw_parse::{parse_classes, Modifier, ParsedClass};
-use std::collections::HashMap;
+use headwind_tw_parse::{parse_class, parse_classes, Modifier, ParsedClass};
+use std::collections::{BTreeSet, HashMap};
 
 /// CSS 规则组，按修饰符分组
 #[derive(Debug, Clone)]
@@ -101,6 +101,13 @@ impl Bundler {
     pub fn new() -> Self {
         Self {
             converter: Converter::new(),
+        }
+    }
+
+    /// 创建使用内联值的打包器（不依赖 Tailwind 主题变量）
+    pub fn with_inline() -> Self {
+        Self {
+            converter: Converter::with_inline(),
         }
     }
 
@@ -417,6 +424,14 @@ impl Bundler {
         Ok(context)
     }
 
+    /// 检查单个 Tailwind 类名是否可被识别并转换为 CSS
+    pub fn is_recognized(&self, class: &str) -> bool {
+        match parse_class(class) {
+            Ok(parsed) => self.converter.to_declarations(&parsed).is_some(),
+            Err(_) => false,
+        }
+    }
+
     /// 直接生成 CSS 字符串（使用 ClassContext 架构）
     ///
     /// 这是 bundle_to_context 的便捷版本，直接返回 CSS 字符串
@@ -443,6 +458,88 @@ impl Bundler {
     ) -> Result<String, String> {
         let context = self.bundle_to_context(class_name, classes)?;
         Ok(context.to_css(indent))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// :root 主题变量生成
+// ---------------------------------------------------------------------------
+
+/// 从 CSS 中提取所有 var(--xxx) 引用的变量名
+fn extract_var_references(css: &str) -> BTreeSet<String> {
+    let mut refs = BTreeSet::new();
+    let mut search_from = 0;
+
+    while let Some(pos) = css[search_from..].find("var(--") {
+        let abs_start = search_from + pos + 4; // 指向 "--"
+        if let Some(end) = css[abs_start..].find(')') {
+            let var_name = &css[abs_start..abs_start + end]; // "--text-3xl"
+            refs.insert(var_name.to_string());
+            search_from = abs_start + end;
+        } else {
+            break;
+        }
+    }
+
+    refs
+}
+
+/// 将已知主题变量名解析为内联值
+fn resolve_theme_variable(var_name: &str) -> Option<String> {
+    use crate::theme_values;
+
+    // --text-{size}--line-height
+    if let Some(size) = var_name.strip_prefix("--text-") {
+        if let Some(lh_size) = size.strip_suffix("--line-height") {
+            return theme_values::TEXT_LINE_HEIGHT.get(lh_size).map(|v| v.to_string());
+        }
+        return theme_values::TEXT_SIZE.get(size).map(|v| v.to_string());
+    }
+
+    // --font-{family}
+    if let Some(family) = var_name.strip_prefix("--font-") {
+        return theme_values::FONT_FAMILY.get(family).map(|v| v.to_string());
+    }
+
+    // --blur-{size}
+    if let Some(size) = var_name.strip_prefix("--blur-") {
+        return theme_values::BLUR_SIZE.get(size).map(|v| v.to_string());
+    }
+
+    // --aspect-video
+    if var_name == "--aspect-video" {
+        return Some("16 / 9".to_string());
+    }
+
+    None
+}
+
+impl Bundler {
+    /// 从 CSS 中提取用到的主题变量引用，生成 :root 定义块。
+    ///
+    /// 只处理已知主题变量（--text-*, --font-*, --blur-*, --aspect-video），
+    /// 内部 --tw-* 变量自动排除。
+    pub fn generate_root_css(&self, css: &str) -> String {
+        let var_refs = extract_var_references(css);
+
+        let mut definitions: Vec<(String, String)> = Vec::new();
+        for var_name in &var_refs {
+            if let Some(value) = resolve_theme_variable(var_name) {
+                definitions.push((var_name.clone(), value));
+            }
+        }
+
+        if definitions.is_empty() {
+            return String::new();
+        }
+
+        let mut root_css = ":root {\n".to_string();
+        for (name, value) in &definitions {
+            root_css.push_str(&format!("  {}: {};\n", name, value));
+        }
+        root_css.push('}');
+
+        root_css
     }
 }
 
