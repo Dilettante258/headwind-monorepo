@@ -52,6 +52,7 @@ const App: Component = () => {
   const [error, setError] = createSignal('');
   const [duration, setDuration] = createSignal(0);
   const [activeTab, setActiveTab] = createSignal<'code' | 'css' | 'map'>('code');
+  const [copied, setCopied] = createSignal(false);
 
   onMount(async () => {
     try {
@@ -107,6 +108,23 @@ const App: Component = () => {
     const r = result();
     if (!r) return [];
     return Object.entries(r.classMap);
+  };
+
+  const currentOutputText = () => {
+    const tab = activeTab();
+    const r = result();
+    if (!r) return '';
+    if (tab === 'code') return r.code;
+    if (tab === 'css') return r.css;
+    return classMapEntries().map(([orig, gen]) => `${orig} → ${gen}`).join('\n');
+  };
+
+  const copyOutput = async () => {
+    const text = currentOutputText();
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -227,6 +245,13 @@ const App: Component = () => {
               onClick={() => setActiveTab('map')}
             >
               Class Map ({classMapEntries().length})
+            </button>
+            <button
+              class="copy-btn"
+              onClick={copyOutput}
+              disabled={!result()}
+            >
+              {copied() ? 'Copied!' : 'Copy'}
             </button>
           </div>
 

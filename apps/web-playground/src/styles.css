@@ -212,6 +212,30 @@ body {
   border-bottom-color: var(--accent);
 }
 
+.copy-btn {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.copy-btn:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.copy-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ── Editor (input textarea) ───────────────────── */
 
 .editor {
@@ -308,6 +332,35 @@ body {
 
 .map-table tr:hover td {
   background: rgba(56, 189, 248, 0.05);
+}
+
+/* ── Scrollbar ────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-elevated) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* ── Responsive ────────────────────────────────── */

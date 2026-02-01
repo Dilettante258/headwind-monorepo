@@ -9,7 +9,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "build:plugin": "node tools/scripts/build-plugin.mjs",
-    "build:wasm": "node tools/scripts/build-wasm.mjs"
+    "build:wasm": "node tools/scripts/build-wasm.mjs",
+    "build:playground": "pnpm turbo run build --filter=@headwind/web-playground",
+    "dev:playground": "pnpm turbo run dev --filter=@headwind/web-playground"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
