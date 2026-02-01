@@ -35,10 +35,6 @@ importers:
         version: 4.61.0(@cloudflare/workers-types@4.20260129.0)
 
   apps/vscode-extension:
-    dependencies:
-      '@headwind/transformer':
-        specifier: workspace:*
-        version: link:../../packages/transformer
     devDependencies:
       '@headwind/config':
         specifier: workspace:*
