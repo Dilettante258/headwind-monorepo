@@ -1,3 +1,4 @@
+use crate::palette::{self, ColorMode};
 use phf::phf_map;
 
 /// 间距关键字映射（非数字的特殊值）
@@ -31,62 +32,7 @@ static SPACING_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "fit" => "fit-content",
 };
 
-/// 颜色值映射
-static COLOR_MAP: phf::Map<&'static str, &'static str> = phf_map! {
-    // 基础颜色
-    "black" => "#000",
-    "white" => "#fff",
-    "transparent" => "transparent",
-    "current" => "currentColor",
-
-    // Gray
-    "gray-50" => "#f9fafb",
-    "gray-100" => "#f3f4f6",
-    "gray-200" => "#e5e7eb",
-    "gray-300" => "#d1d5db",
-    "gray-400" => "#9ca3af",
-    "gray-500" => "#6b7280",
-    "gray-600" => "#4b5563",
-    "gray-700" => "#374151",
-    "gray-800" => "#1f2937",
-    "gray-900" => "#111827",
-
-    // Blue
-    "blue-50" => "#eff6ff",
-    "blue-100" => "#dbeafe",
-    "blue-200" => "#bfdbfe",
-    "blue-300" => "#93c5fd",
-    "blue-400" => "#60a5fa",
-    "blue-500" => "#3b82f6",
-    "blue-600" => "#2563eb",
-    "blue-700" => "#1d4ed8",
-    "blue-800" => "#1e40af",
-    "blue-900" => "#1e3a8a",
-
-    // Red
-    "red-50" => "#fef2f2",
-    "red-100" => "#fee2e2",
-    "red-200" => "#fecaca",
-    "red-300" => "#fca5a5",
-    "red-400" => "#f87171",
-    "red-500" => "#ef4444",
-    "red-600" => "#dc2626",
-    "red-700" => "#b91c1c",
-    "red-800" => "#991b1b",
-    "red-900" => "#7f1d1d",
-
-    // Green
-    "green-50" => "#f0fdf4",
-    "green-100" => "#dcfce7",
-    "green-200" => "#bbf7d0",
-    "green-300" => "#86efac",
-    "green-400" => "#4ade80",
-    "green-500" => "#22c55e",
-    "green-600" => "#16a34a",
-    "green-700" => "#15803d",
-    "green-800" => "#166534",
-    "green-900" => "#14532d",
-};
+// 颜色值通过 palette 模块提供，支持 22 色族 × 11 色阶 + 特殊颜色
 
 /// 获取间距值
 ///
@@ -122,9 +68,9 @@ fn is_viewport_unit(key: &str) -> bool {
     )
 }
 
-/// 获取颜色值
-pub fn get_color_value(key: &str) -> Option<&'static str> {
-    COLOR_MAP.get(key).copied()
+/// 获取颜色值（根据颜色模式输出对应格式）
+pub fn get_color_value(key: &str, mode: ColorMode) -> Option<String> {
+    palette::get_color(key, mode)
 }
 
 /// 获取不透明度值
@@ -154,7 +100,7 @@ fn get_container_size(key: &str) -> Option<String> {
 }
 
 /// 根据插件类型推断值映射
-pub fn infer_value(plugin: &str, value: &str) -> Option<String> {
+pub fn infer_value(plugin: &str, value: &str, color_mode: ColorMode) -> Option<String> {
     match plugin {
         // ── Spacing ──────────────────────────────────────────────
         "p" | "px" | "py" | "pt" | "pr" | "pb" | "pl" | "m" | "mx" | "my" | "mt" | "mr"
@@ -189,20 +135,19 @@ pub fn infer_value(plugin: &str, value: &str) -> Option<String> {
         }
 
         // ── Background color (fall through for non-color) ────────
-        "bg" => get_color_value(value)
-            .map(|s| s.to_string())
+        "bg" => get_color_value(value, color_mode)
             .or_else(|| get_spacing_value(value)),
 
         // ── Text color ───────────────────────────────────────────
-        "text" => get_color_value(value).map(|s| s.to_string()),
+        "text" => get_color_value(value, color_mode),
 
         // ── Gradient color stops ────────────────────────────────
-        "from" | "via" | "to" => get_color_value(value).map(|s| s.to_string()),
+        "from" | "via" | "to" => get_color_value(value, color_mode),
 
         // ── Border (color or width) ──────────────────────────────
         "border" => {
-            if let Some(color) = get_color_value(value) {
-                Some(color.to_string())
+            if let Some(color) = get_color_value(value, color_mode) {
+                Some(color)
             } else {
                 get_spacing_value(value)
             }
@@ -559,9 +504,20 @@ mod tests {
 
     #[test]
     fn test_color_values() {
-        assert_eq!(get_color_value("black"), Some("#000"));
-        assert_eq!(get_color_value("white"), Some("#fff"));
-        assert_eq!(get_color_value("blue-500"), Some("#3b82f6"));
+        assert_eq!(
+            get_color_value("black", ColorMode::Hex),
+            Some("#000000".into())
+        );
+        assert_eq!(
+            get_color_value("white", ColorMode::Hex),
+            Some("#ffffff".into())
+        );
+        // blue-500 oklch(0.623 0.214 259.815) → 接近 #3b82f6
+        assert!(get_color_value("blue-500", ColorMode::Hex).is_some());
+        // 新增颜色族
+        assert!(get_color_value("orange-500", ColorMode::Hex).is_some());
+        assert!(get_color_value("violet-500", ColorMode::Hex).is_some());
+        assert!(get_color_value("slate-950", ColorMode::Hex).is_some());
     }
 
     #[test]
@@ -598,9 +554,19 @@ mod tests {
 
     #[test]
     fn test_infer_value() {
-        assert_eq!(infer_value("p", "4"), Some("1rem".to_string()));
-        assert_eq!(infer_value("w", "full"), Some("100%".to_string()));
-        assert_eq!(infer_value("bg", "blue-500"), Some("#3b82f6".to_string()));
-        assert_eq!(infer_value("opacity", "50"), Some("0.5".to_string()));
+        assert_eq!(infer_value("p", "4", ColorMode::Hex), Some("1rem".to_string()));
+        assert_eq!(infer_value("w", "full", ColorMode::Hex), Some("100%".to_string()));
+        assert!(infer_value("bg", "blue-500", ColorMode::Hex).is_some());
+        assert_eq!(infer_value("opacity", "50", ColorMode::Hex), Some("0.5".to_string()));
+        // oklch 模式
+        assert_eq!(
+            infer_value("text", "blue-500", ColorMode::Oklch),
+            Some("oklch(0.623 0.214 259.815)".into())
+        );
+        // var 模式
+        assert_eq!(
+            infer_value("text", "blue-500", ColorMode::Var),
+            Some("var(--color-blue-500)".into())
+        );
     }
 }

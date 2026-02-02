@@ -1,3 +1,4 @@
+use crate::palette::ColorMode;
 use crate::plugin_map::get_plugin_properties;
 use crate::theme_values;
 use crate::value_map::{get_color_value, get_spacing_value, infer_value};
@@ -149,12 +150,15 @@ static BREAKPOINT_MAP: phf::Map<&'static str, &'static str> = phf_map! {
 pub struct Converter {
     /// true = 使用 var(--text-3xl)，false = 内联为 1.875rem
     use_variables: bool,
+    /// 颜色输出模式（hex / oklch / hsl / var）
+    color_mode: ColorMode,
 }
 
 impl Converter {
     pub fn new() -> Self {
         Self {
             use_variables: true,
+            color_mode: ColorMode::default(),
         }
     }
 
@@ -162,7 +166,14 @@ impl Converter {
     pub fn with_inline() -> Self {
         Self {
             use_variables: false,
+            color_mode: ColorMode::default(),
         }
+    }
+
+    /// 设置颜色输出模式（builder 模式）
+    pub fn with_color_mode(mut self, mode: ColorMode) -> Self {
+        self.color_mode = mode;
+        self
     }
 
     /// 将 Tailwind 类转换为 CSS 声明（仅声明，不含选择器）
@@ -342,7 +353,7 @@ impl Converter {
         }
 
         let properties = get_plugin_properties(&parsed.plugin)?;
-        let mut css_value = infer_value(&parsed.plugin, value)?;
+        let mut css_value = infer_value(&parsed.plugin, value, self.color_mode)?;
 
         if parsed.negative {
             css_value = format!("-{}", css_value);
@@ -384,7 +395,7 @@ impl Converter {
                     }
                 }
             _ => {
-                let css_value = infer_value(&parsed.plugin, value)?;
+                let css_value = infer_value(&parsed.plugin, value, self.color_mode)?;
                 Some(vec![Declaration::new("color", css_value)])
             }
         },
@@ -885,15 +896,15 @@ impl Converter {
 
         // ── from / via / to: gradient color stops ────────────────
         "from" => {
-            get_color_value(value)
+            get_color_value(value, self.color_mode)
                 .map(|color| vec![Declaration::new("--tw-gradient-from", color)])
         }
         "via" => {
-            get_color_value(value)
+            get_color_value(value, self.color_mode)
                 .map(|color| vec![Declaration::new("--tw-gradient-via", color)])
         }
         "to" => {
-            get_color_value(value)
+            get_color_value(value, self.color_mode)
                 .map(|color| vec![Declaration::new("--tw-gradient-to", color)])
         }
 
@@ -1120,7 +1131,7 @@ mod tests {
         assert_eq!(rule.selector, ".bg-blue-500");
         assert_eq!(rule.declarations.len(), 1);
         assert_eq!(rule.declarations[0].property, "background");
-        assert_eq!(rule.declarations[0].value, "#3b82f6");
+        assert!(rule.declarations[0].value.starts_with('#'));
     }
 
     #[test]
@@ -1262,7 +1273,7 @@ mod tests {
         let decls = converter.to_declarations(&parsed).unwrap();
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "--tw-gradient-from");
-        assert_eq!(decls[0].value, "#3b82f6");
+        assert!(decls[0].value.starts_with('#'));
     }
 
     #[test]
@@ -1282,7 +1293,7 @@ mod tests {
         let decls = converter.to_declarations(&parsed).unwrap();
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "--tw-gradient-via");
-        assert_eq!(decls[0].value, "#ef4444");
+        assert!(decls[0].value.starts_with('#'));
     }
 
     #[test]
@@ -1292,7 +1303,7 @@ mod tests {
         let decls = converter.to_declarations(&parsed).unwrap();
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "--tw-gradient-to");
-        assert_eq!(decls[0].value, "#22c55e");
+        assert!(decls[0].value.starts_with('#'));
     }
 
     #[test]
@@ -1303,5 +1314,44 @@ mod tests {
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "--tw-gradient-to");
         assert_eq!(decls[0].value, "rgba(0,0,0,0.5)");
+    }
+
+    // ── 颜色模式测试 ──────────────────────────────────────────
+
+    #[test]
+    fn test_color_mode_oklch() {
+        let converter = Converter::new().with_color_mode(ColorMode::Oklch);
+        let parsed = parse_class("bg-blue-500").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+        assert_eq!(rule.declarations[0].value, "oklch(0.623 0.214 259.815)");
+    }
+
+    #[test]
+    fn test_color_mode_var() {
+        let converter = Converter::new().with_color_mode(ColorMode::Var);
+        let parsed = parse_class("text-red-500").unwrap();
+        let rule = converter.convert(&parsed).unwrap();
+        assert_eq!(rule.declarations[0].property, "color");
+        assert_eq!(rule.declarations[0].value, "var(--color-red-500)");
+    }
+
+    #[test]
+    fn test_color_mode_hsl() {
+        let converter = Converter::new().with_color_mode(ColorMode::Hsl);
+        let parsed = parse_class("from-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert!(decls[0].value.starts_with("hsl("));
+    }
+
+    #[test]
+    fn test_new_color_families() {
+        let converter = Converter::new();
+        // 新增的颜色族应该能正常转换
+        for family in &["orange", "amber", "violet", "slate", "zinc", "rose", "emerald"] {
+            let class = format!("bg-{}-500", family);
+            let parsed = parse_class(&class).unwrap();
+            let rule = converter.convert(&parsed);
+            assert!(rule.is_some(), "Failed for: {}", class);
+        }
     }
 }

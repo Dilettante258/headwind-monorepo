@@ -3,6 +3,7 @@ pub mod context;
 pub mod converter;
 pub mod index;
 pub mod loader;
+pub mod palette;
 pub mod plugin_map;
 pub mod theme_values;
 pub mod value_map;
@@ -13,6 +14,7 @@ pub use context::ClassContext;
 pub use converter::{Converter, CssRule};
 pub use index::TailwindIndex;
 pub use loader::{load_from_json, load_from_official_json};
+pub use palette::ColorMode;
 
 // Implement TailwindIndexLookup for integration with bundle
 use headwind_core::{bundle::TailwindIndexLookup, Declaration};

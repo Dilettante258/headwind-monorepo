@@ -10,3 +10,4 @@ headwind-css = { path = "../css" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 phf = { workspace = true }
+palette = "0.7.6"
