@@ -259,15 +259,43 @@ impl std::fmt::Display for ParsedValue {
 
 impl ArbitraryValue {
     /// 创建新的任意值
+    ///
+    /// 按照 Tailwind 规范，任意值中的 `_` 会转换为空格，
+    /// `\_` 会保留为字面下划线。
     pub fn new(raw: String) -> Self {
-        let content = raw
+        let stripped = raw
             .strip_prefix('[')
             .and_then(|s| s.strip_suffix(']'))
-            .unwrap_or(&raw)
-            .to_string();
+            .unwrap_or(&raw);
+
+        let content = convert_underscores(stripped);
 
         Self { raw, content }
     }
+}
+
+/// 将任意值中的下划线转换为空格
+///
+/// 规则：
+/// - `_` → 空格
+/// - `\_` → 字面下划线 `_`
+fn convert_underscores(s: &str) -> String {
+    let mut result = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        if ch == '\\' && chars.peek() == Some(&'_') {
+            // \_ → 字面下划线
+            chars.next();
+            result.push('_');
+        } else if ch == '_' {
+            result.push(' ');
+        } else {
+            result.push(ch);
+        }
+    }
+
+    result
 }
 
 #[cfg(test)]
@@ -299,5 +327,32 @@ mod tests {
         let arb = ArbitraryValue::new("[13px]".to_string());
         assert_eq!(arb.content, "13px");
         assert_eq!(arb.raw, "[13px]");
+    }
+
+    #[test]
+    fn test_arbitrary_value_underscore_to_space() {
+        // _ → 空格
+        let arb = ArbitraryValue::new("[0_1px_2px_red]".to_string());
+        assert_eq!(arb.content, "0 1px 2px red");
+    }
+
+    #[test]
+    fn test_arbitrary_value_escaped_underscore() {
+        // \_ → 字面下划线
+        let arb = ArbitraryValue::new("[content\\_value]".to_string());
+        assert_eq!(arb.content, "content_value");
+    }
+
+    #[test]
+    fn test_arbitrary_value_mixed_underscores() {
+        // 混合: _ 转空格, \_ 保留
+        let arb = ArbitraryValue::new("[a_b\\_c_d]".to_string());
+        assert_eq!(arb.content, "a b_c d");
+    }
+
+    #[test]
+    fn test_arbitrary_value_no_underscores() {
+        let arb = ArbitraryValue::new("[#ff0000]".to_string());
+        assert_eq!(arb.content, "#ff0000");
     }
 }

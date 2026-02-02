@@ -2,6 +2,7 @@ pub mod bundle;
 pub mod merge;
 pub mod naming;
 pub mod normalize;
+pub mod shorthand;
 pub mod types;
 
 // Re-export commonly used types

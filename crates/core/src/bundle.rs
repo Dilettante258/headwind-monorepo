@@ -1,6 +1,7 @@
 use crate::merge::merge_declarations;
 use crate::naming::create_naming_strategy;
 use crate::normalize::normalize_classes;
+use crate::shorthand::optimize_shorthands;
 use crate::types::{BundleRequest, BundleResult, Declaration, Diagnostic};
 
 /// 主 bundle 函数
@@ -38,13 +39,16 @@ where
     // 3. 合并 CSS 声明
     let merged = merge_declarations(declarations);
 
-    // 4. 生成类名
+    // 4. 简写属性优化（如 padding-top/right/bottom/left → padding）
+    let optimized = optimize_shorthands(merged);
+
+    // 5. 生成类名
     let naming_strategy = create_naming_strategy(request.naming_mode);
     let new_class = naming_strategy.generate_name(&normalized);
 
     BundleResult {
         new_class,
-        css_declarations: merged,
+        css_declarations: optimized,
         removed,
         diagnostics,
     }

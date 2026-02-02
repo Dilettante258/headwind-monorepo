@@ -196,6 +196,9 @@ pub fn infer_value(plugin: &str, value: &str) -> Option<String> {
         // ── Text color ───────────────────────────────────────────
         "text" => get_color_value(value).map(|s| s.to_string()),
 
+        // ── Gradient color stops ────────────────────────────────
+        "from" | "via" | "to" => get_color_value(value).map(|s| s.to_string()),
+
         // ── Border (color or width) ──────────────────────────────
         "border" => {
             if let Some(color) = get_color_value(value) {

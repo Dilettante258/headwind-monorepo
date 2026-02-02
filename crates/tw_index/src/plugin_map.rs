@@ -43,6 +43,11 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "bg" => "background",
     "bg-color" => "background-color",
 
+    // Gradient color stops (渐变色)
+    "from" => "--tw-gradient-from",
+    "via" => "--tw-gradient-via",
+    "to" => "--tw-gradient-to",
+
     // Border (边框)
     "border" => "border-width",
     "border-t" => "border-top-width",

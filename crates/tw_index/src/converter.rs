@@ -1,6 +1,6 @@
 use crate::plugin_map::get_plugin_properties;
 use crate::theme_values;
-use crate::value_map::{get_spacing_value, infer_value};
+use crate::value_map::{get_color_value, get_spacing_value, infer_value};
 use headwind_core::Declaration;
 use headwind_tw_parse::{Modifier, ParsedClass, ParsedValue};
 use phf::phf_map;
@@ -275,6 +275,13 @@ fn build_valueless_from_full_name(parsed: &ParsedClass, value: &str) -> Option<V
 // 复杂插件分发（语义重载的插件，不适合放进静态 map）
 // ---------------------------------------------------------------------------
 
+/// 从字符串中提取方括号内的值
+///
+/// 例如：`"[45deg]"` → `Some("45deg")`，`"123"` → `None`
+fn extract_bracket_value(s: &str) -> Option<&str> {
+    s.strip_prefix('[').and_then(|s| s.strip_suffix(']'))
+}
+
 /// 处理复杂任意值插件
 fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<Declaration>> {
     match parsed.plugin.as_str() {
@@ -287,6 +294,36 @@ fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<
             };
             Some(vec![Declaration::new("color", value)])
         }
+        // bg-linear-[<value>] → linear-gradient
+        "bg-linear" => Some(vec![Declaration::new(
+            "background-image",
+            format!("linear-gradient(var(--tw-gradient-stops, {}))", raw_value),
+        )]),
+        // bg-conic-[<value>] → conic-gradient
+        "bg-conic" => Some(vec![Declaration::new(
+            "background-image",
+            format!("conic-gradient(var(--tw-gradient-stops, {}))", raw_value),
+        )]),
+        // bg-radial-[<value>] → radial-gradient
+        "bg-radial" => Some(vec![Declaration::new(
+            "background-image",
+            format!("radial-gradient(var(--tw-gradient-stops, {}))", raw_value),
+        )]),
+        // from-[<value>] → --tw-gradient-from
+        "from" => Some(vec![Declaration::new(
+            "--tw-gradient-from",
+            raw_value.to_string(),
+        )]),
+        // via-[<value>] → --tw-gradient-via
+        "via" => Some(vec![Declaration::new(
+            "--tw-gradient-via",
+            raw_value.to_string(),
+        )]),
+        // to-[<value>] → --tw-gradient-to
+        "to" => Some(vec![Declaration::new(
+            "--tw-gradient-to",
+            raw_value.to_string(),
+        )]),
         _ => None,
     }
 }
@@ -426,6 +463,61 @@ impl Converter {
                         "background-image",
                         format!("linear-gradient({}, var(--tw-gradient-stops))", direction),
                     )]);
+                }
+                // linear-<angle> 或 linear-[<value>]
+                if let Some(rest) = value.strip_prefix("linear-") {
+                    if let Some(arb) = extract_bracket_value(rest) {
+                        return Some(vec![Declaration::new(
+                            "background-image",
+                            format!("linear-gradient(var(--tw-gradient-stops, {}))", arb),
+                        )]);
+                    }
+                    if let Ok(n) = rest.parse::<f64>() {
+                        let deg = if parsed.negative {
+                            format!("-{}deg", n)
+                        } else {
+                            format!("{}deg", n)
+                        };
+                        return Some(vec![Declaration::new(
+                            "background-image",
+                            format!(
+                                "linear-gradient({} in oklab, var(--tw-gradient-stops))",
+                                deg
+                            ),
+                        )]);
+                    }
+                }
+                // conic-<angle> 或 conic-[<value>]
+                if let Some(rest) = value.strip_prefix("conic-") {
+                    if let Some(arb) = extract_bracket_value(rest) {
+                        return Some(vec![Declaration::new(
+                            "background-image",
+                            format!("conic-gradient(var(--tw-gradient-stops, {}))", arb),
+                        )]);
+                    }
+                    if let Ok(n) = rest.parse::<f64>() {
+                        let deg = if parsed.negative {
+                            format!("-{}deg", n)
+                        } else {
+                            format!("{}deg", n)
+                        };
+                        return Some(vec![Declaration::new(
+                            "background-image",
+                            format!(
+                                "conic-gradient(from {} in oklab, var(--tw-gradient-stops))",
+                                deg
+                            ),
+                        )]);
+                    }
+                }
+                // radial-[<value>]
+                if let Some(rest) = value.strip_prefix("radial-") {
+                    if let Some(arb) = extract_bracket_value(rest) {
+                        return Some(vec![Declaration::new(
+                            "background-image",
+                            format!("radial-gradient(var(--tw-gradient-stops, {}))", arb),
+                        )]);
+                    }
                 }
                 None // fall through to standard path for colors
             }
@@ -791,6 +883,20 @@ impl Converter {
             _ => None,
         },
 
+        // ── from / via / to: gradient color stops ────────────────
+        "from" => {
+            get_color_value(value)
+                .map(|color| vec![Declaration::new("--tw-gradient-from", color)])
+        }
+        "via" => {
+            get_color_value(value)
+                .map(|color| vec![Declaration::new("--tw-gradient-via", color)])
+        }
+        "to" => {
+            get_color_value(value)
+                .map(|color| vec![Declaration::new("--tw-gradient-to", color)])
+        }
+
         _ => None,
     }
 }
@@ -1067,5 +1173,135 @@ mod tests {
         assert_eq!(rule.declarations.len(), 1);
         assert_eq!(rule.declarations[0].property, "column-gap");
         assert_eq!(rule.declarations[0].value, "1rem");
+    }
+
+    // ── Gradient tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_bg_linear_angle() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-linear-45").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(45deg in oklab, var(--tw-gradient-stops))"
+        );
+    }
+
+    #[test]
+    fn test_bg_linear_negative_angle() {
+        let converter = Converter::new();
+        let parsed = parse_class("-bg-linear-45").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(-45deg in oklab, var(--tw-gradient-stops))"
+        );
+    }
+
+    #[test]
+    fn test_bg_linear_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-linear-[45deg]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(var(--tw-gradient-stops, 45deg))"
+        );
+    }
+
+    #[test]
+    fn test_bg_conic_angle() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-conic-90").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "conic-gradient(from 90deg in oklab, var(--tw-gradient-stops))"
+        );
+    }
+
+    #[test]
+    fn test_bg_conic_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-conic-[from_45deg]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "conic-gradient(var(--tw-gradient-stops, from 45deg))"
+        );
+    }
+
+    #[test]
+    fn test_bg_radial_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-radial-[circle]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "radial-gradient(var(--tw-gradient-stops, circle))"
+        );
+    }
+
+    #[test]
+    fn test_from_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("from-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-from");
+        assert_eq!(decls[0].value, "#3b82f6");
+    }
+
+    #[test]
+    fn test_from_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("from-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-from");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_via_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("via-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-via");
+        assert_eq!(decls[0].value, "#ef4444");
+    }
+
+    #[test]
+    fn test_to_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("to-green-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-to");
+        assert_eq!(decls[0].value, "#22c55e");
+    }
+
+    #[test]
+    fn test_to_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("to-[rgba(0,0,0,0.5)]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-to");
+        assert_eq!(decls[0].value, "rgba(0,0,0,0.5)");
     }
 }

@@ -1,3 +1,4 @@
+use headwind_core::shorthand::optimize_shorthands;
 use headwind_core::Declaration;
 use headwind_tw_parse::{parse_modifiers_from_raw, Modifier};
 use std::collections::HashMap;
@@ -43,8 +44,9 @@ impl ClassContext {
         // 1. 生成基础规则（无修饰符）
         if let Some(decls) = self.groups.get("") {
             if !decls.is_empty() {
+                let decls = optimize_shorthands(decls.clone());
                 css.push_str(&format!(".{} {{\n", self.class_name));
-                for decl in decls {
+                for decl in &decls {
                     css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
                 }
                 css.push_str("}\n");
@@ -69,8 +71,11 @@ impl ClassContext {
             // 在需要时从 raw_modifiers 解析出 modifiers
             let modifiers = parse_modifiers_from_raw(raw_modifiers);
 
+            // 简写属性优化
+            let optimized = optimize_shorthands(decls.clone());
+
             // 根据修饰符类型生成选择器
-            self.generate_selector_with_modifiers(&mut css, &modifiers, decls, indent);
+            self.generate_selector_with_modifiers(&mut css, &modifiers, &optimized, indent);
         }
 
         css
