@@ -6,6 +6,7 @@ use headwind_transform::{
     transform_jsx as rs_transform_jsx,
     transform_html as rs_transform_html,
     TransformOptions, OutputMode, CssModulesAccess, NamingMode, CssVariableMode, UnknownClassMode,
+    ColorMode,
 };
 
 // ── JS 侧 serde 镜像类型 ──────────────────────────────────────
@@ -21,6 +22,8 @@ struct JsTransformOptions {
     css_variables: JsCssVariableMode,
     #[serde(default)]
     unknown_classes: JsUnknownClassMode,
+    #[serde(default)]
+    color_mode: JsColorMode,
 }
 
 #[derive(Deserialize)]
@@ -101,6 +104,21 @@ impl Default for JsUnknownClassMode {
     }
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+enum JsColorMode {
+    Hex,
+    Oklch,
+    Hsl,
+    Var,
+}
+
+impl Default for JsColorMode {
+    fn default() -> Self {
+        JsColorMode::Hex
+    }
+}
+
 fn default_binding() -> String {
     "styles".to_string()
 }
@@ -169,6 +187,17 @@ impl From<JsUnknownClassMode> for UnknownClassMode {
     }
 }
 
+impl From<JsColorMode> for ColorMode {
+    fn from(m: JsColorMode) -> Self {
+        match m {
+            JsColorMode::Hex => ColorMode::Hex,
+            JsColorMode::Oklch => ColorMode::Oklch,
+            JsColorMode::Hsl => ColorMode::Hsl,
+            JsColorMode::Var => ColorMode::Var,
+        }
+    }
+}
+
 impl From<JsTransformOptions> for TransformOptions {
     fn from(opts: JsTransformOptions) -> Self {
         TransformOptions {
@@ -176,6 +205,7 @@ impl From<JsTransformOptions> for TransformOptions {
             output_mode: opts.output_mode.into(),
             css_variables: opts.css_variables.into(),
             unknown_classes: opts.unknown_classes.into(),
+            color_mode: opts.color_mode.into(),
         }
     }
 }
@@ -187,6 +217,7 @@ fn parse_options(options: JsValue) -> Result<JsTransformOptions, JsError> {
             output_mode: JsOutputMode::default(),
             css_variables: JsCssVariableMode::default(),
             unknown_classes: JsUnknownClassMode::default(),
+            color_mode: JsColorMode::default(),
         })
     } else {
         serde_wasm_bindgen::from_value(options)

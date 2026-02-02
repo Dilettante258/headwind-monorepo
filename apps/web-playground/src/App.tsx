@@ -41,6 +41,7 @@ type OutputModeType = 'global' | 'cssModules';
 type AccessMode = 'dot' | 'bracket';
 type CssVariablesMode = 'var' | 'inline';
 type UnknownClassesMode = 'remove' | 'preserve';
+type ColorModeType = 'hex' | 'oklch' | 'hsl' | 'var';
 
 const App: Component = () => {
   const [wasmLoaded, setWasmLoaded] = createSignal(false);
@@ -52,6 +53,7 @@ const App: Component = () => {
   const [accessMode, setAccessMode] = createSignal<AccessMode>('dot');
   const [cssVariables, setCssVariables] = createSignal<CssVariablesMode>('inline');
   const [unknownClasses, setUnknownClasses] = createSignal<UnknownClassesMode>('preserve');
+  const [colorMode, setColorMode] = createSignal<ColorModeType>('hex');
   const [result, setResult] = createSignal<TransformResult | null>(null);
   const [error, setError] = createSignal('');
   const [duration, setDuration] = createSignal(0);
@@ -83,6 +85,7 @@ const App: Component = () => {
     const access = accessMode();
     const cssVars = cssVariables();
     const unknown = unknownClasses();
+    const color = colorMode();
 
     const options: TransformOptions = {
       namingMode: naming,
@@ -92,6 +95,7 @@ const App: Component = () => {
           : { type: 'cssModules', access },
       cssVariables: cssVars,
       unknownClasses: unknown,
+      colorMode: color,
     };
 
     try {
@@ -216,6 +220,20 @@ const App: Component = () => {
           >
             <option value="preserve">Preserve</option>
             <option value="remove">Remove</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="toolbar-label">Colors</label>
+          <select
+            class="toolbar-select"
+            value={colorMode()}
+            onChange={(e) => setColorMode(e.currentTarget.value as ColorModeType)}
+          >
+            <option value="hex">Hex (#3b82f6)</option>
+            <option value="oklch">OKLCH</option>
+            <option value="hsl">HSL</option>
+            <option value="var">CSS Var</option>
           </select>
         </div>
 

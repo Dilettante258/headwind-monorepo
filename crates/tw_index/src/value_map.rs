@@ -1,4 +1,5 @@
-use crate::palette::{self, ColorMode};
+use crate::palette;
+use headwind_core::ColorMode;
 use phf::phf_map;
 
 /// 间距关键字映射（非数字的特殊值）

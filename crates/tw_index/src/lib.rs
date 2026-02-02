@@ -14,7 +14,7 @@ pub use context::ClassContext;
 pub use converter::{Converter, CssRule};
 pub use index::TailwindIndex;
 pub use loader::{load_from_json, load_from_official_json};
-pub use palette::ColorMode;
+pub use headwind_core::ColorMode;
 
 // Implement TailwindIndexLookup for integration with bundle
 use headwind_core::{bundle::TailwindIndexLookup, Declaration};

@@ -5,6 +5,7 @@ export interface TransformOptions {
   outputMode: GlobalOutputMode | CssModulesOutputMode;
   cssVariables: 'var' | 'inline';
   unknownClasses: 'remove' | 'preserve';
+  colorMode: 'hex' | 'oklch' | 'hsl' | 'var';
 }
 
 export interface GlobalOutputMode {
@@ -39,6 +40,7 @@ export const DEFAULT_OPTIONS: TransformOptions = {
   outputMode: { type: 'global' },
   cssVariables: 'var',
   unknownClasses: 'preserve',
+  colorMode: 'hex',
 };
 
 // ── Webview <-> Extension Host Message Protocol ──────────────

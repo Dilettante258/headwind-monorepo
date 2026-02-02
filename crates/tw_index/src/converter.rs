@@ -1,4 +1,4 @@
-use crate::palette::ColorMode;
+use headwind_core::ColorMode;
 use crate::plugin_map::get_plugin_properties;
 use crate::theme_values;
 use crate::value_map::{get_color_value, get_spacing_value, infer_value};

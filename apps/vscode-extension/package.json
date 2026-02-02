@@ -93,6 +93,18 @@
           ],
           "description": "How to handle unrecognized Tailwind classes"
         },
+        "headwind.colorMode": {
+          "type": "string",
+          "enum": ["hex", "oklch", "hsl", "var"],
+          "default": "hex",
+          "enumDescriptions": [
+            "Hex color values: #3b82f6",
+            "OKLCH color space: oklch(0.623 0.214 259.815)",
+            "HSL color values: hsl(217, 91%, 60%)",
+            "CSS custom properties: var(--color-blue-500)"
+          ],
+          "description": "Color output format for generated CSS"
+        },
         "headwind.cssOutputPattern": {
           "type": "string",
           "default": "[name].css",

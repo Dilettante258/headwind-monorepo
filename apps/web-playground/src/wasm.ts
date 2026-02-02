@@ -20,6 +20,7 @@ export interface TransformOptions {
   outputMode?: GlobalOutputMode | CssModulesOutputMode;
   cssVariables?: 'var' | 'inline';
   unknownClasses?: 'remove' | 'preserve';
+  colorMode?: 'hex' | 'oklch' | 'hsl' | 'var';
 }
 
 interface GlobalOutputMode {

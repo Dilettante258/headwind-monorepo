@@ -1,6 +1,6 @@
 use crate::context::ClassContext;
 use crate::converter::Converter;
-use headwind_core::Declaration;
+use headwind_core::{ColorMode, Declaration};
 use headwind_css::{create_stylesheet, emit_css};
 use headwind_tw_parse::{parse_class, parse_classes, Modifier, ParsedClass};
 use std::collections::{BTreeSet, HashMap};
@@ -109,6 +109,12 @@ impl Bundler {
         Self {
             converter: Converter::with_inline(),
         }
+    }
+
+    /// 设置颜色输出模式（builder 模式）
+    pub fn with_color_mode(mut self, mode: ColorMode) -> Self {
+        self.converter = self.converter.with_color_mode(mode);
+        self
     }
 
     /// 将多个 Tailwind 类打包成一个规则组

@@ -7,6 +7,6 @@ pub mod types;
 
 // Re-export commonly used types
 pub use types::{
-    BundleRequest, BundleResult, CssVariableMode, Declaration, Diagnostic, DiagnosticLevel,
-    NamingMode, UnknownClassMode,
+    BundleRequest, BundleResult, ColorMode, CssVariableMode, Declaration, Diagnostic,
+    DiagnosticLevel, NamingMode, UnknownClassMode,
 };

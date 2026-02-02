@@ -296,6 +296,15 @@ export function getWebviewHtml(webview: vscode.Webview): string {
             <option value="remove">Remove</option>
           </select>
         </div>
+        <div class="option-group">
+          <label class="option-label">Color Format</label>
+          <select id="opt-color" class="option-select">
+            <option value="hex">Hex (#3b82f6)</option>
+            <option value="oklch">OKLCH</option>
+            <option value="hsl">HSL</option>
+            <option value="var">CSS Var</option>
+          </select>
+        </div>
         <div class="option-group" id="access-group" style="display:none;">
           <label class="option-label">CSS Modules Access</label>
           <select id="opt-access" class="option-select">
@@ -343,6 +352,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     const $cssVars  = document.getElementById('opt-cssVars');
     const $unknown  = document.getElementById('opt-unknown');
     const $access   = document.getElementById('opt-access');
+    const $colorMode = document.getElementById('opt-color');
     const $accessGr = document.getElementById('access-group');
     const $btnTrans = document.getElementById('btn-transform');
     const $btnPrev  = document.getElementById('btn-preview');
@@ -364,6 +374,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
           : { type: 'cssModules', access: $access.value },
         cssVariables: $cssVars.value,
         unknownClasses: $unknown.value,
+        colorMode: $colorMode.value,
       };
     }
 
@@ -375,7 +386,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       $accessGr.style.display = $output.value === 'cssModules' ? '' : 'none';
     }
 
-    [$naming, $output, $cssVars, $unknown, $access].forEach(function(el) {
+    [$naming, $output, $cssVars, $unknown, $colorMode, $access].forEach(function(el) {
       el.addEventListener('change', function() {
         updateAccessVisibility();
         sendOptions();
@@ -460,6 +471,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       $output.value = outType;
       $cssVars.value = opts.cssVariables || 'var';
       $unknown.value = opts.unknownClasses || 'preserve';
+      $colorMode.value = opts.colorMode || 'hex';
       if (outType === 'cssModules' && opts.outputMode.access) {
         $access.value = opts.outputMode.access;
       }

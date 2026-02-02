@@ -45,6 +45,20 @@ pub enum CssVariableMode {
     Inline,
 }
 
+/// 颜色输出模式
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum ColorMode {
+    /// Hex 颜色值：#3b82f6
+    #[default]
+    Hex,
+    /// OKLCH 颜色空间：oklch(0.623 0.214 259.815)
+    Oklch,
+    /// HSL 颜色值：hsl(217, 91%, 60%)
+    Hsl,
+    /// CSS 自定义属性：var(--color-blue-500)
+    Var,
+}
+
 /// 未知类名处理模式
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum UnknownClassMode {

@@ -1,25 +1,7 @@
+use headwind_core::ColorMode;
 use palette::{FromColor, Hsl, IntoColor, Oklch, Srgb};
 // Oklch/Srgb/Hsl 均使用默认 f32 泛型
 use phf::phf_map;
-
-/// 颜色输出模式
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ColorMode {
-    /// CSS 自定义属性：var(--color-blue-500)
-    Var,
-    /// Hex 颜色值：#3b82f6
-    Hex,
-    /// OKLCH 色彩空间：oklch(0.623 0.214 259.815)
-    Oklch,
-    /// HSL 颜色值：hsl(217, 91%, 60%)
-    Hsl,
-}
-
-impl Default for ColorMode {
-    fn default() -> Self {
-        ColorMode::Hex
-    }
-}
 
 /// 色阶顺序：50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950
 /// f32 精度（7 位有效数字）对颜色完全够用，且匹配 palette 默认泛型

@@ -15,7 +15,7 @@ use swc_core::ecma::visit::VisitMutWith;
 
 // Re-exports
 pub use collector::ClassCollector;
-pub use headwind_core::{CssVariableMode, NamingMode, UnknownClassMode};
+pub use headwind_core::{ColorMode, CssVariableMode, NamingMode, UnknownClassMode};
 
 /// CSS Modules 属性访问方式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -102,6 +102,8 @@ pub struct TransformOptions {
     pub css_variables: CssVariableMode,
     /// 未知类名处理模式（默认 Remove）
     pub unknown_classes: UnknownClassMode,
+    /// 颜色输出模式（默认 Hex）
+    pub color_mode: ColorMode,
 }
 
 impl Default for TransformOptions {
@@ -111,6 +113,7 @@ impl Default for TransformOptions {
             output_mode: OutputMode::default(),
             css_variables: CssVariableMode::Var,
             unknown_classes: UnknownClassMode::Remove,
+            color_mode: ColorMode::default(),
         }
     }
 }
@@ -193,7 +196,7 @@ pub fn transform_jsx(
     }
 
     // 遍历并替换
-    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode);
     let css_modules_config = match &options.output_mode {
         OutputMode::CssModules {
             binding_name,
@@ -272,7 +275,7 @@ pub fn transform_jsx(
 /// println!("CSS:\n{}", result.css);
 /// ```
 pub fn transform_html(source: &str, options: TransformOptions) -> Result<TransformResult, String> {
-    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode);
     let code = html::transform_html_source(source, &mut collector);
 
     Ok(TransformResult {
@@ -840,8 +843,7 @@ mod tests {
             TransformOptions {
                 naming_mode: NamingMode::CamelCase,
                 output_mode: OutputMode::css_modules(),
-                css_variables: CssVariableMode::Var,
-                unknown_classes: UnknownClassMode::Remove,
+                ..Default::default()
             },
         )
         .unwrap();
@@ -876,8 +878,7 @@ mod tests {
                     import_path: None,
                     access: CssModulesAccess::Bracket,
                 },
-                css_variables: CssVariableMode::Var,
-                unknown_classes: UnknownClassMode::Remove,
+                ..Default::default()
             },
         )
         .unwrap();
@@ -903,8 +904,7 @@ mod tests {
             TransformOptions {
                 naming_mode: NamingMode::Hash,
                 output_mode: OutputMode::css_modules_bracket(),
-                css_variables: CssVariableMode::Var,
-                unknown_classes: UnknownClassMode::Remove,
+                ..Default::default()
             },
         )
         .unwrap();
