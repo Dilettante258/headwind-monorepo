@@ -1,4 +1,5 @@
 import { createSignal, createEffect, onMount, type Component, Show } from 'solid-js';
+import { Title, Meta, Link } from '@solidjs/meta';
 import {
   loadWasm,
   runTransformJsx,
@@ -141,6 +142,24 @@ const App: Component = () => {
 
   return (
     <div class="app">
+      {/* SEO Meta Tags */}
+      <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
+      <Meta name="description" content="Try Headwind online: convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML with configurable naming, CSS Modules, and color modes." />
+      <Meta name="keywords" content="Tailwind CSS, atomic CSS, semantic CSS, CSS optimizer, CSS converter, Headwind, utility-first CSS, CSS Modules, WASM, playground" />
+      <Meta name="author" content="Headwind" />
+      <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
+      {/* Open Graph */}
+      <Meta property="og:type" content="website" />
+      <Meta property="og:title" content="Headwind Playground — Atomic to Semantic CSS" />
+      <Meta property="og:description" content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML." />
+      <Meta property="og:url" content="https://headwind-playground.kairi.cc/" />
+      <Meta property="og:site_name" content="Headwind Playground" />
+      <Meta property="og:locale" content="en_US" />
+      {/* Twitter Card */}
+      <Meta name="twitter:card" content="summary_large_image" />
+      <Meta name="twitter:title" content="Headwind Playground — Atomic to Semantic CSS" />
+      <Meta name="twitter:description" content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML." />
+
       {/* Header */}
       <header class="header">
         <div class="header-left">

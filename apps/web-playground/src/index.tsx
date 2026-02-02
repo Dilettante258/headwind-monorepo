@@ -1,5 +1,6 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
+import { MetaProvider } from '@solidjs/meta';
 import App from './App';
 import './styles.css';
 
@@ -9,4 +10,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error('Root element not found.');
 }
 
-render(() => <App />, root!);
+render(
+  () => (
+    <MetaProvider>
+      <App />
+    </MetaProvider>
+  ),
+  root!,
+);
