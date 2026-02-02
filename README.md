@@ -1,12 +1,12 @@
 # Headwind
 
-**Tailwind CSS to Atomic CSS compiler** built with Rust and SWC.
+**Atomic CSS to Semantic CSS compiler** built with Rust and SWC.
 
-Headwind parses Tailwind utility classes from JSX/TSX/HTML source code, replaces them with generated atomic class names, and outputs corresponding CSS. It runs as a WASM module in the browser, a VS Code extension, or a Node.js transformer.
+Headwind parses atomic utility classes from JSX/TSX/HTML source code, replaces them with generated semantic class names, and outputs corresponding CSS. It runs as a WASM module in the browser, a VS Code extension, or a Node.js transformer.
 
-**Headwind** 是一个基于 Rust 和 SWC 构建的 **Tailwind CSS 原子化编译器**。
+**Headwind** 是一个基于 Rust 和 SWC 构建的**原子化 CSS 到语义化 CSS 编译器**。
 
-它从 JSX/TSX/HTML 源码中解析 Tailwind 工具类，替换为生成的原子类名，并输出对应的 CSS。支持在浏览器中以 WASM 运行、作为 VS Code 扩展使用，或作为 Node.js 转换器集成。
+它从 JSX/TSX/HTML 源码中解析原子化工具类，替换为生成的语义化类名，并输出对应的 CSS。支持在浏览器中以 WASM 运行、作为 VS Code 扩展使用，或作为 Node.js 转换器集成。
 
 ---
 

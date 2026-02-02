@@ -1,7 +1,7 @@
 {
   "name": "@headwind/vscode-extension",
   "displayName": "Headwind",
-  "description": "Tailwind CSS to Atomic CSS compiler powered by Rust + WASM",
+  "description": "Atomic CSS to Semantic CSS compiler powered by Rust + WASM",
   "version": "0.1.0",
   "private": true,
   "publisher": "headwind",

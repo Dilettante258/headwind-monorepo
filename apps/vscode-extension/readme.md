@@ -1,8 +1,8 @@
 # Headwind for VS Code
 
-**Tailwind CSS to Atomic CSS compiler** — transform utility classes into optimized atomic CSS directly in your editor.
+**Atomic CSS to Semantic CSS compiler** — transform atomic utility classes into optimized semantic CSS directly in your editor.
 
-**Tailwind CSS 原子化编译器** — 在编辑器中将工具类转换为优化的原子 CSS。
+**原子化 CSS 到语义化 CSS 编译器** — 在编辑器中将原子化工具类转换为优化的语义化 CSS。
 
 Powered by Rust + WASM for near-instant transforms.
 基于 Rust + WASM，转换几乎瞬间完成。
