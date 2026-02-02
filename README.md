@@ -1,5 +1,7 @@
 # Headwind
 
+![Icon](./assets/headwind.png)
+
 **Atomic CSS to Semantic CSS compiler** built with Rust and SWC.
 
 Headwind parses atomic utility classes from JSX/TSX/HTML source code, replaces them with generated semantic class names, and outputs corresponding CSS. It runs as a WASM module in the browser, a VS Code extension, or a Node.js transformer.

@@ -1,0 +1,12 @@
+src/**
+wasm/**
+resources/**
+node_modules/**
+tsup.config.ts
+tsconfig.json
+.turbo/**
+.vscode/**
+.gitignore
+.DS_Store
+**/*.map
+*.vsix

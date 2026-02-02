@@ -1,10 +1,20 @@
 {
-  "name": "@headwind/vscode-extension",
+  "name": "headwind-vscode",
   "displayName": "Headwind",
   "description": "Atomic CSS to Semantic CSS compiler powered by Rust + WASM",
   "version": "0.1.0",
-  "private": true,
   "publisher": "headwind",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dilettante258/headwind-monorepo.git",
+    "directory": "apps/vscode-extension"
+  },
+  "homepage": "https://github.com/Dilettante258/headwind-monorepo/tree/main/apps/vscode-extension",
+  "bugs": {
+    "url": "https://github.com/Dilettante258/headwind-monorepo/issues"
+  },
+  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -129,6 +139,7 @@
   "devDependencies": {
     "@headwind/config": "workspace:*",
     "@types/vscode": "^1.96.0",
+    "@vscode/vsce": "^3.2.0",
     "tsup": "^8.3.5"
   }
 }
