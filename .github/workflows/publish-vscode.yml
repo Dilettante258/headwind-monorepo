@@ -9,7 +9,7 @@ on:
       dry_run:
         description: 'Dry run (package only, do not publish)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 jobs:

@@ -3,7 +3,7 @@
   "displayName": "Headwind Transformer",
   "description": "Atomic CSS to Semantic CSS compiler powered by Rust + WASM",
   "version": "0.1.0",
-  "publisher": "headwind",
+  "publisher": "Dilettante258",
   "license": "MIT",
   "repository": {
     "type": "git",

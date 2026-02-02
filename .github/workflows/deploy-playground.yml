@@ -3,6 +3,10 @@ name: Deploy Web Playground
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/web-playground/**'
+      - 'crates/**'
+      - 'Cargo.lock'
   workflow_dispatch:
 
 jobs:
