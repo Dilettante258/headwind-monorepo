@@ -118,6 +118,12 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "columns" => "columns",
     "basis" => "flex-basis",
 
+    // Color (颜色)
+    "accent" => "accent-color",
+    "caret" => "caret-color",
+    "fill" => "fill",
+    "stroke" => "stroke",
+
     // Appearance & Interaction
     "appearance" => "appearance",
     "touch" => "touch-action",

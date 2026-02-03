@@ -154,6 +154,9 @@ pub fn infer_value(plugin: &str, value: &str, color_mode: ColorMode) -> Option<S
             }
         }
 
+        // ── Color-only plugins ───────────────────────────────────
+        "accent" | "caret" | "fill" => get_color_value(value, color_mode),
+
         // ── Opacity ──────────────────────────────────────────────
         "opacity" | "bg-opacity" | "text-opacity" | "border-opacity" => get_opacity_value(value),
 

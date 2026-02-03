@@ -1,4 +1,4 @@
-use crate::types::{ArbitraryValue, ParsedClass, ParsedValue};
+use crate::types::{ArbitraryValue, CssVariableValue, ParsedClass, ParsedValue};
 
 /// 解析包含多个 Tailwind class 的字符串
 ///
@@ -89,6 +89,7 @@ pub enum ParseError {
     EmptyInput,
     InvalidFormat(String),
     UnmatchedBracket,
+    UnmatchedParen,
     MissingPlugin,
 }
 
@@ -98,6 +99,7 @@ impl std::fmt::Display for ParseError {
             ParseError::EmptyInput => write!(f, "Empty input"),
             ParseError::InvalidFormat(msg) => write!(f, "Invalid format: {}", msg),
             ParseError::UnmatchedBracket => write!(f, "Unmatched bracket in arbitrary value"),
+            ParseError::UnmatchedParen => write!(f, "Unmatched parenthesis in CSS variable value"),
             ParseError::MissingPlugin => write!(f, "Missing plugin/command"),
         }
     }
@@ -187,6 +189,7 @@ impl<'a> Parser<'a> {
             // 检查是否为有效的修饰符（不包含特殊字符）
             if modifier_str.is_empty()
                 || modifier_str.contains('[')
+                || modifier_str.contains('(')
                 || modifier_str.contains('/')
                 || modifier_str.contains('!')
             {
@@ -200,33 +203,35 @@ impl<'a> Parser<'a> {
 
     /// 解析插件和值
     ///
-    /// 策略：扫描整个字符串，找到所有 `-[` 模式的位置
-    /// - 如果存在 `-[`，则将其之前的部分作为 plugin
+    /// 策略：扫描整个字符串，找到 `-[` 或 `-(` 模式的位置
+    /// - 如果存在 `-[` 或 `-(`, 则将其之前的部分作为 plugin
     /// - 否则，在第一个 `-` 处分割，并尝试扩展复合插件
     fn parse_plugin_and_value(&mut self) -> Result<(String, Option<ParsedValue>), ParseError> {
         let start = self.pos;
 
-        // 查找 `-[` 模式的位置
-        let mut dash_bracket_pos = None;
+        // 查找 `-[` 或 `-(` 模式的位置
+        let mut dash_special_pos = None;
         let mut temp_pos = self.pos;
 
         while temp_pos + 1 < self.input.len() {
-            if self.input[temp_pos..].starts_with("-[") {
-                dash_bracket_pos = Some(temp_pos);
+            if self.input[temp_pos..].starts_with("-[")
+                || self.input[temp_pos..].starts_with("-(")
+            {
+                dash_special_pos = Some(temp_pos);
                 break;
             }
             temp_pos += 1;
         }
 
         // 确定 plugin 的结束位置
-        if let Some(db_pos) = dash_bracket_pos {
-            // 找到了 `-[`，plugin 到这里结束
-            self.pos = db_pos;
+        if let Some(ds_pos) = dash_special_pos {
+            // 找到了 `-[` 或 `-(`, plugin 到这里结束
+            self.pos = ds_pos;
         } else {
-            // 没有 `-[`，在第一个 `-`、`[`、`/`、`!` 处分割
+            // 没有 `-[` 或 `-(`, 在第一个 `-`、`[`、`(`、`/`、`!` 处分割
             while self.pos < self.input.len() {
                 let ch = self.current_char();
-                if ch == '-' || ch == '[' || ch == '/' || ch == '!' {
+                if ch == '-' || ch == '[' || ch == '(' || ch == '/' || ch == '!' {
                     break;
                 }
                 self.pos += 1;
@@ -253,9 +258,12 @@ impl<'a> Parser<'a> {
                 // 跳过 '-'
                 self.pos += 1;
 
-                // 检查是否为任意值
                 if self.pos < self.input.len() && self.current_char() == '[' {
+                    // -[ → 任意值
                     Some(ParsedValue::Arbitrary(self.parse_arbitrary_value()?))
+                } else if self.pos < self.input.len() && self.current_char() == '(' {
+                    // -( → CSS 自定义属性
+                    Some(ParsedValue::CssVariable(self.parse_css_variable_value()?))
                 } else {
                     // 标准值
                     let val = self.parse_standard_value();
@@ -268,6 +276,9 @@ impl<'a> Parser<'a> {
             } else if ch == '[' {
                 // 直接的任意值
                 Some(ParsedValue::Arbitrary(self.parse_arbitrary_value()?))
+            } else if ch == '(' {
+                // 直接的 CSS 自定义属性（无 dash 前缀，如 `plugin(--var)`）
+                Some(ParsedValue::CssVariable(self.parse_css_variable_value()?))
             } else {
                 None
             }
@@ -367,25 +378,114 @@ impl<'a> Parser<'a> {
         Ok(ArbitraryValue::new(raw))
     }
 
-    /// 解析透明度修饰符
+    /// 解析 CSS 自定义属性值（圆括号内容）
+    ///
+    /// 例如：`(--my-color)` 或 `(image:--my-bg)`
+    fn parse_css_variable_value(&mut self) -> Result<CssVariableValue, ParseError> {
+        if self.current_char() != '(' {
+            return Err(ParseError::InvalidFormat(
+                "CSS variable value must start with '('".to_string(),
+            ));
+        }
+
+        let start = self.pos;
+
+        // 跳过 '('
+        self.pos += 1;
+
+        // 找到匹配的 ')'
+        let mut depth = 1;
+        while self.pos < self.input.len() && depth > 0 {
+            match self.current_char() {
+                '(' => depth += 1,
+                ')' => depth -= 1,
+                _ => {}
+            }
+            self.pos += 1;
+        }
+
+        if depth != 0 {
+            return Err(ParseError::UnmatchedParen);
+        }
+
+        let raw = self.input[start..self.pos].to_string();
+        Ok(CssVariableValue::new(raw))
+    }
+
+    /// 解析透明度 / 行高修饰符
+    ///
+    /// 支持三种格式：
+    /// - `/50` — 普通字母数字值（透明度或行高数字）
+    /// - `/[1.5rem]` — 任意值（方括号包裹）
+    /// - `/(--custom)` — CSS 自定义属性（圆括号包裹）
     fn parse_alpha(&mut self) -> Option<String> {
         if self.pos < self.input.len() && self.current_char() == '/' {
             self.pos += 1; // 跳过 '/'
 
-            let start = self.pos;
-
-            // 读取数字或百分比
-            while self.pos < self.input.len() {
-                let ch = self.current_char();
-                if ch == '!' || !ch.is_ascii_alphanumeric() {
-                    break;
-                }
-                self.pos += 1;
+            if self.pos >= self.input.len() {
+                return None;
             }
 
-            let alpha = self.input[start..self.pos].to_string();
-            if !alpha.is_empty() {
-                return Some(alpha);
+            let start = self.pos;
+            let ch = self.current_char();
+
+            if ch == '[' {
+                // 方括号值：/[1.5rem]
+                let mut depth = 0;
+                while self.pos < self.input.len() {
+                    match self.current_char() {
+                        '[' => depth += 1,
+                        ']' => {
+                            depth -= 1;
+                            self.pos += 1;
+                            if depth == 0 {
+                                break;
+                            }
+                            continue;
+                        }
+                        _ => {}
+                    }
+                    self.pos += 1;
+                }
+                let alpha = self.input[start..self.pos].to_string();
+                if !alpha.is_empty() {
+                    return Some(alpha);
+                }
+            } else if ch == '(' {
+                // 圆括号值：/(--custom)
+                let mut depth = 0;
+                while self.pos < self.input.len() {
+                    match self.current_char() {
+                        '(' => depth += 1,
+                        ')' => {
+                            depth -= 1;
+                            self.pos += 1;
+                            if depth == 0 {
+                                break;
+                            }
+                            continue;
+                        }
+                        _ => {}
+                    }
+                    self.pos += 1;
+                }
+                let alpha = self.input[start..self.pos].to_string();
+                if !alpha.is_empty() {
+                    return Some(alpha);
+                }
+            } else {
+                // 普通字母数字值
+                while self.pos < self.input.len() {
+                    let ch = self.current_char();
+                    if ch == '!' || !ch.is_ascii_alphanumeric() {
+                        break;
+                    }
+                    self.pos += 1;
+                }
+                let alpha = self.input[start..self.pos].to_string();
+                if !alpha.is_empty() {
+                    return Some(alpha);
+                }
             }
         }
 
@@ -434,8 +534,8 @@ fn compound_extensions(prefix: &str) -> &'static [&'static str] {
             "t", "r", "b", "l", "tl", "tr", "br", "bl", "s", "e", "ss", "se", "es", "ee",
         ],
 
-        // Inset axis
-        "inset" => &["x", "y"],
+        // Inset axis + inset-shadow / inset-ring
+        "inset" => &["x", "y", "shadow", "ring"],
 
         // Transform axis
         "translate" => &["x", "y", "z"],
@@ -850,5 +950,143 @@ mod tests {
         let parsed = parse_class("col-span").unwrap();
         assert_eq!(parsed.plugin, "col-span");
         assert_eq!(parsed.value, None);
+    }
+
+    // --- CSS variable -(…) syntax tests ---
+
+    #[test]
+    fn test_css_variable_simple() {
+        let parsed = parse_class("bg-(--my-color)").unwrap();
+        assert_eq!(parsed.plugin, "bg");
+        assert!(parsed.value.as_ref().unwrap().is_css_variable());
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--my-color");
+            assert_eq!(cv.type_hint, None);
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_with_type_hint() {
+        let parsed = parse_class("bg-(image:--my-bg)").unwrap();
+        assert_eq!(parsed.plugin, "bg");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--my-bg");
+            assert_eq!(cv.type_hint, Some("image".to_string()));
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_gradient() {
+        let parsed = parse_class("bg-linear-(--my-gradient)").unwrap();
+        assert_eq!(parsed.plugin, "bg-linear");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--my-gradient");
+            assert_eq!(cv.type_hint, None);
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_from() {
+        let parsed = parse_class("from-(--start-color)").unwrap();
+        assert_eq!(parsed.plugin, "from");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--start-color");
+            assert_eq!(cv.type_hint, None);
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_with_modifier() {
+        let parsed = parse_class("hover:bg-(--my-color)").unwrap();
+        assert_eq!(parsed.modifiers().len(), 1);
+        assert_eq!(parsed.plugin, "bg");
+        assert!(parsed.value.as_ref().unwrap().is_css_variable());
+    }
+
+    #[test]
+    fn test_css_variable_with_important() {
+        let parsed = parse_class("bg-(--my-color)!").unwrap();
+        assert_eq!(parsed.plugin, "bg");
+        assert!(parsed.important);
+        assert!(parsed.value.as_ref().unwrap().is_css_variable());
+    }
+
+    #[test]
+    fn test_css_variable_with_alpha() {
+        let parsed = parse_class("bg-(--my-color)/50").unwrap();
+        assert_eq!(parsed.plugin, "bg");
+        assert_eq!(parsed.alpha, Some("50".to_string()));
+        assert!(parsed.value.as_ref().unwrap().is_css_variable());
+    }
+
+    #[test]
+    fn test_css_variable_text() {
+        let parsed = parse_class("text-(--my-size)").unwrap();
+        assert_eq!(parsed.plugin, "text");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--my-size");
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_spacing() {
+        let parsed = parse_class("p-(--spacing)").unwrap();
+        assert_eq!(parsed.plugin, "p");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--spacing");
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_css_variable_normalized_string() {
+        let parsed = parse_class("bg-(--my-color)").unwrap();
+        assert_eq!(parsed.to_normalized_string(), "bg-(--my-color)");
+    }
+
+    #[test]
+    fn test_css_variable_unmatched_paren() {
+        let result = parse_class("bg-(--my-color");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ParseError::UnmatchedParen);
+    }
+
+    #[test]
+    fn test_css_variable_compound_plugin() {
+        let parsed = parse_class("gap-x-(--my-gap)").unwrap();
+        assert_eq!(parsed.plugin, "gap-x");
+
+        if let Some(ParsedValue::CssVariable(cv)) = parsed.value {
+            assert_eq!(cv.property, "--my-gap");
+        } else {
+            panic!("Expected CSS variable value");
+        }
+    }
+
+    #[test]
+    fn test_parse_classes_with_css_variable() {
+        let parsed = parse_classes("p-4 bg-(--my-color) text-center").unwrap();
+        assert_eq!(parsed.len(), 3);
+        assert_eq!(parsed[0].plugin, "p");
+        assert_eq!(parsed[1].plugin, "bg");
+        assert!(parsed[1].value.as_ref().unwrap().is_css_variable());
+        assert_eq!(parsed[2].plugin, "text");
     }
 }

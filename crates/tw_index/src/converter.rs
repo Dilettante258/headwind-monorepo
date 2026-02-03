@@ -3,7 +3,7 @@ use crate::plugin_map::get_plugin_properties;
 use crate::theme_values;
 use crate::value_map::{get_color_value, get_spacing_value, infer_value};
 use headwind_core::Declaration;
-use headwind_tw_parse::{Modifier, ParsedClass, ParsedValue};
+use headwind_tw_parse::{CssVariableValue, Modifier, ParsedClass, ParsedValue};
 use phf::phf_map;
 
 /// CSS 规则，包含选择器和声明
@@ -127,6 +127,10 @@ static VALUELESS_MAP: phf::Map<&'static str, (&'static str, &'static str)> = phf
     // Outline (valueless = 1px width)
     "outline" => ("outline-width", "1px"),
 
+    // Ring (valueless = 1px width)
+    "ring" => ("--tw-ring-shadow", "0 0 0 1px"),
+    "inset-ring" => ("--tw-inset-ring-shadow", "inset 0 0 0 1px"),
+
     // Resize (valueless = both)
     "resize" => ("resize", "both"),
 
@@ -186,6 +190,9 @@ impl Converter {
             Some(ParsedValue::Arbitrary(arb)) => {
                 build_arbitrary_declarations(parsed, &arb.content)?
             }
+            Some(ParsedValue::CssVariable(cv)) => {
+                build_css_variable_declarations(parsed, cv)?
+            }
             Some(ParsedValue::Standard(value)) => self
                 .build_standard_declarations(parsed, value)
                 .or_else(|| build_valueless_from_full_name(parsed, value))?,
@@ -236,6 +243,85 @@ fn build_arbitrary_declarations(parsed: &ParsedClass, raw_value: &str) -> Option
         .collect();
 
     Some(declarations)
+}
+
+/// 为 CSS 自定义属性值构建声明
+///
+/// Tailwind v4 的 `-(...)` 语法：
+/// - `bg-(--my-color)` → `background: var(--my-color)`
+/// - `bg-(image:--my-bg)` → `background-image: var(--my-bg)`
+/// - `bg-linear-(--custom)` → `background-image: linear-gradient(var(--tw-gradient-stops, var(--custom)))`
+/// - `from-(--my-color)` → `--tw-gradient-from: var(--my-color)`
+fn build_css_variable_declarations(
+    parsed: &ParsedClass,
+    cv: &CssVariableValue,
+) -> Option<Vec<Declaration>> {
+    let var_expr = format!("var({})", cv.property);
+
+    // 有类型提示时，根据提示选择 CSS 属性
+    if let Some(ref hint) = cv.type_hint {
+        let property = match hint.as_str() {
+            "image" => "background-image",
+            "color" => "color",
+            "font" => "font-family",
+            "length" | "size" => "width", // 回退到 plugin_map
+            _ => {
+                // 未知类型提示，尝试直接作为属性名
+                return Some(vec![Declaration::new(hint.as_str(), var_expr)]);
+            }
+        };
+        // 对于有类型提示的情况，优先使用提示指定的属性
+        // 但如果 plugin 自身有特定映射（如 bg → background），也参考 plugin
+        let final_property = match (parsed.plugin.as_str(), hint.as_str()) {
+            ("bg", "image") => "background-image",
+            ("bg", "color") => "background-color",
+            ("text", "color") => "color",
+            ("text", "length") | ("text", "size") => "font-size",
+            _ => property,
+        };
+        return Some(vec![Declaration::new(final_property, var_expr)]);
+    }
+
+    // 无类型提示时，走专门的插件分发逻辑
+    match parsed.plugin.as_str() {
+        // 渐变系列
+        "bg-linear" => Some(vec![Declaration::new(
+            "background-image",
+            format!("linear-gradient(var(--tw-gradient-stops, {}))", var_expr),
+        )]),
+        "bg-radial" => Some(vec![Declaration::new(
+            "background-image",
+            format!("radial-gradient(var(--tw-gradient-stops, {}))", var_expr),
+        )]),
+        "bg-conic" => Some(vec![Declaration::new(
+            "background-image",
+            format!("conic-gradient(var(--tw-gradient-stops, {}))", var_expr),
+        )]),
+        // 渐变色标
+        "from" => Some(vec![Declaration::new("--tw-gradient-from", var_expr)]),
+        "via" => Some(vec![Declaration::new("--tw-gradient-via", var_expr)]),
+        "to" => Some(vec![Declaration::new("--tw-gradient-to", var_expr)]),
+        // text 默认映射到 color
+        "text" => Some(vec![Declaration::new("color", var_expr)]),
+        // 颜色双语义插件：CSS 变量总是映射到颜色属性
+        "border" => Some(vec![Declaration::new("border-color", var_expr)]),
+        "outline" => Some(vec![Declaration::new("outline-color", var_expr)]),
+        "decoration" => Some(vec![Declaration::new("text-decoration-color", var_expr)]),
+        "stroke" => Some(vec![Declaration::new("stroke", var_expr)]),
+        "shadow" => Some(vec![Declaration::new("--tw-shadow-color", var_expr)]),
+        "inset-shadow" => Some(vec![Declaration::new("--tw-inset-shadow-color", var_expr)]),
+        "ring" => Some(vec![Declaration::new("--tw-ring-shadow", format!("0 0 0 {}", var_expr))]),
+        "inset-ring" => Some(vec![Declaration::new("--tw-inset-ring-shadow", format!("inset 0 0 0 {}", var_expr))]),
+        // 通用：使用 plugin_map 查找 CSS 属性
+        _ => {
+            let properties = get_plugin_properties(&parsed.plugin)?;
+            let declarations = properties
+                .into_iter()
+                .map(|property| Declaration::new(property, var_expr.clone()))
+                .collect();
+            Some(declarations)
+        }
+    }
 }
 
 // build_standard_declarations is now a method on Converter (see impl block below)
@@ -293,17 +379,33 @@ fn extract_bracket_value(s: &str) -> Option<&str> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']'))
 }
 
+/// 判断任意值是否看起来像颜色值
+///
+/// 用于双语义插件（如 border）区分颜色和非颜色的任意值
+fn looks_like_color_value(value: &str) -> bool {
+    value.starts_with('#')
+        || value.starts_with("rgb")
+        || value.starts_with("hsl")
+        || value.starts_with("oklch")
+        || value.starts_with("oklab")
+        || value.starts_with("color(")
+}
+
 /// 处理复杂任意值插件
 fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<Declaration>> {
     match parsed.plugin.as_str() {
-        // text-[#fff] → color
+        // text-[#fff] → color, text-[14px] → font-size
         "text" => {
             let value = if parsed.negative {
                 format!("-{}", raw_value)
             } else {
                 raw_value.to_string()
             };
-            Some(vec![Declaration::new("color", value)])
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("color", value)])
+            } else {
+                Some(vec![Declaration::new("font-size", value)])
+            }
         }
         // bg-linear-[<value>] → linear-gradient
         "bg-linear" => Some(vec![Declaration::new(
@@ -335,6 +437,70 @@ fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<
             "--tw-gradient-to",
             raw_value.to_string(),
         )]),
+        // border-[<color>] → border-color（仅颜色值，非颜色回退到 plugin_map 的 border-width）
+        "border" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("border-color", raw_value)])
+            } else {
+                None
+            }
+        }
+        // outline-[<value>] → outline-color / outline-width
+        "outline" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("outline-color", raw_value)])
+            } else {
+                Some(vec![Declaration::new("outline-width", raw_value)])
+            }
+        }
+        // decoration-[<value>] → text-decoration-color / text-decoration-thickness
+        "decoration" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("text-decoration-color", raw_value)])
+            } else {
+                Some(vec![Declaration::new("text-decoration-thickness", raw_value)])
+            }
+        }
+        // stroke-[<value>] → stroke / stroke-width
+        "stroke" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("stroke", raw_value)])
+            } else {
+                Some(vec![Declaration::new("stroke-width", raw_value)])
+            }
+        }
+        // shadow-[<color>] → --tw-shadow-color
+        "shadow" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("--tw-shadow-color", raw_value)])
+            } else {
+                None // fall through to plugin_map (box-shadow)
+            }
+        }
+        // inset-shadow-[<color>] → --tw-inset-shadow-color, else box-shadow
+        "inset-shadow" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("--tw-inset-shadow-color", raw_value)])
+            } else {
+                Some(vec![Declaration::new("box-shadow", raw_value.to_string())])
+            }
+        }
+        // ring-[<color>] → --tw-ring-color, ring-[<width>] → --tw-ring-shadow
+        "ring" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("--tw-ring-color", raw_value)])
+            } else {
+                Some(vec![Declaration::new("--tw-ring-shadow", format!("0 0 0 {}", raw_value))])
+            }
+        }
+        // inset-ring-[<color>] → --tw-inset-ring-color, inset-ring-[<width>] → --tw-inset-ring-shadow
+        "inset-ring" => {
+            if looks_like_color_value(raw_value) {
+                Some(vec![Declaration::new("--tw-inset-ring-color", raw_value)])
+            } else {
+                Some(vec![Declaration::new("--tw-inset-ring-shadow", format!("inset 0 0 0 {}", raw_value))])
+            }
+        }
         _ => None,
     }
 }
@@ -380,19 +546,38 @@ impl Converter {
                 }
                 "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl"
                 | "7xl" | "8xl" | "9xl" => {
-                    if self.use_variables {
-                        Some(vec![
-                            Declaration::new("font-size", format!("var(--text-{})", value)),
-                            Declaration::new("line-height", format!("var(--text-{}--line-height)", value)),
-                        ])
+                    let font_size = if self.use_variables {
+                        format!("var(--text-{})", value)
                     } else {
-                        let fs = theme_values::TEXT_SIZE.get(value)?;
-                        let lh = theme_values::TEXT_LINE_HEIGHT.get(value)?;
-                        Some(vec![
-                            Declaration::new("font-size", fs.to_string()),
-                            Declaration::new("line-height", lh.to_string()),
-                        ])
-                    }
+                        theme_values::TEXT_SIZE.get(value)?.to_string()
+                    };
+
+                    // alpha 修饰符覆盖行高：text-base/6, text-base/[1.5rem], text-base/(--lh)
+                    let line_height = if let Some(ref alpha) = parsed.alpha {
+                        if alpha.starts_with('[') && alpha.ends_with(']') {
+                            // 任意值：text-base/[1.5rem] → line-height: 1.5rem
+                            let inner = &alpha[1..alpha.len() - 1];
+                            inner.replace('_', " ")
+                        } else if alpha.starts_with('(') && alpha.ends_with(')') {
+                            // CSS 变量：text-base/(--lh) → line-height: var(--lh)
+                            let inner = alpha.strip_prefix('(').and_then(|s| s.strip_suffix(')')).unwrap_or(alpha);
+                            format!("var({})", inner)
+                        } else if alpha.chars().all(|c| c.is_ascii_digit()) {
+                            // 数字：text-base/6 → line-height: calc(var(--spacing) * 6)
+                            format!("calc(var(--spacing) * {})", alpha)
+                        } else {
+                            alpha.clone()
+                        }
+                    } else if self.use_variables {
+                        format!("var(--text-{}--line-height)", value)
+                    } else {
+                        theme_values::TEXT_LINE_HEIGHT.get(value)?.to_string()
+                    };
+
+                    Some(vec![
+                        Declaration::new("font-size", font_size),
+                        Declaration::new("line-height", line_height),
+                    ])
                 }
             _ => {
                 let css_value = infer_value(&parsed.plugin, value, self.color_mode)?;
@@ -578,7 +763,7 @@ impl Converter {
             _ => Some(vec![Declaration::new("align-content", value.to_string())]),
         },
 
-        // ── border: style / collapse ─────────────────────────────
+        // ── border: style / collapse / color ─────────────────────
         "border" => match value {
             "solid" | "dashed" | "dotted" | "double" | "hidden" | "none" => {
                 Some(vec![Declaration::new("border-style", value)])
@@ -586,10 +771,16 @@ impl Converter {
             "collapse" | "separate" => {
                 Some(vec![Declaration::new("border-collapse", value)])
             }
-            _ => None, // fall through for width/color
+            _ => {
+                if let Some(color) = get_color_value(value, self.color_mode) {
+                    Some(vec![Declaration::new("border-color", color)])
+                } else {
+                    None // fall through for width
+                }
+            }
         },
 
-        // ── decoration: style / thickness ────────────────────────
+        // ── decoration: style / thickness / color ────────────────
         "decoration" => match value {
             "solid" | "dashed" | "dotted" | "double" | "wavy" => {
                 Some(vec![Declaration::new("text-decoration-style", value)])
@@ -597,10 +788,13 @@ impl Converter {
             "auto" | "from-font" => {
                 Some(vec![Declaration::new("text-decoration-thickness", value)])
             }
-            _ => None,
+            _ => {
+                get_color_value(value, self.color_mode)
+                    .map(|color| vec![Declaration::new("text-decoration-color", color)])
+            }
         },
 
-        // ── outline: style / hidden ──────────────────────────────
+        // ── outline: style / hidden / color / width ──────────────
         "outline" => match value {
             "solid" | "dashed" | "dotted" | "double" | "none" => {
                 Some(vec![Declaration::new("outline-style", value)])
@@ -609,8 +803,71 @@ impl Converter {
                 Declaration::new("outline", "2px solid transparent"),
                 Declaration::new("outline-offset", "2px"),
             ]),
-            _ => None,
+            _ => {
+                if let Some(color) = get_color_value(value, self.color_mode) {
+                    Some(vec![Declaration::new("outline-color", color)])
+                } else if let Ok(n) = value.parse::<u32>() {
+                    Some(vec![Declaration::new("outline-width", format!("{}px", n))])
+                } else {
+                    None
+                }
+            }
         },
+
+        // ── stroke: color / width ────────────────────────────────
+        "stroke" => {
+            if let Some(color) = get_color_value(value, self.color_mode) {
+                Some(vec![Declaration::new("stroke", color)])
+            } else if let Ok(n) = value.parse::<u32>() {
+                Some(vec![Declaration::new("stroke-width", n.to_string())])
+            } else {
+                None
+            }
+        }
+
+        // ── shadow: named size / none / color ─────────────────────
+        "shadow" => match value {
+            "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" => {
+                Some(vec![Declaration::new("box-shadow", format!("var(--shadow-{})", value))])
+            }
+            "none" => Some(vec![Declaration::new("box-shadow", "0 0 #0000")]),
+            _ => {
+                get_color_value(value, self.color_mode)
+                    .map(|color| vec![Declaration::new("--tw-shadow-color", color)])
+            }
+        },
+
+        // ── inset-shadow: named size / none / color ──────────────
+        "inset-shadow" => match value {
+            "2xs" | "xs" | "sm" => {
+                Some(vec![Declaration::new("box-shadow", format!("var(--inset-shadow-{})", value))])
+            }
+            "none" => Some(vec![Declaration::new("box-shadow", "inset 0 0 #0000")]),
+            _ => {
+                get_color_value(value, self.color_mode)
+                    .map(|color| vec![Declaration::new("--tw-inset-shadow-color", color)])
+            }
+        },
+
+        // ── ring: number width / color ───────────────────────────
+        "ring" => {
+            if let Ok(n) = value.parse::<u32>() {
+                Some(vec![Declaration::new("--tw-ring-shadow", format!("0 0 0 {}px", n))])
+            } else {
+                get_color_value(value, self.color_mode)
+                    .map(|color| vec![Declaration::new("--tw-ring-color", color)])
+            }
+        }
+
+        // ── inset-ring: number width / color ─────────────────────
+        "inset-ring" => {
+            if let Ok(n) = value.parse::<u32>() {
+                Some(vec![Declaration::new("--tw-inset-ring-shadow", format!("inset 0 0 0 {}px", n))])
+            } else {
+                get_color_value(value, self.color_mode)
+                    .map(|color| vec![Declaration::new("--tw-inset-ring-color", color)])
+            }
+        }
 
         // ── list: type / position / image ────────────────────────
         "list" => match value {
@@ -892,6 +1149,21 @@ impl Converter {
                 Some(vec![Declaration::new("border-style", value)])
             }
             _ => None,
+        },
+
+        // ── leading: line-height ────────────────────────────────
+        "leading" => match value {
+            "none" => Some(vec![Declaration::new("line-height", "1")]),
+            _ => {
+                if let Ok(n) = value.parse::<u32>() {
+                    Some(vec![Declaration::new(
+                        "line-height",
+                        format!("calc(var(--spacing) * {})", n),
+                    )])
+                } else {
+                    None // fall through to standard path (infer_value handles named values)
+                }
+            }
         },
 
         // ── from / via / to: gradient color stops ────────────────
@@ -1353,5 +1625,811 @@ mod tests {
             let rule = converter.convert(&parsed);
             assert!(rule.is_some(), "Failed for: {}", class);
         }
+    }
+
+    // ── CSS 自定义属性 -(…) 语法测试 ──────────────────────────
+
+    #[test]
+    fn test_css_variable_bg() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-(--my-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background");
+        assert_eq!(decls[0].value, "var(--my-color)");
+    }
+
+    #[test]
+    fn test_css_variable_bg_with_type_hint_image() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-(image:--my-bg)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(decls[0].value, "var(--my-bg)");
+    }
+
+    #[test]
+    fn test_css_variable_bg_with_type_hint_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-(color:--my-bg)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-color");
+        assert_eq!(decls[0].value, "var(--my-bg)");
+    }
+
+    #[test]
+    fn test_css_variable_bg_linear() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-linear-(--my-gradient)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(var(--tw-gradient-stops, var(--my-gradient)))"
+        );
+    }
+
+    #[test]
+    fn test_css_variable_bg_radial() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-radial-(--my-gradient)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "radial-gradient(var(--tw-gradient-stops, var(--my-gradient)))"
+        );
+    }
+
+    #[test]
+    fn test_css_variable_bg_conic() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-conic-(--my-gradient)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "conic-gradient(var(--tw-gradient-stops, var(--my-gradient)))"
+        );
+    }
+
+    #[test]
+    fn test_css_variable_from() {
+        let converter = Converter::new();
+        let parsed = parse_class("from-(--start-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-from");
+        assert_eq!(decls[0].value, "var(--start-color)");
+    }
+
+    #[test]
+    fn test_css_variable_via() {
+        let converter = Converter::new();
+        let parsed = parse_class("via-(--mid-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-via");
+        assert_eq!(decls[0].value, "var(--mid-color)");
+    }
+
+    #[test]
+    fn test_css_variable_to() {
+        let converter = Converter::new();
+        let parsed = parse_class("to-(--end-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-gradient-to");
+        assert_eq!(decls[0].value, "var(--end-color)");
+    }
+
+    #[test]
+    fn test_css_variable_text() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-(--my-text-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "var(--my-text-color)");
+    }
+
+    #[test]
+    fn test_css_variable_padding() {
+        let converter = Converter::new();
+        let parsed = parse_class("p-(--spacing)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "padding");
+        assert_eq!(decls[0].value, "var(--spacing)");
+    }
+
+    #[test]
+    fn test_css_variable_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("w-(--sidebar-width)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "width");
+        assert_eq!(decls[0].value, "var(--sidebar-width)");
+    }
+
+    #[test]
+    fn test_css_variable_with_important() {
+        let converter = Converter::new();
+        let parsed = parse_class("bg-(--my-color)!").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background");
+        assert!(decls[0].value.contains("var(--my-color)"));
+        assert!(decls[0].value.contains("!important"));
+    }
+
+    #[test]
+    fn test_css_variable_gap_x() {
+        let converter = Converter::new();
+        let parsed = parse_class("gap-x-(--my-gap)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "column-gap");
+        assert_eq!(decls[0].value, "var(--my-gap)");
+    }
+
+    // ── 颜色插件测试 ────────────────────────────────────────────
+
+    // --- accent ---
+
+    #[test]
+    fn test_accent_standard_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("accent-stone-100").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "accent-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_accent_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("accent-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "accent-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_accent_css_variable() {
+        let converter = Converter::new();
+        let parsed = parse_class("accent-(--my-accent)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "accent-color");
+        assert_eq!(decls[0].value, "var(--my-accent)");
+    }
+
+    // --- caret ---
+
+    #[test]
+    fn test_caret_standard_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("caret-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "caret-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_caret_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("caret-[#00ff00]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "caret-color");
+        assert_eq!(decls[0].value, "#00ff00");
+    }
+
+    #[test]
+    fn test_caret_css_variable() {
+        let converter = Converter::new();
+        let parsed = parse_class("caret-(--my-caret)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "caret-color");
+        assert_eq!(decls[0].value, "var(--my-caret)");
+    }
+
+    // --- fill ---
+
+    #[test]
+    fn test_fill_standard_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("fill-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "fill");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_fill_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("fill-[#0000ff]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "fill");
+        assert_eq!(decls[0].value, "#0000ff");
+    }
+
+    #[test]
+    fn test_fill_css_variable() {
+        let converter = Converter::new();
+        let parsed = parse_class("fill-(--icon-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "fill");
+        assert_eq!(decls[0].value, "var(--icon-color)");
+    }
+
+    // --- stroke ---
+
+    #[test]
+    fn test_stroke_standard_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("stroke-green-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "stroke");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_stroke_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("stroke-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "stroke-width");
+        assert_eq!(decls[0].value, "2");
+    }
+
+    #[test]
+    fn test_stroke_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("stroke-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "stroke");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_stroke_arbitrary_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("stroke-[3px]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "stroke-width");
+        assert_eq!(decls[0].value, "3px");
+    }
+
+    #[test]
+    fn test_stroke_css_variable() {
+        let converter = Converter::new();
+        let parsed = parse_class("stroke-(--stroke-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "stroke");
+        assert_eq!(decls[0].value, "var(--stroke-color)");
+    }
+
+    // --- border color ---
+
+    #[test]
+    fn test_border_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("border-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_border_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("border-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_border_css_variable_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("border-(--border-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-color");
+        assert_eq!(decls[0].value, "var(--border-color)");
+    }
+
+    // --- outline color ---
+
+    #[test]
+    fn test_outline_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("outline-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "outline-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_outline_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("outline-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "outline-width");
+        assert_eq!(decls[0].value, "2px");
+    }
+
+    #[test]
+    fn test_outline_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("outline-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "outline-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_outline_css_variable_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("outline-(--outline-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "outline-color");
+        assert_eq!(decls[0].value, "var(--outline-color)");
+    }
+
+    // --- decoration color ---
+
+    #[test]
+    fn test_decoration_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("decoration-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "text-decoration-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_decoration_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("decoration-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "text-decoration-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_decoration_css_variable_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("decoration-(--deco-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "text-decoration-color");
+        assert_eq!(decls[0].value, "var(--deco-color)");
+    }
+
+    // --- shadow color ---
+
+    #[test]
+    fn test_shadow_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-shadow-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_shadow_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-shadow-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_shadow_css_variable_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-(--shadow-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-shadow-color");
+        assert_eq!(decls[0].value, "var(--shadow-color)");
+    }
+
+    // --- ring color ---
+
+    #[test]
+    fn test_ring_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_ring_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_ring_css_variable_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring-(--ring-width)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-shadow");
+        assert_eq!(decls[0].value, "0 0 0 var(--ring-width)");
+    }
+
+    // --- inset-shadow ---
+
+    #[test]
+    fn test_inset_shadow_css_variable_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-(--inset-shadow-color)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-shadow-color");
+        assert_eq!(decls[0].value, "var(--inset-shadow-color)");
+    }
+
+    // --- inset-ring ---
+
+    #[test]
+    fn test_inset_ring_css_variable_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring-(--ring-width)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-shadow");
+        assert_eq!(decls[0].value, "inset 0 0 0 var(--ring-width)");
+    }
+
+    // ── shadow named sizes ───────────────────────────────────────
+
+    #[test]
+    fn test_shadow_sm() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-sm").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "var(--shadow-sm)");
+    }
+
+    #[test]
+    fn test_shadow_md() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-md").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "var(--shadow-md)");
+    }
+
+    #[test]
+    fn test_shadow_2xl() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-2xl").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "var(--shadow-2xl)");
+    }
+
+    #[test]
+    fn test_shadow_none() {
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-none").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "0 0 #0000");
+    }
+
+    // ── inset-shadow named sizes ─────────────────────────────────
+
+    #[test]
+    fn test_inset_shadow_sm() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-sm").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "var(--inset-shadow-sm)");
+    }
+
+    #[test]
+    fn test_inset_shadow_2xs() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-2xs").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "var(--inset-shadow-2xs)");
+    }
+
+    #[test]
+    fn test_inset_shadow_none() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-none").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "box-shadow");
+        assert_eq!(decls[0].value, "inset 0 0 #0000");
+    }
+
+    #[test]
+    fn test_inset_shadow_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-red-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-shadow-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    // ── ring width ───────────────────────────────────────────────
+
+    #[test]
+    fn test_ring_valueless() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-shadow");
+        assert_eq!(decls[0].value, "0 0 0 1px");
+    }
+
+    #[test]
+    fn test_ring_number() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-shadow");
+        assert_eq!(decls[0].value, "0 0 0 2px");
+    }
+
+    #[test]
+    fn test_ring_arbitrary_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("ring-[3px]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-ring-shadow");
+        assert_eq!(decls[0].value, "0 0 0 3px");
+    }
+
+    // ── inset-ring width ─────────────────────────────────────────
+
+    #[test]
+    fn test_inset_ring_valueless() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-shadow");
+        assert_eq!(decls[0].value, "inset 0 0 0 1px");
+    }
+
+    #[test]
+    fn test_inset_ring_number() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-shadow");
+        assert_eq!(decls[0].value, "inset 0 0 0 2px");
+    }
+
+    #[test]
+    fn test_inset_ring_arbitrary_width() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring-[3px]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-shadow");
+        assert_eq!(decls[0].value, "inset 0 0 0 3px");
+    }
+
+    #[test]
+    fn test_inset_ring_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring-blue-500").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-color");
+        assert!(decls[0].value.starts_with('#'));
+    }
+
+    #[test]
+    fn test_inset_ring_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-ring-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-ring-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    #[test]
+    fn test_inset_shadow_arbitrary_color() {
+        let converter = Converter::new();
+        let parsed = parse_class("inset-shadow-[#ff0000]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "--tw-inset-shadow-color");
+        assert_eq!(decls[0].value, "#ff0000");
+    }
+
+    // ── text: font-size vs color ─────────────────────────────────
+
+    #[test]
+    fn test_text_arbitrary_font_size() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-[14px]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "14px");
+    }
+
+    #[test]
+    fn test_text_arbitrary_font_size_rem() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-[1.5rem]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "1.5rem");
+    }
+
+    #[test]
+    fn test_text_arbitrary_color_hex() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-[#1da1f2]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "#1da1f2");
+    }
+
+    #[test]
+    fn test_text_arbitrary_color_rgb() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-[rgb(255,0,0)]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "rgb(255,0,0)");
+    }
+
+    #[test]
+    fn test_text_css_variable_length_hint() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-(length:--my-size)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "var(--my-size)");
+    }
+
+    // ── text-size/alpha: line-height overrides ───────────────────
+
+    #[test]
+    fn test_text_size_with_number_line_height() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-base/6").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "var(--text-base)");
+        assert_eq!(decls[1].property, "line-height");
+        assert_eq!(decls[1].value, "calc(var(--spacing) * 6)");
+    }
+
+    #[test]
+    fn test_text_size_with_bracket_line_height() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-base/[1.5rem]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "var(--text-base)");
+        assert_eq!(decls[1].property, "line-height");
+        assert_eq!(decls[1].value, "1.5rem");
+    }
+
+    #[test]
+    fn test_text_size_with_css_var_line_height() {
+        let converter = Converter::new();
+        let parsed = parse_class("text-base/(--my-lh)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "var(--text-base)");
+        assert_eq!(decls[1].property, "line-height");
+        assert_eq!(decls[1].value, "var(--my-lh)");
+    }
+
+    // ── leading ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_leading_none() {
+        let converter = Converter::new();
+        let parsed = parse_class("leading-none").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "line-height");
+        assert_eq!(decls[0].value, "1");
+    }
+
+    #[test]
+    fn test_leading_number() {
+        let converter = Converter::new();
+        let parsed = parse_class("leading-6").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "line-height");
+        assert_eq!(decls[0].value, "calc(var(--spacing) * 6)");
+    }
+
+    #[test]
+    fn test_leading_css_variable() {
+        let converter = Converter::new();
+        let parsed = parse_class("leading-(--my-lh)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "line-height");
+        assert_eq!(decls[0].value, "var(--my-lh)");
+    }
+
+    #[test]
+    fn test_leading_arbitrary() {
+        let converter = Converter::new();
+        let parsed = parse_class("leading-[1.5rem]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "line-height");
+        assert_eq!(decls[0].value, "1.5rem");
     }
 }

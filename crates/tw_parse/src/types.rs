@@ -50,6 +50,10 @@ pub enum ParsedValue {
 
     /// 任意值（如 "[13px]", "[#ff0000]"）
     Arbitrary(ArbitraryValue),
+
+    /// CSS 自定义属性引用（如 "(--my-color)", "(image:--my-bg)"）
+    /// Tailwind v4 语法：`bg-(--my-color)` → `background: var(--my-color)`
+    CssVariable(CssVariableValue),
 }
 
 /// 任意值表示
@@ -60,6 +64,19 @@ pub struct ArbitraryValue {
 
     /// 解析后的内容（去除方括号）
     pub content: String,
+}
+
+/// CSS 自定义属性值表示
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CssVariableValue {
+    /// 原始值（包含圆括号，如 "(--my-color)" 或 "(image:--my-bg)"）
+    pub raw: String,
+
+    /// CSS 自定义属性名（如 "--my-color"）
+    pub property: String,
+
+    /// 可选的类型提示（如 "image" in "bg-(image:--my-bg)"）
+    pub type_hint: Option<String>,
 }
 
 impl ParsedClass {
@@ -246,6 +263,11 @@ impl ParsedValue {
     pub fn is_arbitrary(&self) -> bool {
         matches!(self, ParsedValue::Arbitrary(_))
     }
+
+    /// 判断是否为 CSS 自定义属性引用
+    pub fn is_css_variable(&self) -> bool {
+        matches!(self, ParsedValue::CssVariable(_))
+    }
 }
 
 impl std::fmt::Display for ParsedValue {
@@ -253,6 +275,41 @@ impl std::fmt::Display for ParsedValue {
         match self {
             ParsedValue::Standard(s) => write!(f, "{}", s),
             ParsedValue::Arbitrary(arb) => write!(f, "{}", arb.raw),
+            ParsedValue::CssVariable(cv) => write!(f, "{}", cv.raw),
+        }
+    }
+}
+
+impl CssVariableValue {
+    /// 创建新的 CSS 自定义属性值
+    ///
+    /// 从原始圆括号字符串中解析出属性名和可选类型提示。
+    /// 例如：`"(--my-color)"` → property: `"--my-color"`, type_hint: None
+    ///       `"(image:--my-bg)"` → property: `"--my-bg"`, type_hint: Some("image")
+    pub fn new(raw: String) -> Self {
+        let inner = raw
+            .strip_prefix('(')
+            .and_then(|s| s.strip_suffix(')'))
+            .unwrap_or(&raw);
+
+        let (type_hint, property) = if let Some(colon_pos) = inner.find(':') {
+            let hint = &inner[..colon_pos];
+            let prop = &inner[colon_pos + 1..];
+            // 只有当冒号前的部分不以 -- 开头时才视为类型提示
+            // 否则整个值就是属性名（如 --my-color 本身不含类型提示）
+            if !hint.starts_with("--") {
+                (Some(hint.to_string()), prop.to_string())
+            } else {
+                (None, inner.to_string())
+            }
+        } else {
+            (None, inner.to_string())
+        };
+
+        Self {
+            raw,
+            property,
+            type_hint,
         }
     }
 }
