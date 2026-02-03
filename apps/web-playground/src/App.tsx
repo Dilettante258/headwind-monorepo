@@ -44,21 +44,26 @@ type CssVariablesMode = 'var' | 'inline';
 type UnknownClassesMode = 'remove' | 'preserve';
 type ColorModeType = 'hex' | 'oklch' | 'hsl' | 'var';
 
-const App: Component = () => {
+function Playground() {
   const [wasmLoaded, setWasmLoaded] = createSignal(false);
-  const [wasmError, setWasmError] = createSignal('');
-  const [language, setLanguage] = createSignal<Language>('jsx');
+  const [wasmError, setWasmError] = createSignal("");
+  const [language, setLanguage] = createSignal<Language>("jsx");
   const [source, setSource] = createSignal(DEFAULT_JSX);
-  const [namingMode, setNamingMode] = createSignal<NamingMode>('hash');
-  const [outputModeType, setOutputModeType] = createSignal<OutputModeType>('global');
-  const [accessMode, setAccessMode] = createSignal<AccessMode>('dot');
-  const [cssVariables, setCssVariables] = createSignal<CssVariablesMode>('inline');
-  const [unknownClasses, setUnknownClasses] = createSignal<UnknownClassesMode>('preserve');
-  const [colorMode, setColorMode] = createSignal<ColorModeType>('hex');
+  const [namingMode, setNamingMode] = createSignal<NamingMode>("hash");
+  const [outputModeType, setOutputModeType] =
+    createSignal<OutputModeType>("global");
+  const [accessMode, setAccessMode] = createSignal<AccessMode>("dot");
+  const [cssVariables, setCssVariables] =
+    createSignal<CssVariablesMode>("inline");
+  const [unknownClasses, setUnknownClasses] =
+    createSignal<UnknownClassesMode>("preserve");
+  const [colorMode, setColorMode] = createSignal<ColorModeType>("hex");
   const [result, setResult] = createSignal<TransformResult | null>(null);
-  const [error, setError] = createSignal('');
+  const [error, setError] = createSignal("");
   const [duration, setDuration] = createSignal(0);
-  const [activeTab, setActiveTab] = createSignal<'code' | 'css' | 'map'>('code');
+  const [activeTab, setActiveTab] = createSignal<"code" | "css" | "map">(
+    "code",
+  );
   const [copied, setCopied] = createSignal(false);
 
   onMount(async () => {
@@ -66,14 +71,14 @@ const App: Component = () => {
       await loadWasm();
       setWasmLoaded(true);
     } catch (e: any) {
-      setWasmError(e.message || 'Failed to load WASM');
+      setWasmError(e.message || "Failed to load WASM");
     }
   });
 
   // Switch default source when language changes
   createEffect(() => {
     const lang = language();
-    setSource(lang === 'jsx' ? DEFAULT_JSX : DEFAULT_HTML);
+    setSource(lang === "jsx" ? DEFAULT_JSX : DEFAULT_HTML);
   });
 
   // Run transform whenever inputs change
@@ -91,9 +96,9 @@ const App: Component = () => {
     const options: TransformOptions = {
       namingMode: naming,
       outputMode:
-        outType === 'global'
-          ? { type: 'global' }
-          : { type: 'cssModules', access },
+        outType === "global"
+          ? { type: "global" }
+          : { type: "cssModules", access },
       cssVariables: cssVars,
       unknownClasses: unknown,
       colorMode: color,
@@ -102,15 +107,15 @@ const App: Component = () => {
     try {
       const start = performance.now();
       let res: TransformResult;
-      if (language() === 'jsx') {
-        res = runTransformJsx(src, 'App.tsx', options);
+      if (language() === "jsx") {
+        res = runTransformJsx(src, "App.tsx", options);
       } else {
         res = runTransformHtml(src, options);
       }
       const elapsed = performance.now() - start;
       setDuration(elapsed);
       setResult(res);
-      setError('');
+      setError("");
     } catch (e: any) {
       setError(e.message || String(e));
       setResult(null);
@@ -126,10 +131,12 @@ const App: Component = () => {
   const currentOutputText = () => {
     const tab = activeTab();
     const r = result();
-    if (!r) return '';
-    if (tab === 'code') return r.code;
-    if (tab === 'css') return r.css;
-    return classMapEntries().map(([orig, gen]) => `${orig} → ${gen}`).join('\n');
+    if (!r) return "";
+    if (tab === "code") return r.code;
+    if (tab === "css") return r.css;
+    return classMapEntries()
+      .map(([orig, gen]) => `${orig} → ${gen}`)
+      .join("\n");
   };
 
   const copyOutput = async () => {
@@ -141,25 +148,7 @@ const App: Component = () => {
   };
 
   return (
-    <div class="app">
-      {/* SEO Meta Tags */}
-      <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
-      <Meta name="description" content="Try Headwind online: convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML with configurable naming, CSS Modules, and color modes." />
-      <Meta name="keywords" content="Tailwind CSS, atomic CSS, semantic CSS, CSS optimizer, CSS converter, Headwind, utility-first CSS, CSS Modules, WASM, playground" />
-      <Meta name="author" content="Headwind" />
-      <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
-      {/* Open Graph */}
-      <Meta property="og:type" content="website" />
-      <Meta property="og:title" content="Headwind Playground — Atomic to Semantic CSS" />
-      <Meta property="og:description" content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML." />
-      <Meta property="og:url" content="https://headwind-playground.kairi.cc/" />
-      <Meta property="og:site_name" content="Headwind Playground" />
-      <Meta property="og:locale" content="en_US" />
-      {/* Twitter Card */}
-      <Meta name="twitter:card" content="summary_large_image" />
-      <Meta name="twitter:title" content="Headwind Playground — Atomic to Semantic CSS" />
-      <Meta name="twitter:description" content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML." />
-
+    <>
       {/* Header */}
       <header class="header">
         <div class="header-left">
@@ -211,7 +200,9 @@ const App: Component = () => {
           <select
             class="toolbar-select"
             value={outputModeType()}
-            onChange={(e) => setOutputModeType(e.currentTarget.value as OutputModeType)}
+            onChange={(e) =>
+              setOutputModeType(e.currentTarget.value as OutputModeType)
+            }
           >
             <option value="global">Global</option>
             <option value="cssModules">CSS Modules</option>
@@ -223,7 +214,9 @@ const App: Component = () => {
           <select
             class="toolbar-select"
             value={cssVariables()}
-            onChange={(e) => setCssVariables(e.currentTarget.value as CssVariablesMode)}
+            onChange={(e) =>
+              setCssVariables(e.currentTarget.value as CssVariablesMode)
+            }
           >
             <option value="inline">Inline (1.875rem)</option>
             <option value="var">Variables (var(--text-3xl))</option>
@@ -235,7 +228,9 @@ const App: Component = () => {
           <select
             class="toolbar-select"
             value={unknownClasses()}
-            onChange={(e) => setUnknownClasses(e.currentTarget.value as UnknownClassesMode)}
+            onChange={(e) =>
+              setUnknownClasses(e.currentTarget.value as UnknownClassesMode)
+            }
           >
             <option value="preserve">Preserve</option>
             <option value="remove">Remove</option>
@@ -247,7 +242,9 @@ const App: Component = () => {
           <select
             class="toolbar-select"
             value={colorMode()}
-            onChange={(e) => setColorMode(e.currentTarget.value as ColorModeType)}
+            onChange={(e) =>
+              setColorMode(e.currentTarget.value as ColorModeType)
+            }
           >
             <option value="hex">Hex (#3b82f6)</option>
             <option value="oklch">OKLCH</option>
@@ -256,13 +253,15 @@ const App: Component = () => {
           </select>
         </div>
 
-        <Show when={outputModeType() === 'cssModules'}>
+        <Show when={outputModeType() === "cssModules"}>
           <div class="toolbar-group">
             <label class="toolbar-label">Access</label>
             <select
               class="toolbar-select"
               value={accessMode()}
-              onChange={(e) => setAccessMode(e.currentTarget.value as AccessMode)}
+              onChange={(e) =>
+                setAccessMode(e.currentTarget.value as AccessMode)
+              }
             >
               <option value="dot">Dot (styles.xxx)</option>
               <option value="bracket">Bracket (styles["xxx"])</option>
@@ -283,7 +282,7 @@ const App: Component = () => {
         <div class="panel panel-input">
           <div class="panel-header">
             <span class="panel-title">
-              Input ({language() === 'jsx' ? 'JSX' : 'HTML'})
+              Input ({language() === "jsx" ? "JSX" : "HTML"})
             </span>
           </div>
           <textarea
@@ -298,29 +297,25 @@ const App: Component = () => {
         <div class="panel panel-output">
           <div class="panel-header">
             <button
-              class={`tab ${activeTab() === 'code' ? 'tab-active' : ''}`}
-              onClick={() => setActiveTab('code')}
+              class={`tab ${activeTab() === "code" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("code")}
             >
               Output Code
             </button>
             <button
-              class={`tab ${activeTab() === 'css' ? 'tab-active' : ''}`}
-              onClick={() => setActiveTab('css')}
+              class={`tab ${activeTab() === "css" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("css")}
             >
               Generated CSS
             </button>
             <button
-              class={`tab ${activeTab() === 'map' ? 'tab-active' : ''}`}
-              onClick={() => setActiveTab('map')}
+              class={`tab ${activeTab() === "map" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("map")}
             >
               Class Map ({classMapEntries().length})
             </button>
-            <button
-              class="copy-btn"
-              onClick={copyOutput}
-              disabled={!result()}
-            >
-              {copied() ? 'Copied!' : 'Copy'}
+            <button class="copy-btn" onClick={copyOutput} disabled={!result()}>
+              {copied() ? "Copied!" : "Copy"}
             </button>
           </div>
 
@@ -329,13 +324,13 @@ const App: Component = () => {
           </Show>
 
           <Show when={!error()}>
-            <Show when={activeTab() === 'code'}>
-              <pre class="output">{result()?.code ?? ''}</pre>
+            <Show when={activeTab() === "code"}>
+              <pre class="output">{result()?.code ?? ""}</pre>
             </Show>
-            <Show when={activeTab() === 'css'}>
-              <pre class="output output-css">{result()?.css ?? ''}</pre>
+            <Show when={activeTab() === "css"}>
+              <pre class="output output-css">{result()?.css ?? ""}</pre>
             </Show>
-            <Show when={activeTab() === 'map'}>
+            <Show when={activeTab() === "map"}>
               <div class="map-table-wrap">
                 <table class="map-table">
                   <thead>
@@ -347,8 +342,12 @@ const App: Component = () => {
                   <tbody>
                     {classMapEntries().map(([orig, gen]) => (
                       <tr>
-                        <td><code>{orig}</code></td>
-                        <td><code>{gen}</code></td>
+                        <td>
+                          <code>{orig}</code>
+                        </td>
+                        <td>
+                          <code>{gen}</code>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -358,6 +357,50 @@ const App: Component = () => {
           </Show>
         </div>
       </div>
+    </>
+  );
+}
+
+const App: Component = () => {
+  return (
+    <div class="app">
+      {/* SEO Meta Tags */}
+      <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
+      <Meta
+        name="description"
+        content="Try Headwind online: convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML with configurable naming, CSS Modules, and color modes."
+      />
+      <Meta
+        name="keywords"
+        content="Tailwind CSS, atomic CSS, semantic CSS, CSS optimizer, CSS converter, Headwind, utility-first CSS, CSS Modules, WASM, playground"
+      />
+      <Meta name="author" content="Headwind" />
+      <Meta name="msvalidate.01" content="E02F8D47396FC1DC9F6F91870B428BF9" />
+      <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
+      {/* Open Graph */}
+      <Meta property="og:type" content="website" />
+      <Meta
+        property="og:title"
+        content="Headwind Playground — Atomic to Semantic CSS"
+      />
+      <Meta
+        property="og:description"
+        content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML."
+      />
+      <Meta property="og:url" content="https://headwind-playground.kairi.cc/" />
+      <Meta property="og:site_name" content="Headwind Playground" />
+      <Meta property="og:locale" content="en_US" />
+      {/* Twitter Card */}
+      <Meta name="twitter:card" content="summary_large_image" />
+      <Meta
+        name="twitter:title"
+        content="Headwind Playground — Atomic to Semantic CSS"
+      />
+      <Meta
+        name="twitter:description"
+        content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML."
+      />
+      <Playground />
     </div>
   );
 };
