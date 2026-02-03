@@ -26,13 +26,15 @@ impl ClassCollector {
         css_variables: CssVariableMode,
         unknown_class_mode: UnknownClassMode,
         color_mode: ColorMode,
+        color_mix: bool,
     ) -> Self {
         let naming = create_naming_strategy(naming_mode);
         let bundler = match css_variables {
             CssVariableMode::Var => Bundler::new(),
             CssVariableMode::Inline => Bundler::with_inline(),
         }
-        .with_color_mode(color_mode);
+        .with_color_mode(color_mode)
+        .with_color_mix(color_mix);
         Self {
             bundler,
             naming,
@@ -150,7 +152,7 @@ mod tests {
 
     #[test]
     fn test_process_classes_basic() {
-        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default());
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default(), false);
         let name = collector.process_classes("p-4 m-2");
         assert!(name.starts_with("c_"));
         assert!(!collector.combined_css().is_empty());
@@ -158,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_process_classes_caching() {
-        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default());
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default(), false);
         let name1 = collector.process_classes("p-4 m-2");
         let name2 = collector.process_classes("p-4 m-2");
         assert_eq!(name1, name2);
@@ -168,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_process_classes_different_inputs() {
-        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default());
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default(), false);
         let name1 = collector.process_classes("p-4");
         let name2 = collector.process_classes("m-2");
         assert_ne!(name1, name2);
@@ -177,14 +179,14 @@ mod tests {
 
     #[test]
     fn test_process_empty_classes() {
-        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default());
+        let mut collector = ClassCollector::new(NamingMode::Hash, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default(), false);
         let name = collector.process_classes("  ");
         assert!(name.is_empty());
     }
 
     #[test]
     fn test_readable_naming() {
-        let mut collector = ClassCollector::new(NamingMode::Readable, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default());
+        let mut collector = ClassCollector::new(NamingMode::Readable, CssVariableMode::Var, UnknownClassMode::Remove, ColorMode::default(), false);
         let name = collector.process_classes("p-4 m-2");
         assert_eq!(name, "p4_m2");
     }

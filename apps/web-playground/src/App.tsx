@@ -58,6 +58,7 @@ function Playground() {
   const [unknownClasses, setUnknownClasses] =
     createSignal<UnknownClassesMode>("preserve");
   const [colorMode, setColorMode] = createSignal<ColorModeType>("hex");
+  const [colorMix, setColorMix] = createSignal(false);
   const [result, setResult] = createSignal<TransformResult | null>(null);
   const [error, setError] = createSignal("");
   const [duration, setDuration] = createSignal(0);
@@ -65,6 +66,7 @@ function Playground() {
     "code",
   );
   const [copied, setCopied] = createSignal(false);
+  let settingsDialogRef: HTMLDialogElement | undefined;
 
   onMount(async () => {
     try {
@@ -92,6 +94,7 @@ function Playground() {
     const cssVars = cssVariables();
     const unknown = unknownClasses();
     const color = colorMode();
+    const mix = colorMix();
 
     const options: TransformOptions = {
       namingMode: naming,
@@ -102,6 +105,7 @@ function Playground() {
       cssVariables: cssVars,
       unknownClasses: unknown,
       colorMode: color,
+      colorMix: mix,
     };
 
     try {
@@ -274,6 +278,36 @@ function Playground() {
             <span class="duration">{duration().toFixed(1)}ms</span>
           </div>
         </Show>
+
+        <button
+          class="settings-btn"
+          onClick={() => settingsDialogRef?.showModal()}
+        >
+          Settings
+        </button>
+        <dialog
+          ref={settingsDialogRef}
+          class="settings-dialog"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) settingsDialogRef?.close();
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <h3>Advanced Settings</h3>
+            <label>
+              <input
+                type="checkbox"
+                checked={colorMix()}
+                onChange={(e) => setColorMix(e.currentTarget.checked)}
+              />
+              Use color-mix() for opacity
+            </label>
+            <p class="settings-hint">
+              Generate <code>color-mix(in oklab, …)</code> for alpha modifiers
+              (e.g. text-white/60). Useful with CSS Var color mode.
+            </p>
+          </div>
+        </dialog>
       </div>
 
       {/* Main panels */}

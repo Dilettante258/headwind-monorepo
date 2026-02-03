@@ -363,6 +363,87 @@ body {
   background: transparent;
 }
 
+/* ── Settings button & dialog ─────────────────── */
+
+.settings-btn {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  anchor-name: --settings-anchor;
+}
+
+.settings-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.settings-dialog {
+  position: fixed;
+  position-anchor: --settings-anchor;
+  top: anchor(bottom, 100%);
+  left: anchor(right);
+  translate: -100% 6px;
+  margin: 0;
+  padding: 16px;
+  min-width: 240px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.settings-dialog::backdrop {
+  background: transparent;
+}
+
+.settings-dialog h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+
+.settings-dialog label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settings-dialog input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* Fallback for browsers without anchor positioning */
+@supports not (position-anchor: --x) {
+  .settings-dialog {
+    top: auto;
+    left: auto;
+    right: 16px;
+    inset-block-start: 96px;
+  }
+}
+
 /* ── Responsive ────────────────────────────────── */
 
 @media (max-width: 768px) {

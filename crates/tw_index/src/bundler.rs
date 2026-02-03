@@ -117,6 +117,12 @@ impl Bundler {
         self
     }
 
+    /// 设置是否使用 color-mix() 函数处理颜色透明度（builder 模式）
+    pub fn with_color_mix(mut self, enabled: bool) -> Self {
+        self.converter = self.converter.with_color_mix(enabled);
+        self
+    }
+
     /// 将多个 Tailwind 类打包成一个规则组
     ///
     /// # 示例

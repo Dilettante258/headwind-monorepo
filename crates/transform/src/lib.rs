@@ -104,6 +104,8 @@ pub struct TransformOptions {
     pub unknown_classes: UnknownClassMode,
     /// 颜色输出模式（默认 Hex）
     pub color_mode: ColorMode,
+    /// 是否使用 color-mix() 函数处理颜色透明度（默认 false）
+    pub color_mix: bool,
 }
 
 impl Default for TransformOptions {
@@ -114,6 +116,7 @@ impl Default for TransformOptions {
             css_variables: CssVariableMode::Var,
             unknown_classes: UnknownClassMode::Remove,
             color_mode: ColorMode::default(),
+            color_mix: false,
         }
     }
 }
@@ -196,7 +199,7 @@ pub fn transform_jsx(
     }
 
     // 遍历并替换
-    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode, options.color_mix);
     let css_modules_config = match &options.output_mode {
         OutputMode::CssModules {
             binding_name,
@@ -275,7 +278,7 @@ pub fn transform_jsx(
 /// println!("CSS:\n{}", result.css);
 /// ```
 pub fn transform_html(source: &str, options: TransformOptions) -> Result<TransformResult, String> {
-    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode);
+    let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode, options.color_mix);
     let code = html::transform_html_source(source, &mut collector);
 
     Ok(TransformResult {

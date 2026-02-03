@@ -24,6 +24,8 @@ struct JsTransformOptions {
     unknown_classes: JsUnknownClassMode,
     #[serde(default)]
     color_mode: JsColorMode,
+    #[serde(default)]
+    color_mix: bool,
 }
 
 #[derive(Deserialize)]
@@ -206,6 +208,7 @@ impl From<JsTransformOptions> for TransformOptions {
             css_variables: opts.css_variables.into(),
             unknown_classes: opts.unknown_classes.into(),
             color_mode: opts.color_mode.into(),
+            color_mix: opts.color_mix,
         }
     }
 }
@@ -218,6 +221,7 @@ fn parse_options(options: JsValue) -> Result<JsTransformOptions, JsError> {
             css_variables: JsCssVariableMode::default(),
             unknown_classes: JsUnknownClassMode::default(),
             color_mode: JsColorMode::default(),
+            color_mix: false,
         })
     } else {
         serde_wasm_bindgen::from_value(options)

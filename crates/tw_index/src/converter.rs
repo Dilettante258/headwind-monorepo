@@ -156,6 +156,8 @@ pub struct Converter {
     use_variables: bool,
     /// 颜色输出模式（hex / oklch / hsl / var）
     color_mode: ColorMode,
+    /// 是否使用 color-mix() 函数处理颜色透明度
+    use_color_mix: bool,
 }
 
 impl Converter {
@@ -163,6 +165,7 @@ impl Converter {
         Self {
             use_variables: true,
             color_mode: ColorMode::default(),
+            use_color_mix: false,
         }
     }
 
@@ -171,12 +174,19 @@ impl Converter {
         Self {
             use_variables: false,
             color_mode: ColorMode::default(),
+            use_color_mix: false,
         }
     }
 
     /// 设置颜色输出模式（builder 模式）
     pub fn with_color_mode(mut self, mode: ColorMode) -> Self {
         self.color_mode = mode;
+        self
+    }
+
+    /// 设置是否使用 color-mix() 函数处理颜色透明度（builder 模式）
+    pub fn with_color_mix(mut self, enabled: bool) -> Self {
+        self.use_color_mix = enabled;
         self
     }
 
@@ -197,6 +207,13 @@ impl Converter {
                 .build_standard_declarations(parsed, value)
                 .or_else(|| build_valueless_from_full_name(parsed, value))?,
             None => build_valueless_declarations(parsed)?,
+        };
+
+        // 为颜色属性应用 alpha 透明度（如 text-white/60 → color: #fff9）
+        let declarations = if let Some(ref alpha) = parsed.alpha {
+            apply_alpha_to_declarations(declarations, alpha, self.use_color_mix)
+        } else {
+            declarations
         };
 
         Some(apply_important(declarations, parsed.important))
@@ -1188,6 +1205,117 @@ impl Converter {
 // ---------------------------------------------------------------------------
 // 工具函数
 // ---------------------------------------------------------------------------
+
+/// 判断 CSS 属性是否为颜色属性
+fn is_color_property(property: &str) -> bool {
+    matches!(
+        property,
+        "color"
+            | "background"
+            | "background-color"
+            | "border-color"
+            | "outline-color"
+            | "text-decoration-color"
+            | "stroke"
+            | "fill"
+            | "accent-color"
+            | "caret-color"
+            | "--tw-shadow-color"
+            | "--tw-inset-shadow-color"
+            | "--tw-ring-color"
+            | "--tw-inset-ring-color"
+            | "--tw-gradient-from"
+            | "--tw-gradient-via"
+            | "--tw-gradient-to"
+    )
+}
+
+/// 将透明度百分比转为 hex 字节（0-255），返回 2 位 hex 字符串
+fn alpha_percent_to_hex(percent: f64) -> String {
+    let byte = (percent / 100.0 * 255.0).round() as u8;
+    format!("{:02x}", byte)
+}
+
+/// 为 hex 颜色添加 alpha 通道
+///
+/// 支持短格式优化：当 #rrggbb 每对字符相同且 alpha hex 也相同时，
+/// 输出 4 位短格式（如 #ffffff + 60% → #fff9）
+fn apply_alpha_to_hex(hex: &str, alpha_pct: f64) -> String {
+    let body = hex.strip_prefix('#').unwrap_or(hex);
+    let alpha_hex = alpha_percent_to_hex(alpha_pct);
+    let ab = alpha_hex.as_bytes();
+
+    if body.len() == 6 {
+        let b = body.as_bytes();
+        // 可以缩短：每对字符相同 + alpha 两位相同
+        if b[0] == b[1] && b[2] == b[3] && b[4] == b[5] && ab[0] == ab[1] {
+            return format!("#{}{}{}{}", b[0] as char, b[2] as char, b[4] as char, ab[0] as char);
+        }
+    }
+
+    format!("#{}{}", body, alpha_hex)
+}
+
+/// 为颜色值应用 alpha 透明度
+///
+/// 根据值的格式选择不同的策略：
+/// - hex: #rrggbb → #rrggbbaa（支持短格式优化）
+/// - oklch/hsl/rgb: 在闭合括号前插入 `/ N%`
+/// - var(): 无法直接应用 alpha，需要 color-mix（此函数跳过）
+/// - transparent/currentColor: 跳过
+fn apply_alpha_to_color(value: &str, alpha: &str, use_color_mix: bool) -> String {
+    let alpha_pct: f64 = match alpha.parse() {
+        Ok(n) => n,
+        Err(_) => return value.to_string(),
+    };
+
+    // 100% = 完全不透明 → 不修改
+    if (alpha_pct - 100.0).abs() < f64::EPSILON {
+        return value.to_string();
+    }
+
+    // transparent / currentColor 无法应用 alpha
+    if value == "transparent" || value == "currentColor" {
+        return value.to_string();
+    }
+
+    // color-mix 模式：所有颜色值统一使用 color-mix
+    if use_color_mix {
+        return format!(
+            "color-mix(in oklab, {} {}%, transparent)",
+            value, alpha_pct as u32
+        );
+    }
+
+    if value.starts_with('#') {
+        apply_alpha_to_hex(value, alpha_pct)
+    } else if value.starts_with("var(") {
+        // var() → 无法直接应用 alpha（需要 color-mix）
+        value.to_string()
+    } else if let Some(pos) = value.rfind(')') {
+        // oklch(...) / hsl(...) / rgb(...) → 插入 / N%
+        format!("{} / {}%)", &value[..pos], alpha_pct as u32)
+    } else {
+        value.to_string()
+    }
+}
+
+/// 为声明列表中的颜色属性应用 alpha 透明度
+fn apply_alpha_to_declarations(
+    declarations: Vec<Declaration>,
+    alpha: &str,
+    use_color_mix: bool,
+) -> Vec<Declaration> {
+    declarations
+        .into_iter()
+        .map(|mut decl| {
+            if is_color_property(&decl.property) {
+                decl.value = apply_alpha_to_color(&decl.value, alpha, use_color_mix);
+            }
+            decl
+        })
+        .collect()
+}
 
 /// 应用 !important 标记
 fn apply_important(declarations: Vec<Declaration>, important: bool) -> Vec<Declaration> {
@@ -2431,5 +2559,164 @@ mod tests {
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "line-height");
         assert_eq!(decls[0].value, "1.5rem");
+    }
+
+    // ── alpha / opacity ─────────────────────────────────────────
+
+    #[test]
+    fn test_alpha_hex_white_60() {
+        // text-white/60 → color: #fff9 (short form: ff→f, ff→f, ff→f, 99→9)
+        let converter = Converter::new();
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "#fff9");
+    }
+
+    #[test]
+    fn test_alpha_hex_black_50() {
+        // text-black/50 → color: #00000080 (50% = 0x80, digits 8/0 differ → long form)
+        let converter = Converter::new();
+        let parsed = parse_class("text-black/50").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "#00000080");
+    }
+
+    #[test]
+    fn test_alpha_hex_color_long_form() {
+        // bg-blue-500/60 → background: #3b82f699 (not shortable)
+        let converter = Converter::new();
+        let parsed = parse_class("bg-blue-500/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background");
+        assert!(decls[0].value.len() == 9); // #rrggbbaa
+        assert!(decls[0].value.ends_with("99")); // 60% = 0x99
+    }
+
+    #[test]
+    fn test_alpha_100_no_change() {
+        // text-white/100 → no alpha applied
+        let converter = Converter::new();
+        let parsed = parse_class("text-white/100").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "#ffffff");
+    }
+
+    #[test]
+    fn test_alpha_oklch_mode() {
+        // text-white/60 in oklch → oklch(1 0 0 / 60%)
+        let converter = Converter::new().with_color_mode(ColorMode::Oklch);
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "oklch(1 0 0 / 60%)");
+    }
+
+    #[test]
+    fn test_alpha_hsl_mode() {
+        // text-white/60 in hsl → hsl(0, 0%, 100% / 60%)
+        let converter = Converter::new().with_color_mode(ColorMode::Hsl);
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "hsl(0, 0%, 100% / 60%)");
+    }
+
+    #[test]
+    fn test_alpha_var_mode_no_color_mix() {
+        // text-white/60 in var mode without color-mix → alpha not applied
+        let converter = Converter::new().with_color_mode(ColorMode::Var);
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(decls[0].value, "var(--color-white)"); // can't apply alpha
+    }
+
+    #[test]
+    fn test_alpha_var_mode_with_color_mix() {
+        // text-white/60 in var mode with color-mix → color-mix(in oklab, …)
+        let converter = Converter::new()
+            .with_color_mode(ColorMode::Var)
+            .with_color_mix(true);
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(
+            decls[0].value,
+            "color-mix(in oklab, var(--color-white) 60%, transparent)"
+        );
+    }
+
+    #[test]
+    fn test_alpha_color_mix_hex_mode() {
+        // color-mix enabled even in hex mode → generates color-mix
+        let converter = Converter::new()
+            .with_color_mode(ColorMode::Hex)
+            .with_color_mix(true);
+        let parsed = parse_class("text-white/60").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "color");
+        assert_eq!(
+            decls[0].value,
+            "color-mix(in oklab, #ffffff 60%, transparent)"
+        );
+    }
+
+    #[test]
+    fn test_alpha_does_not_apply_to_non_color() {
+        // text-base/6 → alpha used for line-height, NOT applied to font-size
+        let converter = Converter::new();
+        let parsed = parse_class("text-base/6").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "font-size");
+        assert_eq!(decls[0].value, "var(--text-base)"); // no alpha
+        assert_eq!(decls[1].property, "line-height");
+        assert_eq!(decls[1].value, "calc(var(--spacing) * 6)");
+    }
+
+    #[test]
+    fn test_alpha_border_color() {
+        // border-red-500/50 → border-color with alpha
+        let converter = Converter::new();
+        let parsed = parse_class("border-red-500/50").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "border-color");
+        assert!(decls[0].value.ends_with("80")); // 50% = 0x80
+    }
+
+    #[test]
+    fn test_alpha_transparent_unchanged() {
+        // bg-transparent/50 → transparent stays as-is
+        let converter = Converter::new();
+        let parsed = parse_class("bg-transparent/50").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "background");
+        assert_eq!(decls[0].value, "transparent");
+    }
+
+    #[test]
+    fn test_alpha_shadow_color() {
+        // shadow-red-500/50 → --tw-shadow-color with alpha
+        let converter = Converter::new();
+        let parsed = parse_class("shadow-red-500/50").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "--tw-shadow-color");
+        assert!(decls[0].value.ends_with("80")); // 50% = 0x80
+    }
+
+    #[test]
+    fn test_alpha_ring_color() {
+        // ring-blue-500/50 → --tw-ring-color with alpha
+        let converter = Converter::new();
+        let parsed = parse_class("ring-blue-500/50").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls[0].property, "--tw-ring-color");
+        assert!(decls[0].value.ends_with("80")); // 50% = 0x80
     }
 }

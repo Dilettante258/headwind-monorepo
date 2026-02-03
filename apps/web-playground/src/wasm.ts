@@ -21,6 +21,7 @@ export interface TransformOptions {
   cssVariables?: 'var' | 'inline';
   unknownClasses?: 'remove' | 'preserve';
   colorMode?: 'hex' | 'oklch' | 'hsl' | 'var';
+  colorMix?: boolean;
 }
 
 interface GlobalOutputMode {
