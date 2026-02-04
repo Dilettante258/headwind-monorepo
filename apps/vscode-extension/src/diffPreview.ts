@@ -124,6 +124,7 @@ async function executePreviewTransform(): Promise<void> {
     const title = `Headwind: ${filename} (Preview)`;
 
     await vscode.commands.executeCommand("vscode.diff", originalUri, previewUri, title, {
+      viewColumn: vscode.ViewColumn.One,
       preview: true,
     });
   } catch (e) {
@@ -148,7 +149,7 @@ async function executeApplyTransform(): Promise<void> {
     return;
   }
 
-  const editor = await vscode.window.showTextDocument(doc);
+  const editor = await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.One });
   const source = doc.getText();
   const fullRange = new vscode.Range(
     doc.positionAt(0),

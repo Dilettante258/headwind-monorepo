@@ -182,10 +182,13 @@ pub fn transform_jsx(
         })
     };
 
+    // 用占位符注释保留空行位置，防止 SWC parse→emit 吞掉空行
+    let preserved_source = preserve_empty_lines(source);
+
     let cm: Lrc<SourceMap> = Default::default();
     let fm = cm.new_source_file(
         FileName::Custom(filename.to_string()).into(),
-        source.to_string(),
+        preserved_source,
     );
 
     // 解析（保留注释）
@@ -244,6 +247,9 @@ pub fn transform_jsx(
 
     // 输出代码（携带注释）
     let code = GLOBALS.set(&Globals::new(), || emit_module(&cm, &module, Some(&comments)))?;
+
+    // 还原空行占位符
+    let code = restore_empty_lines(&code);
 
     Ok(TransformResult {
         code,
@@ -336,6 +342,42 @@ fn create_css_module_import(binding_name: &str, import_path: &str) -> ModuleItem
         with: None,
         phase: Default::default(),
     }))
+}
+
+/// 空行占位符
+///
+/// SWC 的 AST 不保留空行信息，parse → emit 后空行会被吞掉。
+/// 解法：在解析前把空行替换为注释占位符（SWC 会保留注释），
+/// 代码生成后再把占位符还原为空行。
+const EMPTY_LINE_MARKER: &str = "// __HEADWIND_EMPTY_LINE__";
+
+/// 将源码中的空行替换为占位符注释，使 SWC 保留空行位置
+fn preserve_empty_lines(source: &str) -> String {
+    source
+        .lines()
+        .map(|line| {
+            if line.trim().is_empty() {
+                EMPTY_LINE_MARKER
+            } else {
+                line
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// 将占位符注释还原为空行
+fn restore_empty_lines(code: &str) -> String {
+    code.lines()
+        .map(|line| {
+            if line.trim() == EMPTY_LINE_MARKER {
+                ""
+            } else {
+                line
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// 使用 SWC codegen 输出 JS/TS 模块代码
@@ -970,6 +1012,32 @@ mod tests {
 
         // No import should be injected
         assert!(!result.code.contains("import"));
+    }
+
+    #[test]
+    fn test_transform_jsx_preserves_empty_lines() {
+        let source = "import React from 'react';\n\nfunction App() {\n    const x = 1;\n\n    return (\n        <div className=\"p-4 text-center\">\n\n            <p>Hello</p>\n        </div>\n    );\n}\n\nexport default App;\n";
+
+        let result = transform_jsx(source, "App.tsx", TransformOptions::default()).unwrap();
+
+        println!("=== Source ===\n{}", source);
+        println!("=== Code ===\n{}", result.code);
+
+        // Count empty lines in source vs output
+        let source_empty = source.lines().filter(|l| l.trim().is_empty()).count();
+        let result_empty = result.code.lines().filter(|l| l.trim().is_empty()).count();
+
+        assert_eq!(
+            source_empty, result_empty,
+            "Empty line count should be preserved (source: {}, result: {})",
+            source_empty, result_empty
+        );
+
+        // No placeholder markers should remain
+        assert!(
+            !result.code.contains("__HEADWIND_EMPTY_LINE__"),
+            "Placeholder markers should be fully restored"
+        );
     }
 
     #[test]
