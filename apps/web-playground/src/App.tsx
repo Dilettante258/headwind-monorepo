@@ -1,5 +1,6 @@
-import { createSignal, createEffect, onMount, type Component, Show } from 'solid-js';
+import { createSignal, createEffect, onMount, onCleanup, type Component, Show } from 'solid-js';
 import { Title, Meta, Link } from '@solidjs/meta';
+import About from './About';
 import {
   loadWasm,
   runTransformJsx,
@@ -169,6 +170,10 @@ function Playground() {
           <Show when={wasmError()}>
             <span class="status status-err">{wasmError()}</span>
           </Show>
+          <a href="/about" class="nav-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>About</a>
+          <a href="https://github.com/Dilettante258/headwind-monorepo" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="GitHub">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
         </div>
       </header>
 
@@ -395,11 +400,37 @@ function Playground() {
   );
 }
 
+type Page = 'playground' | 'about';
+
+function getPageFromPath(): Page {
+  return window.location.pathname === '/about' ? 'about' : 'playground';
+}
+
+export function navigate(path: string) {
+  window.history.pushState(null, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 const App: Component = () => {
+  const [page, setPage] = createSignal<Page>(getPageFromPath());
+
+  onMount(() => {
+    const onPopState = () => setPage(getPageFromPath());
+    window.addEventListener('popstate', onPopState);
+    onCleanup(() => window.removeEventListener('popstate', onPopState));
+  });
+
   return (
     <div class="app">
       {/* SEO Meta Tags */}
-      <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
+      <Show when={page() === 'playground'}>
+        <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
+        <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
+      </Show>
+      <Show when={page() === 'about'}>
+        <Title>About — Headwind | Atomic CSS to Semantic CSS Compiler</Title>
+        <Link rel="canonical" href="https://headwind-playground.kairi.cc/about" />
+      </Show>
       <Meta
         name="description"
         content="Try Headwind online: convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML with configurable naming, CSS Modules, and color modes."
@@ -410,7 +441,6 @@ const App: Component = () => {
       />
       <Meta name="author" content="Headwind" />
       <Meta name="msvalidate.01" content="E02F8D47396FC1DC9F6F91870B428BF9" />
-      <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
       {/* Open Graph */}
       <Meta property="og:type" content="website" />
       <Meta
@@ -434,7 +464,12 @@ const App: Component = () => {
         name="twitter:description"
         content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML."
       />
-      <Playground />
+      <Show when={page() === 'playground'}>
+        <Playground />
+      </Show>
+      <Show when={page() === 'about'}>
+        <About />
+      </Show>
     </div>
   );
 };

@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# Crawl delay for polite crawling
+Crawl-delay: 1
+
 Sitemap: https://headwind-playground.kairi.cc/sitemap.xml
