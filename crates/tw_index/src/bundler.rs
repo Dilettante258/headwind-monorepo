@@ -1,5 +1,6 @@
 use crate::context::ClassContext;
 use crate::converter::Converter;
+use crate::variant::{self, pseudo_class_selector, pseudo_element_selector, StateResolution};
 use headwind_core::{ColorMode, Declaration};
 use headwind_css::{create_stylesheet, emit_css};
 use headwind_tw_parse::{parse_class, parse_classes, Modifier, ParsedClass};
@@ -176,40 +177,89 @@ impl Bundler {
         // 生成伪类规则
         for (pseudo, decls) in &group.pseudo_classes {
             if !decls.is_empty() {
-                css.push('\n');
-                css.push_str(&format!(".{}:{} {{\n", class_name, pseudo));
-                for decl in decls {
-                    css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                // Build selector: check parameterized, child, or standard
+                let selector = if let Some(param_sel) = variant::parameterized_selector(pseudo) {
+                    format!(".{}{}", class_name, param_sel)
+                } else if pseudo == "*" {
+                    format!(".{} > *", class_name)
+                } else if pseudo == "**" {
+                    format!(".{} *", class_name)
+                } else {
+                    let css_pseudo = pseudo_class_selector(pseudo);
+                    format!(".{}:{}", class_name, css_pseudo)
+                };
+
+                // Check if this pseudo-class needs an at-rule wrapper
+                if let Some(at_rule) = variant::pseudo_class_at_rule(pseudo) {
+                    css.push('\n');
+                    css.push_str(&format!("{} {{\n", at_rule));
+                    css.push_str(&format!("{}{} {{\n", indent, selector));
+                    for decl in decls {
+                        css.push_str(&format!(
+                            "{}{}{}: {};\n",
+                            indent, indent, decl.property, decl.value
+                        ));
+                    }
+                    css.push_str(&format!("{}}}\n", indent));
+                    css.push_str("}\n");
+                } else {
+                    css.push('\n');
+                    css.push_str(&format!("{} {{\n", selector));
+                    for decl in decls {
+                        css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                    }
+                    css.push_str("}\n");
                 }
-                css.push_str("}\n");
             }
         }
 
         // 生成伪元素规则
         for (pseudo, decls) in &group.pseudo_elements {
             if !decls.is_empty() {
-                css.push('\n');
-                css.push_str(&format!(".{}::{} {{\n", class_name, pseudo));
-                for decl in decls {
-                    css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                let css_pseudo = pseudo_element_selector(pseudo);
+                if pseudo == "marker" {
+                    // marker targets both the element and its children
+                    for sel in variant::marker_selectors(&format!(".{}", class_name)) {
+                        css.push('\n');
+                        css.push_str(&format!("{} {{\n", sel));
+                        for decl in decls {
+                            css.push_str(&format!(
+                                "{}{}: {};\n",
+                                indent, decl.property, decl.value
+                            ));
+                        }
+                        css.push_str("}\n");
+                    }
+                } else {
+                    css.push('\n');
+                    css.push_str(&format!(".{}::{} {{\n", class_name, css_pseudo));
+                    for decl in decls {
+                        css.push_str(&format!(
+                            "{}{}: {};\n",
+                            indent, decl.property, decl.value
+                        ));
+                    }
+                    css.push_str("}\n");
                 }
-                css.push_str("}\n");
             }
         }
 
         // 生成响应式规则
         for (size, nested_group) in &group.responsive {
-            let breakpoint = match size.as_str() {
-                "sm" => "640px",
-                "md" => "768px",
-                "lg" => "1024px",
-                "xl" => "1280px",
-                "2xl" => "1536px",
-                _ => "0px",
+            // Use variant resolver for breakpoints (v4 rem-based syntax)
+            let at_rule = if let Some(container_name) = size.strip_prefix('@') {
+                variant::container_at_rule(container_name)
+            } else {
+                variant::responsive_at_rule(size)
+            };
+
+            let at_rule = match at_rule {
+                Some(rule) => rule,
+                None => continue,
             };
 
             css.push('\n');
-            css.push_str(&format!("@media (min-width: {}) {{\n", breakpoint));
+            css.push_str(&format!("{} {{\n", at_rule));
 
             // 基础规则
             if !nested_group.base.is_empty() {
@@ -226,15 +276,38 @@ impl Bundler {
             // 伪类
             for (pseudo, decls) in &nested_group.pseudo_classes {
                 if !decls.is_empty() {
-                    css.push('\n');
-                    css.push_str(&format!("{}.{}:{} {{\n", indent, class_name, pseudo));
-                    for decl in decls {
-                        css.push_str(&format!(
-                            "{}{}{}: {};\n",
-                            indent, indent, decl.property, decl.value
-                        ));
+                    let selector = if let Some(param_sel) = variant::parameterized_selector(pseudo)
+                    {
+                        format!(".{}{}", class_name, param_sel)
+                    } else {
+                        let css_pseudo = pseudo_class_selector(pseudo);
+                        format!(".{}:{}", class_name, css_pseudo)
+                    };
+
+                    // Hover at-rule wrapping inside responsive
+                    if let Some(hover_rule) = variant::pseudo_class_at_rule(pseudo) {
+                        css.push('\n');
+                        css.push_str(&format!("{}{} {{\n", indent, hover_rule));
+                        css.push_str(&format!("{}{}{} {{\n", indent, indent, selector));
+                        for decl in decls {
+                            css.push_str(&format!(
+                                "{}{}{}{}: {};\n",
+                                indent, indent, indent, decl.property, decl.value
+                            ));
+                        }
+                        css.push_str(&format!("{}{}}}\n", indent, indent));
+                        css.push_str(&format!("{}}}\n", indent));
+                    } else {
+                        css.push('\n');
+                        css.push_str(&format!("{}{} {{\n", indent, selector));
+                        for decl in decls {
+                            css.push_str(&format!(
+                                "{}{}{}: {};\n",
+                                indent, indent, decl.property, decl.value
+                            ));
+                        }
+                        css.push_str(&format!("{}}}\n", indent));
                     }
-                    css.push_str(&format!("{}}}\n", indent));
                 }
             }
 
@@ -243,27 +316,64 @@ impl Bundler {
 
         // 生成状态规则
         for (state, nested_group) in &group.states {
-            css.push('\n');
+            if nested_group.base.is_empty() {
+                continue;
+            }
 
-            let selector = match state.as_str() {
-                "dark" => format!(".dark .{}", class_name),
-                s if s.starts_with("group-") => {
-                    let pseudo = &s[6..];
-                    format!(".group:{} .{}", pseudo, class_name)
-                }
-                s if s.starts_with("peer-") => {
-                    let pseudo = &s[5..];
-                    format!(".peer:{} ~ .{}", pseudo, class_name)
-                }
-                _ => format!(".{}", class_name),
-            };
+            let class_sel = format!(".{}", class_name);
 
-            if !nested_group.base.is_empty() {
-                css.push_str(&format!("{} {{\n", selector));
+            // Check for supports-[...] → @supports at-rule
+            if let Some(at_rule) = variant::supports_at_rule(state) {
+                css.push('\n');
+                css.push_str(&format!("{} {{\n", at_rule));
+                css.push_str(&format!("{}{} {{\n", indent, class_sel));
                 for decl in &nested_group.base {
-                    css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                    css.push_str(&format!(
+                        "{}{}{}: {};\n",
+                        indent, indent, decl.property, decl.value
+                    ));
                 }
+                css.push_str(&format!("{}}}\n", indent));
                 css.push_str("}\n");
+            } else if state == "starting" {
+                css.push('\n');
+                css.push_str("@starting-style {\n");
+                css.push_str(&format!("{}{} {{\n", indent, class_sel));
+                for decl in &nested_group.base {
+                    css.push_str(&format!(
+                        "{}{}{}: {};\n",
+                        indent, indent, decl.property, decl.value
+                    ));
+                }
+                css.push_str(&format!("{}}}\n", indent));
+                css.push_str("}\n");
+            } else {
+                match variant::resolve_state(state, &class_sel) {
+                    StateResolution::Selector(selector) => {
+                        css.push('\n');
+                        css.push_str(&format!("{} {{\n", selector));
+                        for decl in &nested_group.base {
+                            css.push_str(&format!(
+                                "{}{}: {};\n",
+                                indent, decl.property, decl.value
+                            ));
+                        }
+                        css.push_str("}\n");
+                    }
+                    StateResolution::AtRule(rule) => {
+                        css.push('\n');
+                        css.push_str(&format!("{} {{\n", rule));
+                        css.push_str(&format!("{}{} {{\n", indent, class_sel));
+                        for decl in &nested_group.base {
+                            css.push_str(&format!(
+                                "{}{}{}: {};\n",
+                                indent, indent, decl.property, decl.value
+                            ));
+                        }
+                        css.push_str(&format!("{}}}\n", indent));
+                        css.push_str("}\n");
+                    }
+                }
             }
         }
 
@@ -324,20 +434,46 @@ impl Bundler {
         // 伪类规则
         for (pseudo, decls) in &group.pseudo_classes {
             if !decls.is_empty() {
-                css.push('\n');
-                css.push_str(&format!(".{}:{} {{\n", class_name, pseudo));
-                for decl in decls {
-                    css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                let selector = if let Some(param_sel) = variant::parameterized_selector(pseudo) {
+                    format!(".{}{}", class_name, param_sel)
+                } else if pseudo == "*" {
+                    format!(".{} > *", class_name)
+                } else if pseudo == "**" {
+                    format!(".{} *", class_name)
+                } else {
+                    let css_pseudo = pseudo_class_selector(pseudo);
+                    format!(".{}:{}", class_name, css_pseudo)
+                };
+
+                if let Some(at_rule) = variant::pseudo_class_at_rule(pseudo) {
+                    css.push('\n');
+                    css.push_str(&format!("{} {{\n", at_rule));
+                    css.push_str(&format!("{}{} {{\n", indent, selector));
+                    for decl in decls {
+                        css.push_str(&format!(
+                            "{}{}{}: {};\n",
+                            indent, indent, decl.property, decl.value
+                        ));
+                    }
+                    css.push_str(&format!("{}}}\n", indent));
+                    css.push_str("}\n");
+                } else {
+                    css.push('\n');
+                    css.push_str(&format!("{} {{\n", selector));
+                    for decl in decls {
+                        css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
+                    }
+                    css.push_str("}\n");
                 }
-                css.push_str("}\n");
             }
         }
 
         // 伪元素规则
         for (pseudo, decls) in &group.pseudo_elements {
             if !decls.is_empty() {
+                let css_pseudo = pseudo_element_selector(pseudo);
                 css.push('\n');
-                css.push_str(&format!(".{}::{} {{\n", class_name, pseudo));
+                css.push_str(&format!(".{}::{} {{\n", class_name, css_pseudo));
                 for decl in decls {
                     css.push_str(&format!("{}{}: {};\n", indent, decl.property, decl.value));
                 }
@@ -345,19 +481,21 @@ impl Bundler {
             }
         }
 
-        // 响应式规则（暂时使用字符串生成）
+        // 响应式规则
         for (size, nested_group) in &group.responsive {
-            let breakpoint = match size.as_str() {
-                "sm" => "640px",
-                "md" => "768px",
-                "lg" => "1024px",
-                "xl" => "1280px",
-                "2xl" => "1536px",
-                _ => "0px",
+            let at_rule = if let Some(container_name) = size.strip_prefix('@') {
+                variant::container_at_rule(container_name)
+            } else {
+                variant::responsive_at_rule(size)
+            };
+
+            let at_rule = match at_rule {
+                Some(rule) => rule,
+                None => continue,
             };
 
             css.push('\n');
-            css.push_str(&format!("@media (min-width: {}) {{\n", breakpoint));
+            css.push_str(&format!("{} {{\n", at_rule));
 
             if !nested_group.base.is_empty() {
                 css.push_str(&format!("{}.{} {{\n", indent, class_name));
@@ -619,6 +757,8 @@ mod tests {
 
         assert!(css.contains(".my-class {"));
         assert!(css.contains("text-align: center;"));
+        // hover is now wrapped in @media (hover: hover)
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
         assert!(css.contains("text-align: left;"));
     }
@@ -632,7 +772,7 @@ mod tests {
 
         assert!(css.contains(".my-class {"));
         assert!(css.contains("text-align: center;"));
-        assert!(css.contains("@media (min-width: 768px)"));
+        assert!(css.contains("@media (width >= 48rem)"));
         assert!(css.contains("text-align: right;"));
     }
 
@@ -668,7 +808,8 @@ mod tests {
         assert!(css.contains("text-align"));
         assert!(css.contains("padding"));
 
-        // 验证伪类规则（字符串生成）
+        // 验证伪类规则（字符串生成, wrapped in @media (hover: hover))
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(":hover"));
     }
 
@@ -687,13 +828,14 @@ mod tests {
         assert!(css.contains("text-align: center;"));
         assert!(css.contains("padding: 1rem;"));
 
-        // 检查 hover 规则
+        // 检查 hover 规则 (wrapped in @media (hover: hover))
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
         assert!(css.contains("text-align: left;"));
         assert!(css.contains("padding: 2rem;"));
 
         // 检查响应式规则
-        assert!(css.contains("@media (min-width: 768px)"));
+        assert!(css.contains("@media (width >= 48rem)"));
         assert!(css.contains("text-align: right;"));
     }
 
@@ -729,6 +871,8 @@ mod tests {
 
         assert!(css.contains(".my-class {"));
         assert!(css.contains("text-align: center;"));
+        // hover is now wrapped in @media (hover: hover)
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
         assert!(css.contains("text-align: left;"));
     }
@@ -747,7 +891,7 @@ mod tests {
 
         assert!(css.contains(".my-class {"));
         assert!(css.contains("padding: 1rem;"));
-        assert!(css.contains("@media (min-width: 768px)"));
+        assert!(css.contains("@media (width >= 48rem)"));
         assert!(css.contains("padding: 2rem;"));
     }
 
@@ -783,6 +927,7 @@ mod tests {
 
         assert!(css.contains(".my-class {"));
         assert!(css.contains("padding: 1rem;"));
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
         assert!(css.contains("padding: 2rem;"));
     }
@@ -806,13 +951,14 @@ mod tests {
         assert!(css.contains("text-align: center;"));
         assert!(css.contains("padding: 1rem;"));
 
-        // hover 规则
+        // hover 规则 (wrapped in @media (hover: hover))
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
         assert!(css.contains("text-align: left;"));
         assert!(css.contains("padding: 2rem;"));
 
         // 响应式规则
-        assert!(css.contains("@media (min-width: 768px)"));
+        assert!(css.contains("@media (width >= 48rem)"));
         assert!(css.contains("text-align: right;"));
         assert!(css.contains("padding: 3rem;"));
     }

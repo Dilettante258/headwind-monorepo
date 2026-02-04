@@ -160,44 +160,66 @@ impl<'a> Parser<'a> {
     }
 
     /// 跳过修饰符部分（不解析，只移动位置）
+    ///
+    /// Supports bracket-containing modifiers such as `has-[.active]`,
+    /// `supports-[display:grid]`, `min-[800px]`, etc. Colons inside
+    /// square brackets are not treated as modifier terminators.
     fn skip_modifiers(&mut self) {
         loop {
-            // 尝试找到下一个冒号
             let start = self.pos;
-            while self.pos < self.input.len() && self.current_char() != ':' {
-                self.pos += 1;
+
+            // Scan for the colon that terminates this modifier.
+            // Skip over bracket contents [...] so that colons inside
+            // brackets (e.g., supports-[display:grid]) are ignored.
+            let mut bracket_depth: i32 = 0;
+            while self.pos < self.input.len() {
+                let ch = self.current_char();
+                match ch {
+                    '[' => {
+                        bracket_depth += 1;
+                        self.pos += 1;
+                    }
+                    ']' => {
+                        if bracket_depth > 0 {
+                            bracket_depth -= 1;
+                        }
+                        self.pos += 1;
+                    }
+                    ':' if bracket_depth == 0 => break,
+                    _ => {
+                        self.pos += 1;
+                    }
+                }
             }
 
-            // 如果没有找到冒号，说明修饰符结束
+            // If we didn't find a colon outside brackets, no more modifiers
             if self.pos >= self.input.len() || self.current_char() != ':' {
-                self.pos = start; // 回退
+                self.pos = start;
                 break;
             }
 
-            // 提取修饰符
             let modifier_str = &self.input[start..self.pos];
 
-            // 跳过冒号
+            // Skip the colon
             self.pos += 1;
 
-            // 检查这是否真的是修饰符（后面还有内容）
+            // Must have content after the colon
             if self.pos >= self.input.len() {
-                self.pos = start; // 回退，这不是修饰符
+                self.pos = start;
                 break;
             }
 
-            // 检查是否为有效的修饰符（不包含特殊字符）
+            // Validate: modifier must not be empty and must not contain
+            // '(' (CSS variable syntax), '/' (alpha), or '!' (important).
+            // '[' is now allowed for parameterized variants.
             if modifier_str.is_empty()
-                || modifier_str.contains('[')
                 || modifier_str.contains('(')
                 || modifier_str.contains('/')
                 || modifier_str.contains('!')
             {
-                self.pos = start; // 回退
+                self.pos = start;
                 break;
             }
-
-            // 不需要解析成 Modifier，只需要继续跳过
         }
     }
 
@@ -1088,5 +1110,100 @@ mod tests {
         assert_eq!(parsed[1].plugin, "bg");
         assert!(parsed[1].value.as_ref().unwrap().is_css_variable());
         assert_eq!(parsed[2].plugin, "text");
+    }
+
+    // --- Bracket-containing modifier tests ---
+
+    #[test]
+    fn test_parameterized_modifier_has() {
+        let parsed = parse_class("has-[.active]:bg-blue-500").unwrap();
+        assert_eq!(parsed.raw_modifiers, "has-[.active]:");
+        assert_eq!(parsed.plugin, "bg");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("blue-500".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_parameterized_modifier_not() {
+        let parsed = parse_class("not-[.disabled]:opacity-50").unwrap();
+        assert_eq!(parsed.raw_modifiers, "not-[.disabled]:");
+        assert_eq!(parsed.plugin, "opacity");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("50".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_parameterized_modifier_supports() {
+        let parsed = parse_class("supports-[display:grid]:flex").unwrap();
+        assert_eq!(parsed.raw_modifiers, "supports-[display:grid]:");
+        assert_eq!(parsed.plugin, "flex");
+        assert_eq!(parsed.value, None);
+    }
+
+    #[test]
+    fn test_parameterized_modifier_min_breakpoint() {
+        let parsed = parse_class("min-[800px]:p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "min-[800px]:");
+        assert_eq!(parsed.plugin, "p");
+        assert_eq!(
+            parsed.value,
+            Some(ParsedValue::Standard("4".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_parameterized_modifier_max_breakpoint() {
+        let parsed = parse_class("max-[600px]:p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "max-[600px]:");
+        assert_eq!(parsed.plugin, "p");
+    }
+
+    #[test]
+    fn test_parameterized_modifier_data() {
+        let parsed = parse_class("data-[loading]:animate-pulse").unwrap();
+        assert_eq!(parsed.raw_modifiers, "data-[loading]:");
+        assert_eq!(parsed.plugin, "animate");
+    }
+
+    #[test]
+    fn test_parameterized_modifier_aria() {
+        let parsed = parse_class("aria-[sort=ascending]:text-blue-500").unwrap();
+        assert_eq!(parsed.raw_modifiers, "aria-[sort=ascending]:");
+        assert_eq!(parsed.plugin, "text");
+    }
+
+    #[test]
+    fn test_container_query_modifier() {
+        let parsed = parse_class("@sm:p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "@sm:");
+        assert_eq!(parsed.plugin, "p");
+    }
+
+    #[test]
+    fn test_container_query_max_modifier() {
+        let parsed = parse_class("@max-[600px]:p-4").unwrap();
+        assert_eq!(parsed.raw_modifiers, "@max-[600px]:");
+        assert_eq!(parsed.plugin, "p");
+    }
+
+    #[test]
+    fn test_multiple_modifiers_with_brackets() {
+        let parsed = parse_class("md:has-[.active]:bg-blue-500").unwrap();
+        assert_eq!(parsed.raw_modifiers, "md:has-[.active]:");
+        assert_eq!(parsed.plugin, "bg");
+        assert_eq!(parsed.modifiers().len(), 2);
+    }
+
+    #[test]
+    fn test_bracket_in_value_not_modifier() {
+        // w-[13px] should NOT be parsed as a modifier
+        let parsed = parse_class("w-[13px]").unwrap();
+        assert_eq!(parsed.raw_modifiers, "");
+        assert_eq!(parsed.plugin, "w");
+        assert!(parsed.value.as_ref().unwrap().is_arbitrary());
     }
 }

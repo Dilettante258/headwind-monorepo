@@ -1,3 +1,7 @@
+use crate::variant::{
+    self, parameterized_selector, pseudo_class_at_rule, pseudo_class_selector,
+    pseudo_element_selector, responsive_at_rule, supports_at_rule, StateResolution,
+};
 use headwind_core::shorthand::optimize_shorthands;
 use headwind_core::Declaration;
 use headwind_tw_parse::{parse_modifiers_from_raw, Modifier};
@@ -93,51 +97,78 @@ impl ClassContext {
             return;
         }
 
-        // 分离响应式和其他修饰符
-        let mut responsive_mods = Vec::new();
-        let mut other_mods = Vec::new();
+        // Collect at-rule wrappers and selector modifiers
+        let mut at_rules: Vec<String> = Vec::new();
+        let mut selector_mods: Vec<&Modifier> = Vec::new();
 
         for modifier in modifiers {
-            if modifier.is_responsive() {
-                responsive_mods.push(modifier);
-            } else {
-                other_mods.push(modifier);
+            match modifier {
+                Modifier::Responsive(name) => {
+                    // Container queries start with @
+                    if let Some(container_name) = name.strip_prefix('@') {
+                        if let Some(rule) = variant::container_at_rule(container_name) {
+                            at_rules.push(rule);
+                        }
+                    } else if let Some(rule) = responsive_at_rule(name) {
+                        at_rules.push(rule);
+                    }
+                }
+                Modifier::PseudoClass(name) => {
+                    // Some pseudo-classes need at-rule wrappers (hover → @media (hover: hover))
+                    if let Some(at_rule) = pseudo_class_at_rule(name) {
+                        at_rules.push(at_rule.to_string());
+                    }
+                    selector_mods.push(modifier);
+                }
+                Modifier::State(name) => {
+                    // supports-[...] → @supports at-rule
+                    if let Some(rule) = supports_at_rule(name) {
+                        at_rules.push(rule);
+                    } else if name == "starting" {
+                        at_rules.push("@starting-style".to_string());
+                    } else {
+                        match variant::resolve_state(name, "") {
+                            StateResolution::AtRule(rule) => at_rules.push(rule),
+                            StateResolution::Selector(_) => selector_mods.push(modifier),
+                        }
+                    }
+                }
+                _ => selector_mods.push(modifier),
             }
         }
 
-        // 如果有响应式修饰符，生成 @media 查询
-        if !responsive_mods.is_empty() {
-            for responsive in responsive_mods {
-                let breakpoint = self.get_breakpoint(responsive);
-                css.push('\n');
-                css.push_str(&format!("@media (min-width: {}) {{\n", breakpoint));
+        // Build the selector
+        let mut selector = format!(".{}", self.class_name);
+        for modifier in &selector_mods {
+            selector = self.apply_modifier(&selector, modifier);
+        }
 
-                // 基础选择器
-                let mut selector = format!(".{}", self.class_name);
+        if !at_rules.is_empty() {
+            css.push('\n');
+            // Open all at-rules with increasing indent (proper nesting)
+            for (i, at_rule) in at_rules.iter().enumerate() {
+                let prefix = indent.repeat(i);
+                css.push_str(&format!("{}{} {{\n", prefix, at_rule));
+            }
+            let depth = at_rules.len();
+            let sel_prefix = indent.repeat(depth);
+            let decl_prefix = indent.repeat(depth + 1);
 
-                // 添加其他修饰符（伪类、伪元素等）
-                for modifier in &other_mods {
-                    selector = self.apply_modifier(&selector, modifier);
-                }
+            css.push_str(&format!("{}{} {{\n", sel_prefix, selector));
+            for decl in declarations {
+                css.push_str(&format!(
+                    "{}{}: {};\n",
+                    decl_prefix, decl.property, decl.value
+                ));
+            }
+            css.push_str(&format!("{}}}\n", sel_prefix));
 
-                css.push_str(&format!("{}{} {{\n", indent, selector));
-                for decl in declarations {
-                    css.push_str(&format!(
-                        "{}{}{}: {};\n",
-                        indent, indent, decl.property, decl.value
-                    ));
-                }
-                css.push_str(&format!("{}}}\n", indent));
-                css.push_str("}\n");
+            // Close at-rules in reverse order
+            for i in (0..depth).rev() {
+                let prefix = indent.repeat(i);
+                css.push_str(&format!("{}}}\n", prefix));
             }
         } else {
-            // 没有响应式修饰符，直接生成选择器
-            let mut selector = format!(".{}", self.class_name);
-
-            for modifier in &other_mods {
-                selector = self.apply_modifier(&selector, modifier);
-            }
-
             css.push('\n');
             css.push_str(&format!("{} {{\n", selector));
             for decl in declarations {
@@ -147,50 +178,47 @@ impl ClassContext {
         }
     }
 
-    /// 应用单个修饰符到选择器
+    /// Apply a single modifier to a selector, using the centralized variant resolver
     fn apply_modifier(&self, selector: &str, modifier: &Modifier) -> String {
         match modifier {
             Modifier::PseudoClass(name) => {
-                format!("{}:{}", selector, name)
+                // Parameterized pseudo-classes: has-[...], not-[...], aria-[...], data-[...], etc.
+                if let Some(param_sel) = parameterized_selector(name) {
+                    format!("{}{}", selector, param_sel)
+                } else if name == "*" {
+                    // Child selector: direct children
+                    format!("{} > *", selector)
+                } else if name == "**" {
+                    // Descendant selector: all descendants
+                    format!("{} *", selector)
+                } else {
+                    let css_pseudo = pseudo_class_selector(name);
+                    format!("{}:{}", selector, css_pseudo)
+                }
             }
             Modifier::PseudoElement(name) => {
-                format!("{}::{}", selector, name)
+                let css_pseudo = pseudo_element_selector(name);
+                format!("{}::{}", selector, css_pseudo)
             }
-            Modifier::State(name) => match name.as_str() {
-                "dark" => format!(".dark {}", selector),
-                name if name.starts_with("group-") => {
-                    let pseudo = &name[6..];
-                    format!(".group:{} {}", pseudo, selector)
+            Modifier::State(name) => {
+                match variant::resolve_state(name, selector) {
+                    StateResolution::Selector(s) => s,
+                    // AtRule states are handled in generate_selector_with_modifiers
+                    StateResolution::AtRule(_) => selector.to_string(),
                 }
-                name if name.starts_with("peer-") => {
-                    let pseudo = &name[5..];
-                    format!(".peer:{} ~ {}", pseudo, selector)
-                }
-                _ => selector.to_string(),
-            },
+            }
             Modifier::Responsive(_) => {
-                // 响应式修饰符在外层处理
+                // Handled at outer level
                 selector.to_string()
             }
             Modifier::Custom(name) => {
-                format!("{}:{}", selector, name)
+                // Also check parameterized selector for custom modifiers
+                if let Some(param_sel) = parameterized_selector(name) {
+                    format!("{}{}", selector, param_sel)
+                } else {
+                    format!("{}:{}", selector, name)
+                }
             }
-        }
-    }
-
-    /// 获取响应式断点
-    fn get_breakpoint(&self, modifier: &Modifier) -> &'static str {
-        if let Modifier::Responsive(size) = modifier {
-            match size.as_str() {
-                "sm" => "640px",
-                "md" => "768px",
-                "lg" => "1024px",
-                "xl" => "1280px",
-                "2xl" => "1536px",
-                _ => "0px",
-            }
-        } else {
-            "0px"
         }
     }
 }
@@ -223,6 +251,8 @@ mod tests {
 
         let css = ctx.to_css("  ");
         assert!(css.contains(".my-class {"));
+        // hover is now wrapped in @media (hover: hover)
+        assert!(css.contains("@media (hover: hover)"));
         assert!(css.contains(".my-class:hover {"));
     }
 
@@ -241,5 +271,7 @@ mod tests {
         assert_eq!(css.matches(".my-class:hover").count(), 1);
         assert!(css.contains("padding: 1rem"));
         assert!(css.contains("margin: 0.5rem"));
+        // hover is wrapped in @media (hover: hover)
+        assert!(css.contains("@media (hover: hover)"));
     }
 }

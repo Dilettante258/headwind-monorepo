@@ -7,6 +7,7 @@ pub mod palette;
 pub mod plugin_map;
 pub mod theme_values;
 pub mod value_map;
+pub mod variant;
 
 // Re-export main types
 pub use bundler::{Bundler, RuleGroup};

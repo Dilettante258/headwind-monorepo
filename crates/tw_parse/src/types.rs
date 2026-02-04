@@ -183,19 +183,84 @@ impl Modifier {
 
     /// 从字符串推断修饰符类型
     pub fn from_str(s: &str) -> Self {
-        // 响应式断点
-        if matches!(s, "sm" | "md" | "lg" | "xl" | "2xl") {
+        // 响应式断点: sm, md, lg, xl, 2xl, max-sm, max-md, etc.
+        // Also min-[...], max-[...]
+        if matches!(s, "sm" | "md" | "lg" | "xl" | "2xl")
+            || matches!(
+                s,
+                "max-sm" | "max-md" | "max-lg" | "max-xl" | "max-2xl"
+            )
+            || (s.starts_with("min-") && s.contains('['))
+            || (s.starts_with("max-") && s.contains('['))
+        {
             return Modifier::Responsive(s.to_string());
+        }
+
+        // Container queries: @3xs through @7xl, @max-*, @min-[...]
+        if s.starts_with('@') {
+            return Modifier::Responsive(s.to_string());
+        }
+
+        // supports-[...] → @supports at-rule (treated as state/at-rule)
+        if s.starts_with("supports-") && s.contains('[') {
+            return Modifier::State(s.to_string());
+        }
+
+        // Parameterized pseudo-classes: has-[...], not-[...], nth-[...],
+        // nth-last-[...], nth-of-type-[...], nth-last-of-type-[...],
+        // aria-[...], data-[...], in-[...]
+        if (s.starts_with("has-")
+            || s.starts_with("not-")
+            || s.starts_with("nth-")
+            || s.starts_with("in-")
+            || s.starts_with("data-"))
+            && s.contains('[')
+        {
+            return Modifier::PseudoClass(s.to_string());
+        }
+
+        // Named aria-* (no bracket): aria-busy, aria-checked, etc.
+        if s.starts_with("aria-") {
+            return Modifier::PseudoClass(s.to_string());
         }
 
         // 伪类
         if matches!(
             s,
-            "hover" | "focus" | "active" | "visited" | "focus-within" | "focus-visible"
-                | "disabled" | "enabled" | "checked" | "indeterminate" | "default"
-                | "required" | "valid" | "invalid" | "in-range" | "out-of-range"
-                | "read-only" | "empty" | "first" | "last" | "only" | "odd" | "even"
-                | "first-of-type" | "last-of-type" | "only-of-type"
+            "hover"
+                | "focus"
+                | "active"
+                | "visited"
+                | "target"
+                | "focus-within"
+                | "focus-visible"
+                | "disabled"
+                | "enabled"
+                | "checked"
+                | "indeterminate"
+                | "default"
+                | "optional"
+                | "required"
+                | "valid"
+                | "invalid"
+                | "user-valid"
+                | "user-invalid"
+                | "in-range"
+                | "out-of-range"
+                | "placeholder-shown"
+                | "autofill"
+                | "read-only"
+                | "empty"
+                | "first"
+                | "last"
+                | "only"
+                | "odd"
+                | "even"
+                | "first-of-type"
+                | "last-of-type"
+                | "only-of-type"
+                | "open"
+                | "inert"
         ) {
             return Modifier::PseudoClass(s.to_string());
         }
@@ -203,18 +268,52 @@ impl Modifier {
         // 伪元素
         if matches!(
             s,
-            "before" | "after" | "placeholder" | "file" | "marker" | "selection"
-                | "first-line" | "first-letter" | "backdrop"
+            "before"
+                | "after"
+                | "placeholder"
+                | "file"
+                | "marker"
+                | "selection"
+                | "first-line"
+                | "first-letter"
+                | "backdrop"
+                | "details-content"
         ) {
             return Modifier::PseudoElement(s.to_string());
+        }
+
+        // Child selectors
+        if matches!(s, "*" | "**") {
+            return Modifier::PseudoClass(s.to_string());
         }
 
         // 状态修饰符
         if s.starts_with("group-")
             || s.starts_with("peer-")
-            || matches!(s, "dark" | "light" | "motion-safe" | "motion-reduce"
-                | "contrast-more" | "contrast-less" | "portrait" | "landscape"
-                | "print" | "rtl" | "ltr")
+            || matches!(
+                s,
+                "dark"
+                    | "light"
+                    | "starting"
+                    | "motion-safe"
+                    | "motion-reduce"
+                    | "contrast-more"
+                    | "contrast-less"
+                    | "portrait"
+                    | "landscape"
+                    | "print"
+                    | "forced-colors"
+                    | "inverted-colors"
+                    | "pointer-fine"
+                    | "pointer-coarse"
+                    | "pointer-none"
+                    | "any-pointer-fine"
+                    | "any-pointer-coarse"
+                    | "any-pointer-none"
+                    | "noscript"
+                    | "rtl"
+                    | "ltr"
+            )
         {
             return Modifier::State(s.to_string());
         }
