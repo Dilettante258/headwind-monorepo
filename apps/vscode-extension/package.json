@@ -2,7 +2,7 @@
   "name": "headwind-vscode",
   "displayName": "Headwind Transformer",
   "description": "Atomic CSS to Semantic CSS compiler powered by Rust + WASM",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "Dilettante258",
   "license": "MIT",
   "repository": {
@@ -18,7 +18,10 @@
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": ["Formatters", "Other"],
+  "categories": [
+    "Formatters",
+    "Other"
+  ],
   "activationEvents": [
     "onLanguage:javascriptreact",
     "onLanguage:typescriptreact",
@@ -54,7 +57,11 @@
         },
         "headwind.namingMode": {
           "type": "string",
-          "enum": ["hash", "readable", "camelCase"],
+          "enum": [
+            "hash",
+            "readable",
+            "camelCase"
+          ],
           "default": "hash",
           "enumDescriptions": [
             "Hash-based names (c_a1b2c3)",
@@ -65,7 +72,10 @@
         },
         "headwind.outputMode": {
           "type": "string",
-          "enum": ["global", "cssModules"],
+          "enum": [
+            "global",
+            "cssModules"
+          ],
           "default": "global",
           "enumDescriptions": [
             "Global CSS with string class names",
@@ -75,7 +85,10 @@
         },
         "headwind.cssModulesAccess": {
           "type": "string",
-          "enum": ["dot", "bracket"],
+          "enum": [
+            "dot",
+            "bracket"
+          ],
           "default": "dot",
           "enumDescriptions": [
             "Dot notation: styles.className",
@@ -85,7 +98,10 @@
         },
         "headwind.cssVariables": {
           "type": "string",
-          "enum": ["var", "inline"],
+          "enum": [
+            "var",
+            "inline"
+          ],
           "default": "var",
           "enumDescriptions": [
             "Use CSS custom properties: var(--text-3xl)",
@@ -95,7 +111,10 @@
         },
         "headwind.unknownClasses": {
           "type": "string",
-          "enum": ["remove", "preserve"],
+          "enum": [
+            "remove",
+            "preserve"
+          ],
           "default": "preserve",
           "enumDescriptions": [
             "Remove unrecognized class names from output",
@@ -105,7 +124,12 @@
         },
         "headwind.colorMode": {
           "type": "string",
-          "enum": ["hex", "oklch", "hsl", "var"],
+          "enum": [
+            "hex",
+            "oklch",
+            "hsl",
+            "var"
+          ],
           "default": "hex",
           "enumDescriptions": [
             "Hex color values: #3b82f6",
