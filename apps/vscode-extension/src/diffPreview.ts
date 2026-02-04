@@ -7,6 +7,7 @@ import { getCssOutputPattern } from "./config";
 import { clearDiagnostics, reportError } from "./diagnostics";
 import { log, logError } from "./logger";
 import { isSupportedFile } from "./types";
+import { formatCodeString } from "./formatCode";
 
 const SCHEME = "headwind-preview";
 
@@ -111,8 +112,11 @@ async function executePreviewTransform(): Promise<void> {
       `Transform preview: ${filename} in ${duration.toFixed(1)}ms (${Object.keys(result.classMap).length} class groups)`,
     );
 
+    // Format the transformed code with the user's formatter before previewing
+    const formattedCode = await formatCodeString(result.code, filename);
+
     // Update the virtual document
-    previewProvider.setContent(document.uri, result.code);
+    previewProvider.setContent(document.uri, formattedCode);
 
     // Open the diff editor
     const originalUri = document.uri;
@@ -154,6 +158,9 @@ async function executeApplyTransform(): Promise<void> {
   await editor.edit((editBuilder) => {
     editBuilder.replace(fullRange, result.code);
   });
+
+  // Format the document with the user's default formatter
+  await vscode.commands.executeCommand("editor.action.formatDocument");
 
   // Write CSS file
   if (result.css.trim().length > 0) {

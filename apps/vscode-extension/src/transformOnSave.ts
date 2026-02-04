@@ -7,6 +7,7 @@ import { writeCssOutput } from "./cssOutput";
 import { clearDiagnostics, reportError } from "./diagnostics";
 import { log, logError } from "./logger";
 import type { SupportedLanguage } from "./types";
+import { formatCodeString } from "./formatCode";
 
 function detectLanguage(filename: string): SupportedLanguage | null {
   const ext = path.extname(filename).toLowerCase();
@@ -43,11 +44,14 @@ export function registerTransformOnSave(context: vscode.ExtensionContext): void 
             `Transform on save: ${filename} (${Object.keys(result.classMap).length} classes)`,
           );
 
+          // Format the transformed code with the user's formatter
+          const formattedCode = await formatCodeString(result.code, filename);
+
           const fullRange = new vscode.Range(
             document.positionAt(0),
             document.positionAt(source.length),
           );
-          return [vscode.TextEdit.replace(fullRange, result.code)];
+          return [vscode.TextEdit.replace(fullRange, formattedCode)];
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           logError(`Transform on save failed for ${filename}`, err);
