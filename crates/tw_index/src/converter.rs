@@ -124,6 +124,9 @@ static VALUELESS_MAP: phf::Map<&'static str, (&'static str, &'static str)> = phf
     "backdrop-invert" => ("backdrop-filter", "invert(100%)"),
     "backdrop-sepia" => ("backdrop-filter", "sepia(100%)"),
 
+    // Border (valueless = 1px width)
+    "border" => ("border-width", "1px"),
+
     // Outline (valueless = 1px width)
     "outline" => ("outline-width", "1px"),
 
@@ -294,6 +297,7 @@ fn build_css_variable_declarations(
             ("bg", "color") => "background-color",
             ("text", "color") => "color",
             ("text", "length") | ("text", "size") => "font-size",
+            ("border", "length") | ("border", "size") => "border-width",
             _ => property,
         };
         return Some(vec![Declaration::new(final_property, var_expr)]);
@@ -310,10 +314,8 @@ fn build_css_variable_declarations(
             "background-image",
             format!("radial-gradient(var(--tw-gradient-stops, {}))", var_expr),
         )]),
-        "bg-conic" => Some(vec![Declaration::new(
-            "background-image",
-            format!("conic-gradient(var(--tw-gradient-stops, {}))", var_expr),
-        )]),
+        // bg-conic CSS 变量直接作为 background-image（不包裹 conic-gradient）
+        "bg-conic" => Some(vec![Declaration::new("background-image", var_expr)]),
         // 渐变色标
         "from" => Some(vec![Declaration::new("--tw-gradient-from", var_expr)]),
         "via" => Some(vec![Declaration::new("--tw-gradient-via", var_expr)]),
@@ -429,10 +431,10 @@ fn build_complex_arbitrary(parsed: &ParsedClass, raw_value: &str) -> Option<Vec<
             "background-image",
             format!("linear-gradient(var(--tw-gradient-stops, {}))", raw_value),
         )]),
-        // bg-conic-[<value>] → conic-gradient
+        // bg-conic-[<value>] → 直接作为 background-image（不包裹 conic-gradient）
         "bg-conic" => Some(vec![Declaration::new(
             "background-image",
-            format!("conic-gradient(var(--tw-gradient-stops, {}))", raw_value),
+            raw_value.to_string(),
         )]),
         // bg-radial-[<value>] → radial-gradient
         "bg-radial" => Some(vec![Declaration::new(
@@ -702,10 +704,11 @@ impl Converter {
                 }
                 // conic-<angle> 或 conic-[<value>]
                 if let Some(rest) = value.strip_prefix("conic-") {
+                    // conic-[<value>] → 直接作为 background-image
                     if let Some(arb) = extract_bracket_value(rest) {
                         return Some(vec![Declaration::new(
                             "background-image",
-                            format!("conic-gradient(var(--tw-gradient-stops, {}))", arb),
+                            arb.to_string(),
                         )]);
                     }
                     if let Ok(n) = rest.parse::<f64>() {
@@ -791,6 +794,10 @@ impl Converter {
             _ => {
                 if let Some(color) = get_color_value(value, self.color_mode) {
                     Some(vec![Declaration::new("border-color", color)])
+                } else if let Ok(n) = value.parse::<f64>() {
+                    // border-<number> → border-width: <number>px
+                    let px = if parsed.negative { -n } else { n };
+                    Some(vec![Declaration::new("border-width", format!("{}px", px))])
                 } else {
                     None // fall through for width
                 }
@@ -1642,14 +1649,37 @@ mod tests {
 
     #[test]
     fn test_bg_conic_arbitrary() {
+        // bg-conic-[<value>] → background-image: <value> (raw, not wrapped)
         let converter = Converter::new();
         let parsed = parse_class("bg-conic-[from_45deg]").unwrap();
         let decls = converter.to_declarations(&parsed).unwrap();
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "background-image");
+        assert_eq!(decls[0].value, "from 45deg");
+    }
+
+    #[test]
+    fn test_bg_conic_css_variable() {
+        // bg-conic-(--my-gradient) → background-image: var(--my-gradient)
+        let converter = Converter::new();
+        let parsed = parse_class("bg-conic-(--my-gradient)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(decls[0].value, "var(--my-gradient)");
+    }
+
+    #[test]
+    fn test_bg_conic_negative_angle() {
+        // -bg-conic-90 → conic-gradient(from -90deg in oklab, ...)
+        let converter = Converter::new();
+        let parsed = parse_class("-bg-conic-90").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
         assert_eq!(
             decls[0].value,
-            "conic-gradient(var(--tw-gradient-stops, from 45deg))"
+            "conic-gradient(from -90deg in oklab, var(--tw-gradient-stops))"
         );
     }
 
@@ -1820,10 +1850,7 @@ mod tests {
         let decls = converter.to_declarations(&parsed).unwrap();
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "background-image");
-        assert_eq!(
-            decls[0].value,
-            "conic-gradient(var(--tw-gradient-stops, var(--my-gradient)))"
-        );
+        assert_eq!(decls[0].value, "var(--my-gradient)");
     }
 
     #[test]
@@ -2087,6 +2114,52 @@ mod tests {
         assert_eq!(decls.len(), 1);
         assert_eq!(decls[0].property, "border-color");
         assert_eq!(decls[0].value, "var(--border-color)");
+    }
+
+    // --- border width ---
+
+    #[test]
+    fn test_border_valueless() {
+        // border → border-width: 1px
+        let converter = Converter::new();
+        let parsed = parse_class("border").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-width");
+        assert_eq!(decls[0].value, "1px");
+    }
+
+    #[test]
+    fn test_border_number() {
+        // border-2 → border-width: 2px
+        let converter = Converter::new();
+        let parsed = parse_class("border-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-width");
+        assert_eq!(decls[0].value, "2px");
+    }
+
+    #[test]
+    fn test_border_arbitrary_width() {
+        // border-[3px] → border-width: 3px
+        let converter = Converter::new();
+        let parsed = parse_class("border-[3px]").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-width");
+        assert_eq!(decls[0].value, "3px");
+    }
+
+    #[test]
+    fn test_border_css_variable_length() {
+        // border-(length:--my-width) → border-width: var(--my-width)
+        let converter = Converter::new();
+        let parsed = parse_class("border-(length:--my-width)").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "border-width");
+        assert_eq!(decls[0].value, "var(--my-width)");
     }
 
     // --- outline color ---
