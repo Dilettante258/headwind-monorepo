@@ -60,6 +60,8 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
     "gap" => "gap",
     "gap-x" => "column-gap",
     "gap-y" => "row-gap",
+    "space-x" => "column-gap",
+    "space-y" => "row-gap",
     "grid-cols" => "grid-template-columns",
     "grid-rows" => "grid-template-rows",
     "col-span" => "grid-column",
@@ -131,6 +133,16 @@ static PLUGIN_PROPERTY_MAP: phf::Map<&'static str, &'static str> = phf_map! {
 
     // Scroll & Overscroll
     "scroll" => "scroll-behavior",
+    "scroll-p" => "scroll-padding",
+    "scroll-pt" => "scroll-padding-top",
+    "scroll-pr" => "scroll-padding-right",
+    "scroll-pb" => "scroll-padding-bottom",
+    "scroll-pl" => "scroll-padding-left",
+    "scroll-m" => "scroll-margin",
+    "scroll-mt" => "scroll-margin-top",
+    "scroll-mr" => "scroll-margin-right",
+    "scroll-mb" => "scroll-margin-bottom",
+    "scroll-ml" => "scroll-margin-left",
     "overscroll" => "overscroll-behavior",
     "overscroll-x" => "overscroll-behavior-x",
     "overscroll-y" => "overscroll-behavior-y",
@@ -205,6 +217,10 @@ static MULTI_PROPERTY_MAP: phf::Map<&'static str, (&'static str, &'static str)> 
     "rounded-b" => ("border-bottom-right-radius", "border-bottom-left-radius"),
     "rounded-l" => ("border-top-left-radius", "border-bottom-left-radius"),
     "size" => ("width", "height"),
+    "scroll-px" => ("scroll-padding-left", "scroll-padding-right"),
+    "scroll-py" => ("scroll-padding-top", "scroll-padding-bottom"),
+    "scroll-mx" => ("scroll-margin-left", "scroll-margin-right"),
+    "scroll-my" => ("scroll-margin-top", "scroll-margin-bottom"),
 };
 
 /// 获取插件属性映射的引用

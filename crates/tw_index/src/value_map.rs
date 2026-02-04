@@ -262,6 +262,11 @@ pub fn infer_value(plugin: &str, value: &str, color_mode: ColorMode) -> Option<S
         // ── Scroll behavior (passthrough) ────────────────────────
         "scroll" => Some(value.to_string()),
 
+        // ── Scroll padding / margin (spacing) ────────────────────
+        "scroll-p" | "scroll-px" | "scroll-py" | "scroll-pt" | "scroll-pr" | "scroll-pb"
+        | "scroll-pl" | "scroll-m" | "scroll-mx" | "scroll-my" | "scroll-mt" | "scroll-mr"
+        | "scroll-mb" | "scroll-ml" => get_spacing_value(value),
+
         // ── Overscroll behavior (passthrough) ────────────────────
         "overscroll" | "overscroll-x" | "overscroll-y" => Some(value.to_string()),
 

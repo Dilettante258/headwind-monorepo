@@ -2792,4 +2792,82 @@ mod tests {
         assert_eq!(decls[0].property, "--tw-ring-color");
         assert!(decls[0].value.ends_with("80")); // 50% = 0x80
     }
+
+    // ── space-x / space-y ──────────────────────────────────────────
+
+    #[test]
+    fn test_space_x_0() {
+        let converter = Converter::new();
+        let parsed = parse_class("space-x-0").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "column-gap");
+        assert_eq!(decls[0].value, "0");
+    }
+
+    #[test]
+    fn test_space_x_2() {
+        let converter = Converter::new();
+        let parsed = parse_class("space-x-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "column-gap");
+        assert_eq!(decls[0].value, "0.5rem");
+    }
+
+    #[test]
+    fn test_space_y_4() {
+        let converter = Converter::new();
+        let parsed = parse_class("space-y-4").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "row-gap");
+        assert_eq!(decls[0].value, "1rem");
+    }
+
+    // ── scroll padding / margin ────────────────────────────────────
+
+    #[test]
+    fn test_scroll_pr_6() {
+        let converter = Converter::new();
+        let parsed = parse_class("scroll-pr-6").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "scroll-padding-right");
+        assert_eq!(decls[0].value, "1.5rem");
+    }
+
+    #[test]
+    fn test_scroll_mt_2() {
+        let converter = Converter::new();
+        let parsed = parse_class("scroll-mt-2").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "scroll-margin-top");
+        assert_eq!(decls[0].value, "0.5rem");
+    }
+
+    #[test]
+    fn test_scroll_px_4() {
+        let converter = Converter::new();
+        let parsed = parse_class("scroll-px-4").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "scroll-padding-left");
+        assert_eq!(decls[0].value, "1rem");
+        assert_eq!(decls[1].property, "scroll-padding-right");
+        assert_eq!(decls[1].value, "1rem");
+    }
+
+    #[test]
+    fn test_scroll_my_8() {
+        let converter = Converter::new();
+        let parsed = parse_class("scroll-my-8").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 2);
+        assert_eq!(decls[0].property, "scroll-margin-top");
+        assert_eq!(decls[0].value, "2rem");
+        assert_eq!(decls[1].property, "scroll-margin-bottom");
+        assert_eq!(decls[1].value, "2rem");
+    }
 }
