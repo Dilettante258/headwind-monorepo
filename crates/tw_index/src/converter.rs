@@ -661,8 +661,11 @@ impl Converter {
                         mode.to_string(),
                     )]);
                 }
-                // linear-to-* → background-image: linear-gradient(...)
-                if let Some(dir) = value.strip_prefix("linear-to-") {
+                // linear-to-* / gradient-to-* (v3 compat) → background-image: linear-gradient(...)
+                if let Some(dir) = value
+                    .strip_prefix("linear-to-")
+                    .or_else(|| value.strip_prefix("gradient-to-"))
+                {
                     let direction = match dir {
                         "t" => "to top",
                         "b" => "to bottom",
@@ -1605,6 +1608,29 @@ mod tests {
         assert_eq!(
             decls[0].value,
             "linear-gradient(45deg in oklab, var(--tw-gradient-stops))"
+        );
+    }
+
+    #[test]
+    fn test_bg_gradient_to_v3_compat() {
+        let converter = Converter::new();
+        // Tailwind v3 syntax: bg-gradient-to-b
+        let parsed = parse_class("bg-gradient-to-b").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(decls[0].property, "background-image");
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(to bottom, var(--tw-gradient-stops))"
+        );
+
+        // bg-gradient-to-tr
+        let parsed = parse_class("bg-gradient-to-tr").unwrap();
+        let decls = converter.to_declarations(&parsed).unwrap();
+        assert_eq!(decls.len(), 1);
+        assert_eq!(
+            decls[0].value,
+            "linear-gradient(to top right, var(--tw-gradient-stops))"
         );
     }
 
