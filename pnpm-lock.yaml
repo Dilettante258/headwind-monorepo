@@ -35,6 +35,9 @@ importers:
 
   apps/vscode-extension:
     devDependencies:
+      '@headwind/common-utils':
+        specifier: workspace:*
+        version: link:../../packages/common-utils
       '@headwind/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -44,9 +47,18 @@ importers:
       '@vscode/vsce':
         specifier: ^3.2.0
         version: 3.7.1
+      solid-js:
+        specifier: ^1.9.5
+        version: 1.9.11
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(@swc/core@1.15.11)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)
+      vite:
+        specifier: ^7.1.4
+        version: 7.3.1(@types/node@22.19.7)(tsx@4.21.0)
+      vite-plugin-solid:
+        specifier: ^2.11.8
+        version: 2.11.10(solid-js@1.9.11)(vite@7.3.1(@types/node@22.19.7)(tsx@4.21.0))
 
   apps/web-playground:
     dependencies:

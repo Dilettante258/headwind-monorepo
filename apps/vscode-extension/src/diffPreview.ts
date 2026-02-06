@@ -135,6 +135,37 @@ async function executePreviewTransform(): Promise<void> {
   }
 }
 
+/**
+ * Preview the stored result (used by the control panel).
+ * Uses state.lastResult directly — supports AI-renamed results.
+ * Skips formatCodeString to avoid creating untitled documents.
+ */
+export async function previewCurrentResult(): Promise<void> {
+  const result = state.lastResult;
+  if (!result) {
+    vscode.window.showErrorMessage("No transform result available. Run Transform first.");
+    return;
+  }
+
+  const doc = await resolveDocument();
+  if (!doc) {
+    vscode.window.showErrorMessage(NO_FILE_MSG);
+    return;
+  }
+
+  const filename = path.basename(doc.uri.fsPath);
+
+  previewProvider.setContent(doc.uri, result.code);
+
+  const previewUri = previewProvider.toVirtualUri(doc.uri);
+  const title = `Headwind: ${filename} (Preview)`;
+
+  await vscode.commands.executeCommand("vscode.diff", doc.uri, previewUri, title, {
+    viewColumn: vscode.ViewColumn.One,
+    preview: true,
+  });
+}
+
 async function executeApplyTransform(): Promise<void> {
   const result = state.lastResult;
   if (!result) {

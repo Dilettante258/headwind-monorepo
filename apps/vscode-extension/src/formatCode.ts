@@ -98,17 +98,25 @@ export async function formatCodeString(
 
 /**
  * Close an untitled tab by its URI if it exists.
+ * Retries after a short delay in case the tab hasn't appeared yet.
  */
 async function closeUntitledTab(uri: vscode.Uri): Promise<void> {
   if (uri.scheme !== "untitled") return;
 
-  for (const tabGroup of vscode.window.tabGroups.all) {
-    for (const tab of tabGroup.tabs) {
-      const input = tab.input;
-      if (input instanceof vscode.TabInputText && input.uri.toString() === uri.toString()) {
-        await vscode.window.tabGroups.close(tab);
-        return;
+  const uriStr = uri.toString();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    for (const tabGroup of vscode.window.tabGroups.all) {
+      for (const tab of tabGroup.tabs) {
+        const input = tab.input;
+        if (input instanceof vscode.TabInputText && input.uri.toString() === uriStr) {
+          await vscode.window.tabGroups.close(tab);
+          return;
+        }
       }
+    }
+    // Tab may not exist yet on first attempt — wait briefly and retry
+    if (attempt === 0) {
+      await new Promise(r => setTimeout(r, 50));
     }
   }
 }

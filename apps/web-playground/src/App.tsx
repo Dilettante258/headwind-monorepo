@@ -174,7 +174,8 @@ function Playground() {
     try {
       const names = await fetchSemanticNames(r.elementTree);
       setOriginalResult(r);
-      const renamed = applyAiNames(r, names);
+      const useCamelCase = outputModeType() === "cssModules" && accessMode() === "dot";
+      const renamed = applyAiNames(r, names, { camelCase: useCamelCase });
       setResult(renamed);
       setAiApplied(true);
     } catch (e: any) {

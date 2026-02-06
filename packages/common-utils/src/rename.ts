@@ -1,11 +1,27 @@
 import { parseTreeRefs } from './parse.ts';
 import type { TransformResult } from './types.ts';
 
+export interface ApplyAiNamesOptions {
+  /**
+   * When true, convert kebab-case AI names to camelCase so they work
+   * as JS property names in CSS Modules dot notation (styles.pageName).
+   * CSS selectors also use camelCase to stay consistent.
+   */
+  camelCase?: boolean;
+}
+
+/** Convert kebab-case to camelCase: "page-header" → "pageHeader" */
+function kebabToCamel(name: string): string {
+  return name.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+}
+
 /** 应用 AI 命名结果，替换 code/css 中的生成类名 */
 export function applyAiNames(
   result: TransformResult,
   aiNames: Record<string, string>,
+  options?: ApplyAiNamesOptions,
 ): TransformResult {
+  const useCamelCase = options?.camelCase ?? false;
   const refClasses = parseTreeRefs(result.elementTree!);
   let { code, css } = result;
   const newClassMap: Record<string, string> = {};
@@ -15,7 +31,8 @@ export function applyAiNames(
   for (const [ref, semantic] of Object.entries(aiNames)) {
     const tailwind = refClasses.get(ref);
     if (tailwind && !tailwindToSemantic.has(tailwind)) {
-      tailwindToSemantic.set(tailwind, semantic);
+      const name = useCamelCase ? kebabToCamel(semantic) : semantic;
+      tailwindToSemantic.set(tailwind, name);
     }
   }
 

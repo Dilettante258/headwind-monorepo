@@ -43,6 +43,7 @@ export const DEFAULT_OPTIONS: TransformOptions = {
   cssVariables: 'var',
   unknownClasses: 'preserve',
   colorMode: 'hex',
+  elementTree: true,
 };
 
 // ── Webview <-> Extension Host Message Protocol ──────────────
@@ -54,7 +55,8 @@ export type WebviewToHostMessage =
   | { type: 'requestTransform' }
   | { type: 'requestPreviewDiff' }
   | { type: 'requestApply' }
-  | { type: 'copyToClipboard'; text: string };
+  | { type: 'copyToClipboard'; text: string }
+  | { type: 'requestAiRename' };
 
 /** Messages sent FROM the extension host TO the webview */
 export type HostToWebviewMessage =
@@ -62,7 +64,9 @@ export type HostToWebviewMessage =
   | { type: 'transformResult'; result: TransformResult; duration: number }
   | { type: 'transformError'; error: string }
   | { type: 'activeFileChanged'; filename: string | null }
-  | { type: 'optionsUpdated'; options: TransformOptions };
+  | { type: 'optionsUpdated'; options: TransformOptions }
+  | { type: 'aiRenameResult'; result: TransformResult }
+  | { type: 'aiRenameError'; error: string };
 
 /** Full state sent on webview init or restore */
 export interface PanelState {

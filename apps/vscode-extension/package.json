@@ -141,7 +141,7 @@
         },
         "headwind.elementTree": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Generate element tree in transform result, showing tag hierarchy with classes and [ref=eN] identifiers for AI secondary processing"
         },
         "headwind.cssOutputPattern": {
@@ -153,22 +153,33 @@
           "type": "string",
           "default": "**/*.{jsx,tsx,html}",
           "description": "Glob pattern for files to include in workspace transform"
+        },
+        "headwind.aiApiUrl": {
+          "type": "string",
+          "default": "https://headwind-playground.kairi.cc",
+          "description": "API endpoint base URL for AI semantic class naming. Leave empty to disable AI Rename."
         }
       }
     }
   },
   "scripts": {
     "build:wasm": "node ../../tools/scripts/build-wasm-node.mjs",
+    "build:webview": "vite build --config webview/vite.config.ts",
     "prebuild": "npm run build:wasm",
-    "build": "tsup",
+    "build": "tsup && npm run build:webview",
     "dev": "tsup --watch",
+    "dev:webview": "vite --config webview/vite.config.ts",
     "typecheck": "tsc --noEmit",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@headwind/common-utils": "workspace:*",
     "@headwind/config": "workspace:*",
     "@types/vscode": "^1.96.0",
     "@vscode/vsce": "^3.2.0",
-    "tsup": "^8.3.5"
+    "solid-js": "^1.9.5",
+    "tsup": "^8.3.5",
+    "vite": "^7.1.4",
+    "vite-plugin-solid": "^2.11.8"
   }
 }

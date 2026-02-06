@@ -30,6 +30,12 @@ class HeadwindState extends EventEmitter {
     this.emit("resultChanged", result, duration);
   }
 
+  /** Update the result without emitting events (used for AI rename). */
+  updateResultSilent(result: TransformResult): void {
+    this.lastResult = result;
+    this._version++;
+  }
+
   /**
    * Update the active file. Only updates if the file is a supported type
    * (.jsx/.tsx/.html etc). Non-supported files are ignored so the panel
