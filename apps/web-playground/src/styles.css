@@ -270,6 +270,51 @@ body {
   cursor: default;
 }
 
+/* ── AI Rename button ─────────────────────────── */
+
+.ai-btn {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent-dim);
+  background: rgba(14, 165, 233, 0.15);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ai-btn:hover:not(:disabled) {
+  background: rgba(14, 165, 233, 0.25);
+  border-color: var(--accent);
+}
+
+.ai-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ai-btn-reset {
+  border-color: var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+}
+
+.ai-btn-reset:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.ai-error {
+  font-size: 11px;
+  color: var(--red);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Editor (input textarea) ───────────────────── */
 
 .editor {

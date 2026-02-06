@@ -22,6 +22,7 @@ export interface TransformOptions {
   unknownClasses?: 'remove' | 'preserve';
   colorMode?: 'hex' | 'oklch' | 'hsl' | 'var';
   colorMix?: boolean;
+  elementTree?: boolean;
 }
 
 interface GlobalOutputMode {
@@ -39,6 +40,7 @@ export interface TransformResult {
   code: string;
   css: string;
   classMap: Record<string, string>;
+  elementTree?: string;
 }
 
 export function runTransformJsx(

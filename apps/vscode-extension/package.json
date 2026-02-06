@@ -139,6 +139,11 @@
           ],
           "description": "Color output format for generated CSS"
         },
+        "headwind.elementTree": {
+          "type": "boolean",
+          "default": false,
+          "description": "Generate element tree in transform result, showing tag hierarchy with classes and [ref=eN] identifiers for AI secondary processing"
+        },
         "headwind.cssOutputPattern": {
           "type": "string",
           "default": "[name].css",

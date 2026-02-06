@@ -1,0 +1,9 @@
+{
+  "extends": "../config/tsconfig/web.json",
+  "compilerOptions": {
+    "isolatedModules": true
+  },
+  "include": [
+    "src"
+  ]
+}

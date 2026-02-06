@@ -11,6 +11,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@headwind/common-utils": "workspace:*",
     "@solidjs/meta": "^0.29.4",
     "solid-js": "^1.9.5"
   },

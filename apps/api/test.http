@@ -1,0 +1,45 @@
+
+###
+
+### OPTIONS preflight
+OPTIONS http://localhost:8787/api/semantic-names
+Content-Type: application/json
+Origin: http://localhost:3000
+
+###
+
+### AI Semantic Names — default App example
+POST http://localhost:8787/api/semantic-names
+Content-Type: application/json
+
+{
+  "elementTree": "## App\n- div flex flex-col items-center p-8 [ref=e1]\n  - h1 text-3xl font-bold text-blue-600 \"Hello Head\" [ref=e2]\n  - p mt-4 text-gray-500 text-center \"Atomic CSS\" [ref=e3]\n  - button mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 \"Click me\" [ref=e4]"
+}
+
+###
+
+### AI Semantic Names — nav + card layout
+POST https://headwind-api.admire258.workers.dev/api/semantic-names
+Content-Type: application/json
+
+{
+  "elementTree": "## Layout\n- div min-h-screen bg-gray-100 [ref=e1]\n  - nav flex items-center justify-between px-6 py-4 bg-white shadow [ref=e2]\n    - a text-xl font-bold text-indigo-600 \"MyApp\" [ref=e3]\n    - div flex gap-4 [ref=e4]\n      - a text-gray-600 hover:text-indigo-600 \"Home\" [ref=e5]\n      - a text-gray-600 hover:text-indigo-600 \"About\" [ref=e6]\n  - main max-w-4xl mx-auto p-8 [ref=e7]\n    - div bg-white rounded-xl shadow-lg p-6 [ref=e8]\n      - h2 text-2xl font-semibold text-gray-800 \"Welcome\" [ref=e9]\n      - p mt-2 text-gray-500 \"This is a c\" [ref=e10]"
+}
+
+###
+
+### Error case — missing elementTree
+POST http://localhost:8787/api/semantic-names
+Content-Type: application/json
+
+{
+  "foo": "bar"
+}
+
+###
+
+### Error case — invalid JSON body
+POST http://localhost:8787/api/semantic-names
+Content-Type: application/json
+
+not json

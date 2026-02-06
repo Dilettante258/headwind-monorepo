@@ -1,13 +1,15 @@
 import { createSignal, createEffect, onMount, onCleanup, type Component, Show } from 'solid-js';
 import { Title, Meta, Link } from '@solidjs/meta';
-import About from './About';
+import About from "./About.tsx";
 import {
   loadWasm,
   runTransformJsx,
   runTransformHtml,
   type TransformResult,
   type TransformOptions,
-} from './wasm';
+} from "./wasm.ts";
+import { applyAiNames } from "@headwind/common-utils";
+import { fetchSemanticNames } from "./api.ts";
 
 const DEFAULT_JSX = `export default function App() {
   return (
@@ -60,13 +62,19 @@ function Playground() {
     createSignal<UnknownClassesMode>("preserve");
   const [colorMode, setColorMode] = createSignal<ColorModeType>("hex");
   const [colorMix, setColorMix] = createSignal(false);
+  const [elementTree, setElementTree] = createSignal(true);
   const [result, setResult] = createSignal<TransformResult | null>(null);
   const [error, setError] = createSignal("");
   const [duration, setDuration] = createSignal(0);
-  const [activeTab, setActiveTab] = createSignal<"code" | "css" | "map">(
-    "code",
-  );
+  const [activeTab, setActiveTab] = createSignal<
+    "code" | "css" | "map" | "tree"
+  >("code");
   const [copied, setCopied] = createSignal(false);
+  const [aiLoading, setAiLoading] = createSignal(false);
+  const [aiError, setAiError] = createSignal("");
+  const [originalResult, setOriginalResult] =
+    createSignal<TransformResult | null>(null);
+  const [aiApplied, setAiApplied] = createSignal(false);
   let settingsDialogRef: HTMLDialogElement | undefined;
 
   onMount(async () => {
@@ -96,6 +104,7 @@ function Playground() {
     const unknown = unknownClasses();
     const color = colorMode();
     const mix = colorMix();
+    const tree = elementTree();
 
     const options: TransformOptions = {
       namingMode: naming,
@@ -107,6 +116,7 @@ function Playground() {
       unknownClasses: unknown,
       colorMode: color,
       colorMix: mix,
+      elementTree: tree,
     };
 
     try {
@@ -121,6 +131,9 @@ function Playground() {
       setDuration(elapsed);
       setResult(res);
       setError("");
+      setAiApplied(false);
+      setOriginalResult(null);
+      setAiError("");
     } catch (e: any) {
       setError(e.message || String(e));
       setResult(null);
@@ -139,6 +152,7 @@ function Playground() {
     if (!r) return "";
     if (tab === "code") return r.code;
     if (tab === "css") return r.css;
+    if (tab === "tree") return r.elementTree ?? "";
     return classMapEntries()
       .map(([orig, gen]) => `${orig} → ${gen}`)
       .join("\n");
@@ -150,6 +164,34 @@ function Playground() {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleAiRename = async () => {
+    const r = result();
+    if (!r?.elementTree || aiLoading()) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const names = await fetchSemanticNames(r.elementTree);
+      setOriginalResult(r);
+      const renamed = applyAiNames(r, names);
+      setResult(renamed);
+      setAiApplied(true);
+    } catch (e: any) {
+      setAiError(e.message || "AI rename failed");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleResetAi = () => {
+    const orig = originalResult();
+    if (orig) {
+      setResult(orig);
+      setOriginalResult(null);
+      setAiApplied(false);
+      setAiError("");
+    }
   };
 
   return (
@@ -170,9 +212,26 @@ function Playground() {
           <Show when={wasmError()}>
             <span class="status status-err">{wasmError()}</span>
           </Show>
-          <a href="/about" class="nav-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>About</a>
-          <a href="https://github.com/Dilettante258/headwind-monorepo" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="GitHub">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          <a
+            href="/about"
+            class="nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/about");
+            }}
+          >
+            About
+          </a>
+          <a
+            href="https://github.com/Dilettante258/headwind-monorepo"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="github-link"
+            aria-label="GitHub"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+            </svg>
           </a>
         </div>
       </header>
@@ -311,6 +370,18 @@ function Playground() {
               Generate <code>color-mix(in oklab, …)</code> for alpha modifiers
               (e.g. text-white/60). Useful with CSS Var color mode.
             </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={elementTree()}
+                onChange={(e) => setElementTree(e.currentTarget.checked)}
+              />
+              Element Tree
+            </label>
+            <p class="settings-hint">
+              Generate a structured element tree with <code>[ref=eN]</code>{" "}
+              identifiers, useful for passing to AI for secondary processing.
+            </p>
           </div>
         </dialog>
       </div>
@@ -353,6 +424,31 @@ function Playground() {
             >
               Class Map ({classMapEntries().length})
             </button>
+            <Show when={elementTree()}>
+              <button
+                class={`tab ${activeTab() === "tree" ? "tab-active" : ""}`}
+                onClick={() => setActiveTab("tree")}
+              >
+                Element Tree
+              </button>
+            </Show>
+            <Show when={aiError()}>
+              <span class="ai-error">{aiError()}</span>
+            </Show>
+            <Show when={!aiApplied()}>
+              <button
+                class="ai-btn"
+                onClick={handleAiRename}
+                disabled={!result()?.elementTree || aiLoading()}
+              >
+                {aiLoading() ? "Renaming..." : "AI Rename"}
+              </button>
+            </Show>
+            <Show when={aiApplied()}>
+              <button class="ai-btn ai-btn-reset" onClick={handleResetAi}>
+                Reset AI
+              </button>
+            </Show>
             <button class="copy-btn" onClick={copyOutput} disabled={!result()}>
               {copied() ? "Copied!" : "Copy"}
             </button>
@@ -392,6 +488,9 @@ function Playground() {
                   </tbody>
                 </table>
               </div>
+            </Show>
+            <Show when={activeTab() === "tree"}>
+              <pre class="output">{result()?.elementTree ?? ""}</pre>
             </Show>
           </Show>
         </div>

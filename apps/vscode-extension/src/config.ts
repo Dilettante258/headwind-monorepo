@@ -19,6 +19,7 @@ export function getTransformOptions(): TransformOptions {
     cssVariables: config.get<"var" | "inline">("cssVariables", "var"),
     unknownClasses: config.get<"remove" | "preserve">("unknownClasses", "preserve"),
     colorMode: config.get<"hex" | "oklch" | "hsl" | "var">("colorMode", "hex"),
+    elementTree: config.get<boolean>("elementTree", false),
   };
 }
 

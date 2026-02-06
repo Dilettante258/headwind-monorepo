@@ -53,9 +53,9 @@ function applyTextEdits(text: string, edits: vscode.TextEdit[]): string {
  * Format a code string using the user's configured formatter.
  *
  * Opens a temporary in-memory document with the correct language,
- * asks the registered formatting provider for edits, and applies
- * them to the string.  Returns the original string unchanged if
- * no formatter is available.
+ * asks the registered formatting provider for edits, applies them
+ * to the string, and closes any resulting untitled tab.
+ * Returns the original string unchanged if no formatter is available.
  */
 export async function formatCodeString(
   code: string,
@@ -81,6 +81,10 @@ export async function formatCodeString(
       options,
     );
 
+    // Close any untitled tab that may have been created for this document
+    // This prevents the untitled window from appearing
+    await closeUntitledTab(doc.uri);
+
     if (!edits || edits.length === 0) {
       return code;
     }
@@ -89,5 +93,22 @@ export async function formatCodeString(
   } catch {
     // No formatter available or formatting failed — return as-is
     return code;
+  }
+}
+
+/**
+ * Close an untitled tab by its URI if it exists.
+ */
+async function closeUntitledTab(uri: vscode.Uri): Promise<void> {
+  if (uri.scheme !== "untitled") return;
+
+  for (const tabGroup of vscode.window.tabGroups.all) {
+    for (const tab of tabGroup.tabs) {
+      const input = tab.input;
+      if (input instanceof vscode.TabInputText && input.uri.toString() === uri.toString()) {
+        await vscode.window.tabGroups.close(tab);
+        return;
+      }
+    }
   }
 }

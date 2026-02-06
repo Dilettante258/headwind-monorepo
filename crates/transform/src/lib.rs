@@ -1,4 +1,5 @@
 pub mod collector;
+pub mod element_tree;
 pub mod html;
 pub mod jsx_visitor;
 
@@ -106,6 +107,11 @@ pub struct TransformOptions {
     pub color_mode: ColorMode,
     /// 是否使用 color-mix() 函数处理颜色透明度（默认 false）
     pub color_mix: bool,
+    /// 是否生成元素树（默认 false）
+    ///
+    /// 开启后 `TransformResult.element_tree` 会包含结构化的元素树文本，
+    /// 每个元素附带 `[ref=eN]` 引用标识，方便传给 AI 做二次处理。
+    pub element_tree: bool,
 }
 
 impl Default for TransformOptions {
@@ -117,6 +123,7 @@ impl Default for TransformOptions {
             unknown_classes: UnknownClassMode::Remove,
             color_mode: ColorMode::default(),
             color_mix: false,
+            element_tree: false,
         }
     }
 }
@@ -129,6 +136,15 @@ pub struct TransformResult {
     pub css: String,
     /// 类名映射（原始类字符串 -> 生成的类名）
     pub class_map: IndexMap<String, String>,
+    /// 元素树文本（仅当 `TransformOptions.element_tree == true` 时生成）
+    ///
+    /// 格式示例：
+    /// ```text
+    /// - div w-full h-20 border [ref=e1]
+    ///   - h2 text-xl text-red-500 [ref=e2]
+    ///   - p: xxxx [ref=e3]
+    /// ```
+    pub element_tree: Option<String>,
 }
 
 /// 转换 JSX/TSX 源码
@@ -201,6 +217,18 @@ pub fn transform_jsx(
         return Err(format!("解析警告: {:?}", errors));
     }
 
+    // 生成元素树（在 AST 变更前遍历）
+    let tree_text = if options.element_tree {
+        let components = element_tree::build_jsx_element_tree(&module);
+        if components.is_empty() {
+            None
+        } else {
+            Some(element_tree::format_component_trees(&components))
+        }
+    } else {
+        None
+    };
+
     // 遍历并替换
     let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode, options.color_mix);
     let css_modules_config = match &options.output_mode {
@@ -255,6 +283,7 @@ pub fn transform_jsx(
         code,
         css: collector.combined_css(),
         class_map: collector.into_class_map(),
+        element_tree: tree_text,
     })
 }
 
@@ -284,6 +313,18 @@ pub fn transform_jsx(
 /// println!("CSS:\n{}", result.css);
 /// ```
 pub fn transform_html(source: &str, options: TransformOptions) -> Result<TransformResult, String> {
+    // 生成元素树（在转换前）
+    let tree_text = if options.element_tree {
+        let nodes = element_tree::build_html_element_tree(source);
+        if nodes.is_empty() {
+            None
+        } else {
+            Some(element_tree::format_element_tree(&nodes))
+        }
+    } else {
+        None
+    };
+
     let mut collector = ClassCollector::new(options.naming_mode, options.css_variables, options.unknown_classes, options.color_mode, options.color_mix);
     let code = html::transform_html_source(source, &mut collector);
 
@@ -291,6 +332,7 @@ pub fn transform_html(source: &str, options: TransformOptions) -> Result<Transfo
         code,
         css: collector.combined_css(),
         class_map: collector.into_class_map(),
+        element_tree: tree_text,
     })
 }
 
@@ -353,10 +395,17 @@ const EMPTY_LINE_MARKER: &str = "// __HEADWIND_EMPTY_LINE__";
 
 /// 将源码中的空行替换为占位符注释，使 SWC 保留空行位置
 fn preserve_empty_lines(source: &str) -> String {
-    source
-        .lines()
-        .map(|line| {
-            if line.trim().is_empty() {
+    let lines: Vec<&str> = source.lines().collect();
+
+    // 找到最后一个非空行的索引，避免处理末尾空行
+    let last_non_empty = lines.iter().rposition(|l| !l.trim().is_empty());
+
+    lines
+        .into_iter()
+        .enumerate()
+        .map(|(i, line)| {
+            // 只在最后一个非空行之前的空行添加 marker
+            if line.trim().is_empty() && last_non_empty.is_some_and(|last| i < last) {
                 EMPTY_LINE_MARKER
             } else {
                 line
@@ -1041,6 +1090,21 @@ mod tests {
     }
 
     #[test]
+    fn test_transform_jsx_trailing_empty_lines_no_marker() {
+        // 末尾有多行空行时不应产生 marker
+        let source = "function App() {\n    return <div className=\"p-4\">Hello</div>;\n}\n\n\n";
+
+        let result = transform_jsx(source, "App.tsx", TransformOptions::default()).unwrap();
+
+        // 不应有任何 marker 残留
+        assert!(
+            !result.code.contains("__HEADWIND_EMPTY_LINE__"),
+            "Trailing empty lines should not produce markers. Got:\n{}",
+            result.code
+        );
+    }
+
+    #[test]
     fn test_global_import_not_injected_when_no_classes() {
         let source = r#"function App() {
     return <div id="main">Hello</div>;
@@ -1060,5 +1124,143 @@ mod tests {
 
         // No className means no class map → no import
         assert!(!result.code.contains("import"));
+    }
+
+    // === Element Tree 测试 ===
+
+    #[test]
+    fn test_element_tree_jsx() {
+        let source = r#"function App() {
+    return (
+        <div className="w-full h-20 border">
+            <h2 className="text-xl text-red-500">Title</h2>
+            <p>some text</p>
+            <div>
+                <p className="text-lg text-blue-500">
+                    <span className="text-sm">inner</span>
+                </p>
+            </div>
+        </div>
+    );
+}"#;
+
+        let result = transform_jsx(
+            source,
+            "App.tsx",
+            TransformOptions {
+                element_tree: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        let tree = result.element_tree.as_ref().expect("element_tree should be Some");
+        println!("=== Element Tree ===\n{}", tree);
+
+        // 验证组件名和树结构
+        assert!(tree.contains("## App"));
+        assert!(tree.contains("- div w-full h-20 border [ref=e1]"));
+        assert!(tree.contains("  - h2 text-xl text-red-500 \"Title\" [ref=e2]"));
+        assert!(tree.contains("  - p: some text [ref=e3]"));
+        assert!(tree.contains("  - div [ref=e4]"));
+        assert!(tree.contains("    - p text-lg text-blue-500 [ref=e5]"));
+        assert!(tree.contains("      - span text-sm \"inner\" [ref=e6]"));
+
+        // 转换结果仍然正常
+        assert!(!result.code.contains("w-full h-20 border"));
+        assert!(!result.css.is_empty());
+    }
+
+    #[test]
+    fn test_element_tree_html() {
+        let html = r#"<div class="flex flex-col">
+    <h1 class="text-2xl font-bold">Title</h1>
+    <p class="text-gray-500">Content</p>
+</div>"#;
+
+        let result = transform_html(
+            html,
+            TransformOptions {
+                element_tree: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        let tree = result.element_tree.as_ref().expect("element_tree should be Some");
+        println!("=== HTML Element Tree ===\n{}", tree);
+
+        assert!(tree.contains("- div flex flex-col [ref=e1]"));
+        assert!(tree.contains("  - h1 text-2xl font-bold"));
+        assert!(tree.contains("  - p text-gray-500"));
+    }
+
+    #[test]
+    fn test_element_tree_multi_component() {
+        let source = r#"function Header() {
+    return (
+        <header className="w-full bg-white shadow">
+            <nav className="flex items-center">
+                <a className="text-blue-500" href="/">Home</a>
+                <a className="text-gray-500" href="/about">About</a>
+            </nav>
+        </header>
+    );
+}
+
+function Card({ title, children }) {
+    return (
+        <div className="rounded-lg border p-4">
+            <h3 className="text-lg font-bold">{title}</h3>
+            <div className="mt-2">{children}</div>
+        </div>
+    );
+}
+
+export default function App() {
+    return (
+        <div className="min-h-screen">
+            <Header />
+            <main className="container mx-auto p-8">
+                <Card title="Hello">
+                    <p className="text-gray-600">World</p>
+                </Card>
+            </main>
+        </div>
+    );
+}"#;
+
+        let result = transform_jsx(
+            source,
+            "App.tsx",
+            TransformOptions {
+                element_tree: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        let tree = result.element_tree.as_ref().expect("element_tree should be Some");
+        println!("=== Multi-Component Element Tree ===\n{}", tree);
+
+        // 验证每个组件都有标题
+        assert!(tree.contains("## Header"));
+        assert!(tree.contains("## Card"));
+        assert!(tree.contains("## App"));
+
+        // 验证组件内的根元素
+        assert!(tree.contains("- header w-full bg-white shadow"));
+        assert!(tree.contains("- div rounded-lg border p-4"));
+        assert!(tree.contains("- div min-h-screen"));
+    }
+
+    #[test]
+    fn test_element_tree_disabled_by_default() {
+        let source = r#"function App() {
+    return <div className="p-4">Hello</div>;
+}"#;
+
+        let result = transform_jsx(source, "App.tsx", TransformOptions::default()).unwrap();
+        assert!(result.element_tree.is_none());
     }
 }

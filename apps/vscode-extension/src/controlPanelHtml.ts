@@ -312,6 +312,12 @@ export function getWebviewHtml(webview: vscode.Webview): string {
             <option value="bracket">Bracket (styles["xxx"])</option>
           </select>
         </div>
+        <div class="option-group" style="justify-content:center;">
+          <label class="option-label" style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="opt-elementTree" />
+            Element Tree
+          </label>
+        </div>
       </div>
     </div>
 
@@ -330,6 +336,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       <button class="tab active" data-tab="css">Generated CSS</button>
       <button class="tab" data-tab="map">Class Map <span id="map-count"></span></button>
       <button class="tab" data-tab="code">Output Code</button>
+      <button class="tab" data-tab="tree" id="tab-tree" style="display:none;">Element Tree</button>
       <div class="tab-actions">
         <button id="btn-copy" class="copy-btn">Copy</button>
       </div>
@@ -363,6 +370,8 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     const $mapCount = document.getElementById('map-count');
     const $outArea  = document.getElementById('output-area');
     const $wasmStat = document.getElementById('wasm-status');
+    const $elemTree = document.getElementById('opt-elementTree');
+    const $tabTree  = document.getElementById('tab-tree');
     const $tabs     = document.querySelectorAll('.tab[data-tab]');
 
     function gatherOptions() {
@@ -375,6 +384,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
         cssVariables: $cssVars.value,
         unknownClasses: $unknown.value,
         colorMode: $colorMode.value,
+        elementTree: $elemTree.checked,
       };
     }
 
@@ -393,6 +403,11 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       });
     });
 
+    $elemTree.addEventListener('change', function() {
+      $tabTree.style.display = $elemTree.checked ? '' : 'none';
+      sendOptions();
+    });
+
     $btnTrans.addEventListener('click', function() {
       vscode.postMessage({ type: 'requestTransform' });
     });
@@ -407,6 +422,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       var text = '';
       if (currentTab === 'css') text = result.css;
       else if (currentTab === 'code') text = result.code;
+      else if (currentTab === 'tree') text = result.elementTree || '';
       else {
         text = Object.entries(result.classMap)
           .map(function(e) { return e[0] + ' -> ' + e[1]; })
@@ -439,6 +455,13 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       } else if (currentTab === 'code') {
         $outArea.innerHTML = '<pre class="output-pre"></pre>';
         $outArea.querySelector('pre').textContent = result.code;
+      } else if (currentTab === 'tree') {
+        if (!result.elementTree) {
+          $outArea.innerHTML = '<div class="placeholder">No element tree (enable Element Tree option)</div>';
+          return;
+        }
+        $outArea.innerHTML = '<pre class="output-pre"></pre>';
+        $outArea.querySelector('pre').textContent = result.elementTree;
       } else if (currentTab === 'map') {
         var entries = Object.entries(result.classMap);
         if (entries.length === 0) {
@@ -472,6 +495,8 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       $cssVars.value = opts.cssVariables || 'var';
       $unknown.value = opts.unknownClasses || 'preserve';
       $colorMode.value = opts.colorMode || 'hex';
+      $elemTree.checked = !!opts.elementTree;
+      $tabTree.style.display = $elemTree.checked ? '' : 'none';
       if (outType === 'cssModules' && opts.outputMode.access) {
         $access.value = opts.outputMode.access;
       }

@@ -1,64 +1,153 @@
-import { DurableObject } from "cloudflare:workers";
+const SYSTEM_PROMPT = `You are a CSS class naming expert. Given an element tree of a web component, generate semantic CSS class names for elements that have Tailwind utility classes.
 
-/**
- * Welcome to Cloudflare Workers! This is your first Durable Objects application.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your Durable Object in action
- * - Run `npm run deploy` to publish your application
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/durable-objects
- */
+Rules:
+1. Use kebab-case (e.g. "page-header", "nav-link", "card-title").
+2. Names should describe the element's PURPOSE or ROLE in the component, NOT its visual properties.
+3. Keep names concise: 1-3 words joined by hyphens, max 30 characters.
+4. All names must be unique within the response.
+5. Must be valid CSS class names: start with a letter, only lowercase letters, digits, and hyphens.
+6. Only generate names for elements that have CSS classes (shown between the tag name and [ref=eN]).
+7. Skip elements that have no classes (e.g. "- div [ref=e4]" or "- p: some text [ref=e3]").
+8. Use the component name (## header), tag name, text content, and tree position as context.
+9. Respond with ONLY a JSON object mapping ref IDs to semantic names. No markdown, no explanation.`;
 
-/** A Durable Object's behavior is defined in an exported Javascript class */
-export class MyDurableObject extends DurableObject<Env> {
-	/**
-	 * The constructor is invoked once upon creation of the Durable Object, i.e. the first call to
-	 * 	`DurableObjectStub::get` for a given identifier (no-op constructors can be omitted)
-	 *
-	 * @param ctx - The interface for interacting with Durable Object state
-	 * @param env - The interface to reference bindings declared in wrangler.jsonc
-	 */
-	constructor(ctx: DurableObjectState, env: Env) {
-		super(ctx, env);
+function corsHeaders(origin: string | null): Record<string, string> {
+	return {
+		'Access-Control-Allow-Origin': origin ?? '*',
+		'Access-Control-Allow-Methods': 'POST, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type',
+		'Access-Control-Max-Age': '86400',
+	};
+}
+
+function jsonResponse(
+	body: unknown,
+	status: number,
+	headers: Record<string, string>,
+): Response {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { ...headers, 'Content-Type': 'application/json' },
+	});
+}
+
+/** Strip markdown fences and extract JSON object from AI text */
+function extractJson(text: string): string {
+	let s = text.trim();
+	const fenceMatch = s.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+	if (fenceMatch) s = fenceMatch[1].trim();
+	const braceStart = s.indexOf('{');
+	const braceEnd = s.lastIndexOf('}');
+	if (braceStart !== -1 && braceEnd > braceStart) {
+		s = s.slice(braceStart, braceEnd + 1);
+	}
+	return s;
+}
+
+/** Validate and sanitize AI-generated class names */
+function sanitizeNames(raw: Record<string, unknown>): Record<string, string> {
+	const result: Record<string, string> = {};
+	const used = new Set<string>();
+	const validPattern = /^[a-z][a-z0-9-]*$/;
+
+	for (const [ref, value] of Object.entries(raw)) {
+		if (typeof value !== 'string' || !ref.match(/^e\d+$/)) continue;
+
+		let name = value
+			.toLowerCase()
+			.replace(/[^a-z0-9-]/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+
+		if (!name || !/^[a-z]/.test(name)) name = 'el-' + name;
+		if (name.length > 30) name = name.slice(0, 30).replace(/-$/, '');
+		if (!validPattern.test(name)) continue;
+
+		// Deduplicate
+		if (used.has(name)) {
+			let suffix = 2;
+			while (used.has(`${name}-${suffix}`)) suffix++;
+			name = `${name}-${suffix}`;
+		}
+		used.add(name);
+		result[ref] = name;
 	}
 
-	/**
-	 * The Durable Object exposes an RPC method sayHello which will be invoked when a Durable
-	 *  Object instance receives a request from a Worker via the same method invocation on the stub
-	 *
-	 * @param name - The name provided to a Durable Object instance from a Worker
-	 * @returns The greeting to be sent back to the Worker
-	 */
-	async sayHello(name: string): Promise<string> {
-		return `Hello, ${name}!`;
+	return result;
+}
+
+async function handleSemanticNames(
+	request: Request,
+	env: Env,
+	headers: Record<string, string>,
+): Promise<Response> {
+	let body: { elementTree?: string };
+	try {
+		body = (await request.json()) as { elementTree?: string };
+	} catch {
+		return jsonResponse({ error: 'Invalid JSON body' }, 400, headers);
+	}
+
+	if (!body.elementTree || typeof body.elementTree !== 'string') {
+		return jsonResponse({ error: 'Missing or invalid "elementTree" field' }, 400, headers);
+	}
+
+	const userPrompt = `Element tree:\n${body.elementTree}\n\nGenerate a JSON object mapping each ref ID (e.g. "e1") to a semantic class name. Only include refs that have CSS classes. Example: {"e1": "page-header", "e2": "nav-link"}`;
+
+	try {
+		const response = (await env.AI.run('@cf/meta/llama-3.1-8b-instruct-fp8', {
+			messages: [
+				{ role: 'system', content: SYSTEM_PROMPT },
+				{ role: 'user', content: userPrompt },
+			],
+			max_tokens: 1024,
+			temperature: 0.3,
+		})) as { response?: string };
+
+		const aiText = response?.response;
+		if (!aiText) {
+			return jsonResponse({ error: 'AI returned empty response' }, 502, headers);
+		}
+
+		const jsonStr = extractJson(aiText);
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(jsonStr);
+		} catch {
+			return jsonResponse(
+				{ error: 'Failed to parse AI response as JSON', raw: aiText.slice(0, 500) },
+				502,
+				headers,
+			);
+		}
+
+		if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+			return jsonResponse({ error: 'AI response is not a JSON object' }, 502, headers);
+		}
+
+		const names = sanitizeNames(parsed as Record<string, unknown>);
+		return jsonResponse({ names }, 200, headers);
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		return jsonResponse({ error: `AI processing failed: ${message}` }, 502, headers);
 	}
 }
 
 export default {
-	/**
-	 * This is the standard fetch handler for a Cloudflare Worker
-	 *
-	 * @param request - The request submitted to the Worker from the client
-	 * @param env - The interface to reference bindings declared in wrangler.jsonc
-	 * @param ctx - The execution context of the Worker
-	 * @returns The response to be sent back to the client
-	 */
 	async fetch(request, env, ctx): Promise<Response> {
-		// Create a stub to open a communication channel with the Durable Object
-		// instance named "foo".
-		//
-		// Requests from all Workers to the Durable Object instance named "foo"
-		// will go to a single remote Durable Object instance.
-		const stub = env.MY_DURABLE_OBJECT.getByName("foo");
+		const origin = request.headers.get('Origin');
+		const headers = corsHeaders(origin);
 
-		// Call the `sayHello()` RPC method on the stub to invoke the method on
-		// the remote Durable Object instance.
-		const greeting = await stub.sayHello("world");
+		if (request.method === 'OPTIONS') {
+			return new Response(null, { status: 204, headers });
+		}
 
-		return new Response(greeting);
+		const url = new URL(request.url);
+
+		if (url.pathname === '/api/semantic-names' && request.method === 'POST') {
+			return handleSemanticNames(request, env, headers);
+		}
+
+		return jsonResponse({ error: 'Not Found' }, 404, headers);
 	},
 } satisfies ExportedHandler<Env>;

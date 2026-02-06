@@ -38,6 +38,9 @@ Headwind parses atomic utility classes from JSX/TSX/HTML source code, replaces t
 - **Arbitrary values** — `bg-[#1da1f2]`, `p-[3.5rem]`, `grid-cols-[1fr_2fr]`
   支持任意值语法
 
+- **Element tree generation** — output a structured text tree of all elements with their classes and `[ref=eN]` identifiers, ideal for passing to AI for secondary processing
+  元素树生成：输出带 `[ref=eN]` 引用标识的结构化元素树文本，方便传给 AI 做二次处理
+
 ---
 
 ## Quick Start / 快速开始
@@ -88,6 +91,17 @@ let result = transform_jsx(source, "App.tsx", TransformOptions::default()).unwra
 
 println!("{}", result.code);  // className replaced with generated name
 println!("{}", result.css);   // .c_abc123 { padding: 1rem; text-align: center; }
+
+// With element tree / 启用元素树
+let result = transform_jsx(source, "App.tsx", TransformOptions {
+    element_tree: true,
+    ..Default::default()
+}).unwrap();
+
+if let Some(tree) = &result.element_tree {
+    println!("{}", tree);
+    // - div p-4 text-center hover:text-left "Hello" [ref=e1]
+}
 ```
 
 ### WASM (Browser)
@@ -109,6 +123,57 @@ console.log(result.css);
 console.log(result.classMap);
 ```
 
+### Element Tree / 元素树
+
+Enable `elementTree` to get a structured text representation of all elements, useful for passing to AI for secondary processing.
+
+开启 `elementTree` 选项可获取所有元素的结构化文本表示，方便传给 AI 做二次处理。
+
+```typescript
+const result = transformJsx(source, 'App.tsx', {
+  elementTree: true,
+});
+
+console.log(result.elementTree);
+```
+
+**Input / 输入:**
+
+```jsx
+<div className="w-full h-20 border">
+  <h2 className="text-xl text-red-500">Title</h2>
+  <p>some text</p>
+  <div>
+    <p className="text-lg text-blue-500">
+      <span className="text-sm">inner</span>
+    </p>
+  </div>
+</div>
+```
+
+**Output `elementTree` / 输出元素树:**
+
+```
+- div w-full h-20 border [ref=e1]
+  - h2 text-xl text-red-500 "Title" [ref=e2]
+  - p: some text [ref=e3]
+  - div [ref=e4]
+    - p text-lg text-blue-500 [ref=e5]
+      - span text-sm "inner" [ref=e6]
+```
+
+Each node follows the format / 每个节点格式如下：
+
+| Pattern / 模式 | Meaning / 含义 |
+|---|---|
+| `- tag classes [ref=eN]` | Element with Tailwind classes / 有 class 的元素 |
+| `- tag: text [ref=eN]` | Element with text content only / 仅有文本的元素 |
+| `- tag classes "text" [ref=eN]` | Element with both classes and text / 同时有 class 和文本 |
+
+Every element has a unique `[ref=eN]` identifier for easy reference in downstream AI prompts.
+
+每个元素都有唯一的 `[ref=eN]` 标识，方便在后续 AI 提示中引用。
+
 ---
 
 ## Transform Options / 转换选项
@@ -119,6 +184,9 @@ console.log(result.classMap);
 | `outputMode` | `{ type: 'global' }`, `{ type: 'cssModules', access: 'dot' \| 'bracket' }` | `global` | Output format / 输出格式 |
 | `cssVariables` | `var`, `inline` | `var` | Use CSS variable references or inline values / 使用 CSS 变量引用或内联值 |
 | `unknownClasses` | `remove`, `preserve` | `remove` | How to handle unrecognized classes / 未知类名处理方式 |
+| `colorMode` | `hex`, `oklch`, `hsl`, `var` | `hex` | Color output format / 颜色输出格式 |
+| `colorMix` | `true`, `false` | `false` | Use `color-mix()` for opacity / 使用 `color-mix()` 处理透明度 |
+| `elementTree` | `true`, `false` | `false` | Generate element tree in result / 在结果中生成元素树 |
 
 ---
 

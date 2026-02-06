@@ -1,11 +1,11 @@
 {
-  "extends": "../../packages/config/tsconfig/web.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
   "compilerOptions": {
     // General
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "target": "ESNext",
-
     // Modules
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -13,9 +13,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
-
     // Type Checking & Safety
     "strict": true,
-    "types": ["vite/client"]
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
   }
 }

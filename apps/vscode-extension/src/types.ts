@@ -6,6 +6,7 @@ export interface TransformOptions {
   cssVariables: 'var' | 'inline';
   unknownClasses: 'remove' | 'preserve';
   colorMode: 'hex' | 'oklch' | 'hsl' | 'var';
+  elementTree?: boolean;
 }
 
 export interface GlobalOutputMode {
@@ -22,6 +23,7 @@ export interface TransformResult {
   code: string;
   css: string;
   classMap: Record<string, string>;
+  elementTree?: string;
 }
 
 export type SupportedLanguage = 'jsx' | 'html';

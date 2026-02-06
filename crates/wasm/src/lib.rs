@@ -26,6 +26,8 @@ struct JsTransformOptions {
     color_mode: JsColorMode,
     #[serde(default)]
     color_mix: bool,
+    #[serde(default)]
+    element_tree: bool,
 }
 
 #[derive(Deserialize)]
@@ -131,6 +133,8 @@ struct JsTransformResult {
     code: String,
     css: String,
     class_map: IndexMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    element_tree: Option<String>,
 }
 
 // ── 类型转换 ──────────────────────────────────────────────────
@@ -209,6 +213,7 @@ impl From<JsTransformOptions> for TransformOptions {
             unknown_classes: opts.unknown_classes.into(),
             color_mode: opts.color_mode.into(),
             color_mix: opts.color_mix,
+            element_tree: opts.element_tree,
         }
     }
 }
@@ -222,6 +227,7 @@ fn parse_options(options: JsValue) -> Result<JsTransformOptions, JsError> {
             unknown_classes: JsUnknownClassMode::default(),
             color_mode: JsColorMode::default(),
             color_mix: false,
+            element_tree: false,
         })
     } else {
         serde_wasm_bindgen::from_value(options)
@@ -234,6 +240,7 @@ fn serialize_result(result: headwind_transform::TransformResult) -> Result<JsVal
         code: result.code,
         css: result.css,
         class_map: result.class_map,
+        element_tree: result.element_tree,
     };
     let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
     js_result.serialize(&serializer)
