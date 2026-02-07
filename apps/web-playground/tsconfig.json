@@ -1,13 +1,7 @@
 {
   "extends": "../../packages/config/tsconfig/web.json",
   "compilerOptions": {
-    // General
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
     "target": "ESNext",
-
-    // Modules
-    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
     "module": "ESNext",
