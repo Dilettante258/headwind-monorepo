@@ -4,7 +4,7 @@ import type { TransformOptions } from "./types";
 export function getTransformOptions(): TransformOptions {
   const config = vscode.workspace.getConfiguration("headwind");
 
-  const outputModeType = config.get<string>("outputMode", "global");
+  const outputModeType = config.get<string>("outputMode", "cssModules");
   const outputMode =
     outputModeType === "cssModules"
       ? {
@@ -14,7 +14,7 @@ export function getTransformOptions(): TransformOptions {
       : { type: "global" as const };
 
   return {
-    namingMode: config.get<"hash" | "readable" | "camelCase">("namingMode", "hash"),
+    namingMode: config.get<"hash" | "readable" | "camelCase">("namingMode", "camelCase"),
     outputMode,
     cssVariables: config.get<"var" | "inline">("cssVariables", "var"),
     unknownClasses: config.get<"remove" | "preserve">("unknownClasses", "preserve"),

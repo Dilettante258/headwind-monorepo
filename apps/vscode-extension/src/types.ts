@@ -38,8 +38,8 @@ export function isSupportedFile(filename: string): boolean {
 }
 
 export const DEFAULT_OPTIONS: TransformOptions = {
-  namingMode: 'hash',
-  outputMode: { type: 'global' },
+  namingMode: 'camelCase',
+  outputMode: { type: 'cssModules', access: 'dot' },
   cssVariables: 'var',
   unknownClasses: 'preserve',
   colorMode: 'hex',

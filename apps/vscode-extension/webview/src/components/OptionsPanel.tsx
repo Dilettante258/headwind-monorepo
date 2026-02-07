@@ -8,8 +8,8 @@ interface OptionsPanelProps {
 }
 
 export function OptionsPanel(props: OptionsPanelProps) {
-  const [naming, setNaming] = createSignal('hash');
-  const [outputType, setOutputType] = createSignal('global');
+  const [naming, setNaming] = createSignal('camelCase');
+  const [outputType, setOutputType] = createSignal('cssModules');
   const [cssVars, setCssVars] = createSignal('var');
   const [unknown, setUnknown] = createSignal('preserve');
   const [colorMode, setColorMode] = createSignal('hex');

@@ -62,7 +62,7 @@
             "readable",
             "camelCase"
           ],
-          "default": "hash",
+          "default": "camelCase",
           "enumDescriptions": [
             "Hash-based names (c_a1b2c3)",
             "Readable abbreviated names (p4_m2)",
@@ -76,7 +76,7 @@
             "global",
             "cssModules"
           ],
-          "default": "global",
+          "default": "cssModules",
           "enumDescriptions": [
             "Global CSS with string class names",
             "CSS Modules with styles.xxx references"

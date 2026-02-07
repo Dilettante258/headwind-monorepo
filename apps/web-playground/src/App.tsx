@@ -52,9 +52,9 @@ function Playground() {
   const [wasmError, setWasmError] = createSignal("");
   const [language, setLanguage] = createSignal<Language>("jsx");
   const [source, setSource] = createSignal(DEFAULT_JSX);
-  const [namingMode, setNamingMode] = createSignal<NamingMode>("hash");
+  const [namingMode, setNamingMode] = createSignal<NamingMode>("camelCase");
   const [outputModeType, setOutputModeType] =
-    createSignal<OutputModeType>("global");
+    createSignal<OutputModeType>("cssModules");
   const [accessMode, setAccessMode] = createSignal<AccessMode>("dot");
   const [cssVariables, setCssVariables] =
     createSignal<CssVariablesMode>("inline");
