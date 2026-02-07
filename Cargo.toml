@@ -2,10 +2,10 @@
 resolver = "2"
 members = [
     "crates/core",
-    "crates/css",
+
     "crates/tw_index",
     "crates/tw_parse",
-    "crates/swc_plugin",
+
     "crates/transform",
     "crates/wasm",
 ]

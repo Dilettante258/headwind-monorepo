@@ -1,4 +1,4 @@
-use crate::types::NamingMode;
+use headwind_core::NamingMode;
 
 /// 命名策略 trait
 pub trait NamingStrategy {
@@ -29,16 +29,9 @@ pub struct ReadableNaming;
 
 impl ReadableNaming {
     /// 从 Tailwind 类名中提取可读前缀
-    ///
-    /// 例如：
-    /// - "p-4" → "p4"
-    /// - "m-2" → "m2"
-    /// - "text-red-500" → "text_red"
     fn extract_prefix(class: &str) -> String {
-        // 移除连字符，限制长度
         let cleaned = class.replace('-', "");
 
-        // 如果太长，只取前 8 个字符
         if cleaned.len() > 8 {
             cleaned[..8].to_string()
         } else {
@@ -55,12 +48,9 @@ impl NamingStrategy for ReadableNaming {
 
         let prefixes: Vec<String> = classes.iter().map(|c| Self::extract_prefix(c)).collect();
 
-        // 连接，用下划线分隔
         let combined = prefixes.join("_");
 
-        // 限制总长度，避免过长
         if combined.len() > 32 {
-            // 截断并添加 hash 后缀
             let truncated = &combined[..24];
             let hash = blake3::hash(combined.as_bytes());
             let hex = format!("{}", hash);
@@ -72,17 +62,10 @@ impl NamingStrategy for ReadableNaming {
 }
 
 /// CamelCase 命名策略：生成驼峰式类名，适合 CSS Modules 的 `styles.xxx` 访问
-///
-/// 例如：
-/// - `["p-4", "m-2"]` → `p4M2`
-/// - `["text-center", "hover:text-left"]` → `textCenterHoverTextLeft`
-/// - `["bg-blue-500", "text-white"]` → `bgBlue500TextWhite`
 pub struct CamelCaseNaming;
 
 impl CamelCaseNaming {
     /// 将单个 Tailwind 类转换为 camelCase 片段
-    ///
-    /// 按 `-` 和 `:` 拆分，首段保持原样，后续段首字母大写
     fn class_to_camel(class: &str) -> String {
         let mut result = String::new();
         let mut capitalize_next = false;
@@ -113,10 +96,8 @@ impl NamingStrategy for CamelCaseNaming {
         for (i, class) in classes.iter().enumerate() {
             let camel = Self::class_to_camel(class);
             if i == 0 {
-                // 第一个类：保持首字母小写
                 combined.push_str(&camel);
             } else {
-                // 后续类：首字母大写
                 let mut chars = camel.chars();
                 if let Some(first) = chars.next() {
                     combined.extend(first.to_uppercase());
@@ -125,7 +106,6 @@ impl NamingStrategy for CamelCaseNaming {
             }
         }
 
-        // 过长时截断 + hash 后缀
         if combined.len() > 32 {
             let truncated = &combined[..24];
             let hash = blake3::hash(combined.as_bytes());
@@ -144,7 +124,6 @@ pub fn create_naming_strategy(mode: NamingMode) -> Box<dyn NamingStrategy> {
         NamingMode::Readable => Box::new(ReadableNaming),
         NamingMode::CamelCase => Box::new(CamelCaseNaming),
         NamingMode::Semantic => {
-            // 未来实现 AI 命名
             unimplemented!("Semantic naming not yet implemented")
         }
     }
@@ -203,7 +182,6 @@ mod tests {
         ];
 
         let name = naming.generate_name(&classes);
-        // 应该被截断并添加 hash
         assert!(name.len() <= 32);
     }
 
@@ -269,7 +247,6 @@ mod tests {
         ];
 
         let name = naming.generate_name(&classes);
-        // 超过 32 字符时应截断 + hash
         assert!(name.len() <= 32);
     }
 

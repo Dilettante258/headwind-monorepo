@@ -2,7 +2,7 @@ use crate::variant::{
     self, parameterized_selector, pseudo_class_at_rule, pseudo_class_selector,
     pseudo_element_selector, responsive_at_rule, supports_at_rule, StateResolution,
 };
-use headwind_core::shorthand::optimize_shorthands;
+use crate::shorthand::optimize_shorthands;
 use headwind_core::Declaration;
 use headwind_tw_parse::{parse_modifiers_from_raw, Modifier};
 use std::collections::HashMap;

@@ -146,10 +146,6 @@ pub fn create_stylesheet(class_name: String, declarations: Vec<Declaration>) -> 
 }
 
 /// 合并多个规则到一个样式表
-// TODO: 添加对伪类、伪元素、媒体查询的支持
-// 这需要更深入地理解 SWC 的 AST 结构
-// 暂时在 bundler 中使用字符串生成，未来可以迁移到这里
-
 pub fn merge_stylesheets(stylesheets: Vec<Stylesheet>) -> Stylesheet {
     let mut all_rules = Vec::new();
 

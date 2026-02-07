@@ -1,5 +1,5 @@
-use headwind_core::naming::{create_naming_strategy, NamingStrategy};
 use headwind_core::{ColorMode, CssVariableMode, NamingMode, UnknownClassMode};
+use headwind_tw_index::naming::{create_naming_strategy, NamingStrategy};
 use headwind_tw_index::Bundler;
 use indexmap::IndexMap;
 

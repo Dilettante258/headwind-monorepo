@@ -5,10 +5,6 @@ use swc_css_codegen::{
 };
 
 /// 使用 swc_css_codegen 生成 CSS 字符串
-///
-/// 保证：
-/// - 使用 SWC 的标准 CSS 生成器
-/// - 确保格式一致性
 pub fn emit_css(stylesheet: &Stylesheet) -> Result<String, std::fmt::Error> {
     let mut output = String::new();
 
@@ -29,7 +25,7 @@ pub fn emit_css(stylesheet: &Stylesheet) -> Result<String, std::fmt::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::create_stylesheet;
+    use crate::css::ir::create_stylesheet;
     use headwind_core::Declaration;
 
     #[test]
@@ -40,9 +36,7 @@ mod tests {
         );
 
         let css = emit_css(&stylesheet).unwrap();
-        println!("Generated CSS:\n{}", css);
 
-        // 验证包含基本结构
         assert!(css.contains("padding"));
         assert!(css.contains("1rem"));
     }
@@ -58,7 +52,6 @@ mod tests {
         );
 
         let css = emit_css(&stylesheet).unwrap();
-        println!("Generated CSS:\n{}", css);
 
         assert!(css.contains("padding"));
         assert!(css.contains("margin"));
@@ -66,7 +59,6 @@ mod tests {
 
     #[test]
     fn test_emit_stability() {
-        // 相同输入应该产生相同输出
         let stylesheet = create_stylesheet(
             "test".to_string(),
             vec![

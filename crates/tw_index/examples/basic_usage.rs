@@ -1,16 +1,17 @@
-/// 基本使用示例：展示如何使用 headwind-core 进行 Tailwind 类名转换
+/// 基本使用示例：展示如何使用 headwind 进行 Tailwind 类名转换
 ///
 /// 运行示例：
 /// ```bash
-/// cargo run --example basic_usage -p headwind-core
+/// cargo run --example basic_usage -p headwind-tw-index
 /// ```
 
-use headwind_core::{bundle::bundle, BundleRequest, NamingMode};
+use headwind_core::{BundleRequest, NamingMode};
+use headwind_tw_index::bundle::bundle;
+use headwind_tw_index::css::{create_stylesheet, emit_css};
 use headwind_tw_index::load_from_json;
-use headwind_css::{create_stylesheet, emit_css};
 
 fn main() {
-    println!("=== HeadWind Core 基本使用示例 ===\n");
+    println!("=== HeadWind 基本使用示例 ===\n");
 
     // 1. 准备 Tailwind 索引（从 JSON 加载）
     let tailwind_json = r#"[
@@ -59,7 +60,6 @@ fn main() {
     println!("生成类名: {}", result.new_class);
     println!("CSS 声明数: {}", result.css_declarations.len());
 
-    // 生成 CSS
     let stylesheet = create_stylesheet(
         result.new_class.clone(),
         result.css_declarations.clone(),
@@ -83,8 +83,8 @@ fn main() {
     let request = BundleRequest {
         classes: vec![
             "p-4".to_string(),
-            "p-4".to_string(), // 重复
-            "unknown-class".to_string(), // 未知类
+            "p-4".to_string(),
+            "unknown-class".to_string(),
             "m-2".to_string(),
         ],
         naming_mode: NamingMode::Hash,
@@ -103,7 +103,6 @@ fn main() {
     // 5. 示例 4：CSS 冲突处理
     println!("\n--- 示例 4: CSS 冲突处理 ---");
 
-    // 添加冲突的类到索引
     let conflicting_json = r#"[
         {
             "class": "p-4",

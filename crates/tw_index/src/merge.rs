@@ -1,4 +1,4 @@
-use crate::types::Declaration;
+use headwind_core::Declaration;
 use indexmap::IndexMap;
 
 /// 合并 CSS 声明
@@ -10,7 +10,6 @@ pub fn merge_declarations(decls: Vec<Declaration>) -> Vec<Declaration> {
     let mut map: IndexMap<String, String> = IndexMap::new();
 
     for decl in decls {
-        // 后者覆盖前者
         map.insert(decl.property, decl.value);
     }
 
@@ -57,7 +56,6 @@ mod tests {
         ];
         let result = merge_declarations(decls);
         assert_eq!(result.len(), 2);
-        // IndexMap 保持首次插入的顺序
         assert_eq!(result[0].property, "padding");
         assert_eq!(result[0].value, "2rem");
         assert_eq!(result[1].property, "margin");

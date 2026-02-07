@@ -11,7 +11,6 @@ pub fn normalize_classes(classes: &[String]) -> Vec<String> {
     let mut unique_classes = BTreeSet::new();
 
     for class_str in classes {
-        // 按空格拆分并收集
         for token in class_str.split_whitespace() {
             if !token.is_empty() {
                 unique_classes.insert(token.to_string());
@@ -19,7 +18,6 @@ pub fn normalize_classes(classes: &[String]) -> Vec<String> {
         }
     }
 
-    // BTreeSet 自动保持排序，转换为 Vec
     unique_classes.into_iter().collect()
 }
 

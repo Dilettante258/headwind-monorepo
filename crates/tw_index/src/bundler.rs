@@ -2,7 +2,7 @@ use crate::context::ClassContext;
 use crate::converter::Converter;
 use crate::variant::{self, pseudo_class_selector, pseudo_element_selector, StateResolution};
 use headwind_core::{ColorMode, Declaration};
-use headwind_css::{create_stylesheet, emit_css};
+use crate::css::{create_stylesheet, emit_css};
 use headwind_tw_parse::{parse_class, parse_classes, Modifier, ParsedClass};
 use std::collections::{BTreeSet, HashMap};
 
