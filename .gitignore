@@ -42,8 +42,6 @@ coverage/
 
 # WASM build artifacts (allow specific locations)
 *.wasm
-!packages/swc-host/assets/*.wasm
-!apps/vscode-extension/resources/plugins/*.wasm
 !apps/vscode-extension/wasm/*.wasm
 
 # Tools data (cloned repositories)

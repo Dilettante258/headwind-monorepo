@@ -199,16 +199,12 @@ headwind/
 │   │                            核心类型定义
 │   ├── tw_parse/               # Tailwind class parser
 │   │                            Tailwind 类名解析器
-│   ├── tw_index/               # Converter, bundler, and value maps
-│   │                            转换器、打包器、值映射表
-│   ├── css/                    # CSS AST generation (SWC-based)
-│   │                            CSS AST 生成
+│   ├── tw_index/               # Converter, bundler, CSS IR, naming, etc.
+│   │                            转换引擎（转换器、打包器、CSS 生成、命名等）
 │   ├── transform/              # JSX/HTML transform pipeline
 │   │                            JSX/HTML 转换流水线
-│   ├── wasm/                   # WASM bindings (wasm-bindgen)
-│   │                            WASM 绑定
-│   └── swc_plugin/             # SWC plugin (experimental)
-│                                SWC 插件（实验性）
+│   └── wasm/                   # WASM bindings (wasm-bindgen)
+│                                WASM 绑定
 ├── apps/
 │   ├── web-playground/         # Interactive playground (Vite + Solid.js)
 │   │                            在线 Playground
@@ -217,14 +213,10 @@ headwind/
 │   └── api/                    # Cloudflare Workers API
 │                                Cloudflare Workers API
 ├── packages/
-│   ├── transformer/            # Node.js transformer API
-│   │                            Node.js 转换器 API
-│   ├── swc-host/               # SWC core hosting for Node.js
-│   │                            SWC 宿主层
-│   ├── config/                 # Shared TypeScript/ESLint config
-│   │                            共享配置
-│   └── test-fixtures/          # Test utilities
-│                                测试工具
+│   ├── common-utils/           # Shared utilities (AI naming, tree parsing)
+│   │                            共享工具（AI 命名、元素树解析）
+│   └── config/                 # Shared TypeScript/ESLint config
+│                                共享配置
 └── tools/                      # Build scripts & Tailwind mapping extraction
                                  构建脚本与映射提取工具
 ```
