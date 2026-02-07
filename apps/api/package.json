@@ -13,6 +13,7 @@
 	"dependencies": {},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260129.0",
+		"@headwind/config": "workspace:*",
 		"typescript": "^5.7.3",
 		"wrangler": "^4.61.0"
 	}

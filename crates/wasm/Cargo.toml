@@ -5,6 +5,8 @@ edition = "2021"
 description = "Headwind CSS transform compiled to WebAssembly"
 
 [package.metadata.wasm-pack.profile.release]
+# wasm-pack bundled wasm-opt v117 is too old for current WASM output.
+# Re-enable when wasm-pack ships wasm-opt >= 119.
 wasm-opt = false
 
 [lib]
