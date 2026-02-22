@@ -17,7 +17,7 @@ const About: Component = () => {
       </header>
       <div class="about-content">
         <section class="about-hero">
-          <h2 class="about-title">Headwind</h2>
+          <h1 class="about-title">About Headwind: Tailwind CSS to Semantic CSS Compiler</h1>
           <p class="about-subtitle">
             Atomic CSS to Semantic CSS Compiler
           </p>

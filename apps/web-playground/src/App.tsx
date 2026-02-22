@@ -200,7 +200,7 @@ function Playground() {
       {/* Header */}
       <header class="header">
         <div class="header-left">
-          <h1 class="logo">Headwind</h1>
+          <div class="logo">Headwind</div>
           <span class="badge">Playground</span>
         </div>
         <div class="header-right">
@@ -236,6 +236,7 @@ function Playground() {
           </a>
         </div>
       </header>
+      <h1 class="sr-only">Tailwind CSS to CSS Converter - Headwind Playground</h1>
 
       {/* Toolbar */}
       <div class="toolbar">
@@ -513,6 +514,19 @@ export function navigate(path: string) {
 
 const App: Component = () => {
   const [page, setPage] = createSignal<Page>(getPageFromPath());
+  const isPlayground = () => page() === 'playground';
+  const pageTitle = () =>
+    isPlayground()
+      ? 'Tailwind CSS to CSS Converter | Headwind Playground'
+      : 'About Headwind | Tailwind CSS to Semantic CSS Compiler';
+  const pageDescription = () =>
+    isPlayground()
+      ? 'Convert Tailwind CSS utility classes into semantic CSS with Headwind Playground. Includes a VSCode extension for JSX, TSX, and HTML workflows.'
+      : 'Learn how Headwind converts Tailwind CSS utility classes into semantic CSS with Rust and WebAssembly, plus a VSCode extension for in-editor workflows.';
+  const pageUrl = () =>
+    isPlayground()
+      ? 'https://headwind-playground.kairi.cc/'
+      : 'https://headwind-playground.kairi.cc/about';
 
   onMount(() => {
     const onPopState = () => setPage(getPageFromPath());
@@ -523,17 +537,11 @@ const App: Component = () => {
   return (
     <div class="app">
       {/* SEO Meta Tags */}
-      <Show when={page() === 'playground'}>
-        <Title>Headwind Playground — Atomic CSS to Semantic CSS Converter</Title>
-        <Link rel="canonical" href="https://headwind-playground.kairi.cc/" />
-      </Show>
-      <Show when={page() === 'about'}>
-        <Title>About — Headwind | Atomic CSS to Semantic CSS Compiler</Title>
-        <Link rel="canonical" href="https://headwind-playground.kairi.cc/about" />
-      </Show>
+      <Title>{pageTitle()}</Title>
+      <Link rel="canonical" href={pageUrl()} />
       <Meta
         name="description"
-        content="Try Headwind online: convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML with configurable naming, CSS Modules, and color modes."
+        content={pageDescription()}
       />
       <Meta
         name="keywords"
@@ -545,24 +553,24 @@ const App: Component = () => {
       <Meta property="og:type" content="website" />
       <Meta
         property="og:title"
-        content="Headwind Playground — Atomic to Semantic CSS"
+        content={pageTitle()}
       />
       <Meta
         property="og:description"
-        content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML."
+        content={pageDescription()}
       />
-      <Meta property="og:url" content="https://headwind-playground.kairi.cc/" />
+      <Meta property="og:url" content={pageUrl()} />
       <Meta property="og:site_name" content="Headwind Playground" />
       <Meta property="og:locale" content="en_US" />
       {/* Twitter Card */}
       <Meta name="twitter:card" content="summary_large_image" />
       <Meta
         name="twitter:title"
-        content="Headwind Playground — Atomic to Semantic CSS"
+        content={pageTitle()}
       />
       <Meta
         name="twitter:description"
-        content="Convert Tailwind atomic utility classes to optimized semantic CSS in real time. Supports JSX, TSX, and HTML."
+        content={pageDescription()}
       />
       <Show when={page() === 'playground'}>
         <Playground />
