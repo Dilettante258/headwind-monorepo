@@ -107,6 +107,18 @@ const About: Component = () => {
             directly from your editor settings. Install it from the
             {' '}<a href="https://marketplace.visualstudio.com/items?itemName=Dilettante258.headwind-vscode" target="_blank" rel="noopener noreferrer">Visual Studio Marketplace</a>.
           </p>
+          <figure class="about-screenshot">
+            <img
+              src="https://h-r2.kairi.cc/github/headwind-plugin.webp"
+              alt="Headwind VSCode extension screenshot"
+              class="about-screenshot-img"
+              loading="lazy"
+            />
+            <figcaption>
+              Control panel inside VS Code: tune transform options, preview generated CSS,
+              and apply updates with one click.
+            </figcaption>
+          </figure>
         </section>
 
         <section class="about-section">

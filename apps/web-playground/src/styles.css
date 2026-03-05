@@ -703,6 +703,28 @@ body {
   background: var(--bg-elevated);
 }
 
+.about-screenshot {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+.about-screenshot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.about-screenshot figcaption {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
 /* Footer */
 
 .about-footer {

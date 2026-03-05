@@ -7,6 +7,10 @@
 Powered by Rust + WASM for near-instant transforms.
 基于 Rust + WASM，转换几乎瞬间完成。
 
+## Screenshot / 运行截图
+
+![Headwind VS Code Plugin Screenshot](https://h-r2.kairi.cc/github/headwind-plugin.webp)
+
 ---
 
 ## Features / 功能

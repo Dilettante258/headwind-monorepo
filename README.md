@@ -1,6 +1,6 @@
 # Headwind
 
-![Icon](./assets/headwind.png)
+![Icon](https://h-r2.kairi.cc/github/headwind-icon_100.webp)
 
 **Atomic CSS to Semantic CSS compiler** built with Rust and SWC.
 
@@ -9,6 +9,18 @@ Headwind parses atomic utility classes from JSX/TSX/HTML source code, replaces t
 **Headwind** 是一个基于 Rust 和 SWC 构建的**原子化 CSS 到语义化 CSS 编译器**。
 
 它从 JSX/TSX/HTML 源码中解析原子化工具类，替换为生成的语义化类名，并输出对应的 CSS。支持在浏览器中以 WASM 运行、作为 VS Code 扩展使用，或作为 Node.js 转换器集成。
+
+## Screenshots / 运行截图
+
+### Web Playground
+
+[link](https://headwind-playground.kairi.cc/)
+
+![Headwind Web Playground Screenshot](https://h-r2.kairi.cc/github/headwind-playground.webp)
+
+### VS Code Plugin
+
+![Headwind VS Code Plugin Screenshot](https://h-r2.kairi.cc/github/headwind-plugin.webp)
 
 ---
 
